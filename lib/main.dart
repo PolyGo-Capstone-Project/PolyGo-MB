@@ -2,11 +2,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'core/localization/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:device_preview/device_preview.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/size_config.dart';
 import 'routes/app_routes.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    DevicePreview(
+    enabled: true,
+    builder: (context) => const MyApp(),
+  ),);
 }
 
 class MyApp extends StatefulWidget {
@@ -30,6 +36,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig.init(context);
     return MaterialApp(
       title: 'PolyGo App',
       debugShowCheckedModeBanner: false,

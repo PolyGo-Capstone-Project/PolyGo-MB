@@ -16,17 +16,16 @@ class AppHeaderActions extends StatelessWidget {
     final lang = inherited.locale.languageCode;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
     final loc = AppLocalizations.of(context);
 
     Widget buildPopupItem(String value, String label, bool selected) {
       return Row(
         children: [
           if (selected)
-            const Icon(Icons.check, size: 18)
+            Icon(Icons.check, size: 18 * MediaQuery.of(context).textScaleFactor)
           else
-            const SizedBox(width: 18),
-          const SizedBox(width: 8),
+            SizedBox(width: 18),
+          SizedBox(width: 8),
           Text(
             label,
             style: TextStyle(
@@ -43,7 +42,6 @@ class AppHeaderActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // --- Language Icon + Popup ---
         PopupMenuButton<String>(
           tooltip: loc.translate('login_title'),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -66,8 +64,6 @@ class AppHeaderActions extends StatelessWidget {
           },
         ),
         const SizedBox(width: 12),
-
-        // --- Theme Icon + Popup ---
         PopupMenuButton<String>(
           tooltip: loc.translate('login_title'),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -94,7 +90,6 @@ class AppHeaderActions extends StatelessWidget {
             }
           },
         ),
-
       ],
     );
   }

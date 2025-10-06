@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../routes/app_routes.dart';
+import '../../../../core/utils/responsive.dart';
 
 class RegisterForm extends StatefulWidget {
-  const RegisterForm({super.key});
+  final bool isTablet;
+  final bool isDesktop;
+
+  const RegisterForm({super.key, this.isTablet = false, this.isDesktop = false});
 
   @override
   State<RegisterForm> createState() => _RegisterFormState();
@@ -15,8 +19,8 @@ class _RegisterFormState extends State<RegisterForm> {
   final _formKey = GlobalKey<FormState>();
   bool _showPassword = false;
   bool _showConfirmPassword = false;
-  bool _isLoading = false;
   bool _agreeTerms = false;
+  bool _isLoading = false;
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -27,31 +31,21 @@ class _RegisterFormState extends State<RegisterForm> {
   Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreeTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)
-                .translate("agree_terms_error") ??
-                "Bạn phải đồng ý với điều khoản",
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)
+            .translate("agree_terms_error")),
+      ));
       return;
     }
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2)); // giả lập API
+    await Future.delayed(const Duration(seconds: 2));
     setState(() => _isLoading = false);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          AppLocalizations.of(context)
-              .translate("register_success") ??
-              "Đăng ký thành công!",
-        ),
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(AppLocalizations.of(context)
+          .translate("register_success")),
+    ));
   }
 
   @override
@@ -59,14 +53,22 @@ class _RegisterFormState extends State<RegisterForm> {
     final theme = Theme.of(context);
     final t = theme.textTheme;
     final loc = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // --- Max width container đồng bộ với LoginForm ---
+    final containerWidth = screenWidth < 500
+        ? screenWidth * 0.9
+        : screenWidth < 800
+        ? 450.0
+        : 500.0;
 
     return Center(
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 450),
-        padding: const EdgeInsets.all(32),
+        width: containerWidth,
+        padding: EdgeInsets.all(sw(context, 24)),
         decoration: BoxDecoration(
           color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(sw(context, 16)),
           boxShadow: const [
             BoxShadow(
               color: Color(0x11000000),
@@ -80,175 +82,120 @@ class _RegisterFormState extends State<RegisterForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // --- Logo ---
+              // Logo
               Center(
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(sw(context, 12)),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEEF2FF),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(sw(context, 12)),
                   ),
-                  child: const Icon(Icons.person_add_alt_1_rounded,
-                      size: 36, color: Color(0xFF2563EB)),
+                  child: Icon(Icons.person_add_alt_1_rounded,
+                      size: sw(context, 36), color: const Color(0xFF2563EB)),
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: sh(context, 20)),
 
-              // --- Title ---
+              // Title
               Text(
-                loc.translate("signup_title") ?? "Tạo tài khoản PolyGo",
+                loc.translate("signup_title"),
                 textAlign: TextAlign.center,
-                style: t.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: t.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold, fontSize: st(context, 24)),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: sh(context, 6)),
               Text(
-                loc.translate("signup_subtitle") ??
-                    "Nhập thông tin để đăng ký tài khoản mới",
+                loc.translate("signup_subtitle"),
                 textAlign: TextAlign.center,
-                style: t.bodyMedium?.copyWith(color: theme.colorScheme.outline),
+                style: t.bodyMedium
+                    ?.copyWith(color: theme.colorScheme.outline, fontSize: st(context, 14)),
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: sh(context, 32)),
 
-              // --- Name ---
-              Text(loc.translate("full_name") ?? "Họ và tên",
-                  style: t.labelLarge),
-              const SizedBox(height: 8),
+              // Name
+              Text(loc.translate("full_name"),
+                  style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
+              SizedBox(height: sh(context, 8)),
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
                   hintText: "Nguyễn Văn A",
-                  prefixIcon: const Icon(Icons.person_outline),
+                  prefixIcon: Icon(Icons.person_outline, size: sw(context, 20)),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                 ),
-                validator: (v) =>
-                (v == null || v.isEmpty) ? "Vui lòng nhập họ tên" : null,
+                validator: (v) => (v == null || v.isEmpty) ? "Vui lòng nhập họ tên" : null,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sh(context, 16)),
 
-              // --- Email + OTP ---
-              Text(loc.translate("email"), style: t.labelLarge),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: "user@example.com",
-                        prefixIcon: const Icon(Icons.mail_outline),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      validator: (v) => (v == null || !v.contains('@'))
-                          ? "Email không hợp lệ"
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            loc.translate("otp_sent") ??
-                                "Đã gửi mã OTP đến email",
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563EB),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 18,
-                      ),
-                    ),
-                    child: Text(
-                      loc.translate("send_otp") ?? "Gửi OTP",
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // --- OTP ---
-              Text(loc.translate("otp_code") ?? "Mã xác thực OTP",
-                  style: t.labelLarge),
-              const SizedBox(height: 8),
+              // Email
+              Text(loc.translate("email"),
+                  style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
+              SizedBox(height: sh(context, 8)),
               TextFormField(
-                controller: _otpController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  hintText: loc.translate("verify_code") ?? "Nhập mã xác nhận",
-                  counterText: "",
-                  prefixIcon: const Icon(Icons.verified_outlined),
+                  hintText: "user@example.com",
+                  prefixIcon: Icon(Icons.mail_outline, size: sw(context, 20)),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                 ),
-                validator: (v) =>
-                (v == null || v.length != 6) ? "Mã OTP phải gồm 6 số" : null,
+                validator: (v) => (v == null || !v.contains('@')) ? "Email không hợp lệ" : null,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sh(context, 16)),
 
-              // --- Password ---
-              Text(loc.translate("password"), style: t.labelLarge),
-              const SizedBox(height: 8),
+              // Password
+              Text(loc.translate("password"),
+                  style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
+              SizedBox(height: sh(context, 8)),
               TextFormField(
                 controller: _passwordController,
                 obscureText: !_showPassword,
                 decoration: InputDecoration(
                   hintText: "••••••••",
-                  prefixIcon: const Icon(Icons.lock_outline),
+                  prefixIcon: Icon(Icons.lock_outline, size: sw(context, 20)),
                   suffixIcon: IconButton(
                     icon: Icon(_showPassword
                         ? Icons.visibility_off_outlined
                         : Icons.visibility_outlined),
-                    onPressed: () =>
-                        setState(() => _showPassword = !_showPassword),
+                    onPressed: () => setState(() => _showPassword = !_showPassword),
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                 ),
-                validator: (v) =>
-                (v == null || v.length < 6) ? "Mật khẩu tối thiểu 6 ký tự" : null,
+                validator: (v) => (v == null || v.length < 6) ? "Mật khẩu tối thiểu 6 ký tự" : null,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sh(context, 16)),
 
-              // --- Confirm Password ---
-              Text(loc.translate("confirm_password") ?? "Xác nhận mật khẩu",
-                  style: t.labelLarge),
-              const SizedBox(height: 8),
+              // Confirm Password
+              Text(loc.translate("confirm_password"),
+                  style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
+              SizedBox(height: sh(context, 8)),
               TextFormField(
                 controller: _confirmPasswordController,
                 obscureText: !_showConfirmPassword,
                 decoration: InputDecoration(
                   hintText: "••••••••",
-                  prefixIcon: const Icon(Icons.lock_outline),
+                  prefixIcon: Icon(Icons.lock_outline, size: sw(context, 20)),
                   suffixIcon: IconButton(
                     icon: Icon(_showConfirmPassword
                         ? Icons.visibility_off_outlined
                         : Icons.visibility_outlined),
-                    onPressed: () => setState(
-                            () => _showConfirmPassword = !_showConfirmPassword),
+                    onPressed: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                 ),
-                validator: (v) =>
-                (v != _passwordController.text) ? "Mật khẩu không khớp" : null,
+                validator: (v) => (v != _passwordController.text) ? "Mật khẩu không khớp" : null,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: sh(context, 12)),
 
-              // --- Agree to Terms ---
+              // Agree terms
               Row(
                 children: [
                   Checkbox(
@@ -257,50 +204,47 @@ class _RegisterFormState extends State<RegisterForm> {
                   ),
                   Expanded(
                     child: Text(
-                      loc.translate("agree_terms") ??
-                          "Tôi đồng ý với Điều khoản sử dụng và Chính sách bảo mật",
-                      style: t.bodyMedium,
+                      loc.translate("agree_terms"),
+                      style: t.bodyMedium?.copyWith(fontSize: st(context, 14)),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: sh(context, 20)),
 
-              // --- Register Button ---
+              // Register Button
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2563EB),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(vertical: sh(context, 16)),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                 ),
                 onPressed: _isLoading ? null : _onSubmit,
                 child: Text(
-                  _isLoading
-                      ? (loc.translate("signing_up") ?? "Đang đăng ký...")
-                      : (loc.translate("signup_button") ?? "Đăng ký"),
-                  style: const TextStyle(fontSize: 16, color: Colors.white),
+                  _isLoading ? (loc.translate("signing_up")) : (loc.translate("signup_button")),
+                  style: TextStyle(fontSize: st(context, 16), color: Colors.white),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: sh(context, 24)),
 
-              // --- Navigate to Login ---
+              // Navigate to Login
               Text.rich(
                 TextSpan(
-                  text: (loc.translate("have_account") ?? "Đã có tài khoản? ") + ' ',
-                  style: t.bodyMedium?.copyWith(color: Colors.grey),
+                  text: (loc.translate("have_account")) + ' ',
+                  style: t.bodyMedium?.copyWith(color: Colors.grey, fontSize: st(context, 14)),
                   children: [
                     TextSpan(
-                      text: loc.translate("login_now") ?? "Đăng nhập ngay",
-                      style: const TextStyle(
-                        color: Color(0xFF2563EB),
+                      text: loc.translate("login_now"),
+                      style: TextStyle(
+                        color: const Color(0xFF2563EB),
                         fontWeight: FontWeight.w600,
+                        fontSize: st(context, 14),
                       ),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () {
-                          Navigator.pushNamed(context, AppRoutes.login);
-                        },
+                      recognizer: TapGestureRecognizer()..onTap = () {
+                        Navigator.pushNamed(context, AppRoutes.login);
+                      },
                     ),
                   ],
                 ),

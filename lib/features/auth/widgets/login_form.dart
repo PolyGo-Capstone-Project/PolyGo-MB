@@ -2,11 +2,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../routes/app_routes.dart';
+import '../../../../core/utils/responsive.dart'; // import responsive helper
 
 class LoginForm extends StatefulWidget {
-  const LoginForm({super.key});
+  final bool isTablet;
+  final bool isDesktop;
+
+  const LoginForm({super.key, this.isTablet = false, this.isDesktop = false});
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -25,7 +28,7 @@ class _LoginFormState extends State<LoginForm> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2)); // mock login
+    await Future.delayed(const Duration(seconds: 2));
     setState(() => _isLoading = false);
 
     ScaffoldMessenger.of(context)
@@ -37,14 +40,22 @@ class _LoginFormState extends State<LoginForm> {
     final theme = Theme.of(context);
     final t = theme.textTheme;
     final loc = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // --- Max width container ---
+    final containerWidth = screenWidth < 500
+        ? screenWidth * 0.9
+        : screenWidth < 800
+        ? 450.0
+        : 500.0;
 
     return Center(
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
-        padding: const EdgeInsets.all(32),
+        width: containerWidth,
+        padding: EdgeInsets.all(sw(context, 24)),
         decoration: BoxDecoration(
           color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(sw(context, 16)),
           boxShadow: const [
             BoxShadow(
               color: Color(0x11000000),
@@ -58,61 +69,66 @@ class _LoginFormState extends State<LoginForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // --- Logo ---
+              // Logo
               Center(
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(sw(context, 12)),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEEF2FF),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(sw(context, 12)),
                   ),
-                  child: const Icon(Icons.layers_rounded,
-                      size: 36, color: Color(0xFF2563EB)),
+                  child: Icon(Icons.layers_rounded,
+                      size: sw(context, 36), color: const Color(0xFF2563EB)),
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: sh(context, 20)),
 
-              // --- Title ---
+              // Title
               Text(
                 loc.translate("login_title"),
                 textAlign: TextAlign.center,
-                style: t.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: t.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: st(context, 24)),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: sh(context, 6)),
               Text(
                 loc.translate("login_subtitle"),
                 textAlign: TextAlign.center,
-                style: t.bodyMedium?.copyWith(color: theme.colorScheme.outline),
+                style: t.bodyMedium?.copyWith(
+                    color: theme.colorScheme.outline, fontSize: st(context, 14)),
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: sh(context, 32)),
 
-              // --- Email ---
-              Text(loc.translate("email"), style: t.labelLarge),
-              const SizedBox(height: 8),
+              // Email
+              Text(loc.translate("email"),
+                  style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
+              SizedBox(height: sh(context, 8)),
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: "user@example.com",
-                  prefixIcon: const Icon(Icons.mail_outline),
+                  prefixIcon: Icon(Icons.mail_outline, size: sw(context, 20)),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                 ),
                 validator: (v) =>
                 (v == null || !v.contains('@')) ? "Invalid email" : null,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sh(context, 16)),
 
-              // --- Password ---
-              Text(loc.translate("password"), style: t.labelLarge),
-              const SizedBox(height: 8),
+              // Password
+              Text(loc.translate("password"),
+                  style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
+              SizedBox(height: sh(context, 8)),
               TextFormField(
                 controller: _passwordController,
                 obscureText: !_showPassword,
                 decoration: InputDecoration(
                   hintText: "••••••••",
-                  prefixIcon: const Icon(Icons.lock_outline),
+                  prefixIcon: Icon(Icons.lock_outline, size: sw(context, 20)),
                   suffixIcon: IconButton(
                     icon: Icon(_showPassword
                         ? Icons.visibility_off_outlined
@@ -121,102 +137,109 @@ class _LoginFormState extends State<LoginForm> {
                         setState(() => _showPassword = !_showPassword),
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                 ),
                 validator: (v) =>
                 (v == null || v.length < 6) ? "Min 6 characters" : null,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: sh(context, 12)),
 
-              // --- Remember me / Forgot password ---
+              // Remember me / Forgot password
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: _rememberMe,
-                        onChanged: (v) => setState(() => _rememberMe = v!),
-                      ),
-                      Text(loc.translate("remember_me")),
-                    ],
+                  Flexible(
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: _rememberMe,
+                          onChanged: (v) => setState(() => _rememberMe = v!),
+                        ),
+                        Flexible(
+                          child: Text(
+                            loc.translate("remember_me"),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   TextButton(
                     onPressed: () {},
                     child: Text(
                       loc.translate("forgot_password"),
-                      style: const TextStyle(color: Color(0xFF2563EB)),
+                      style: TextStyle(
+                          color: const Color(0xFF2563EB),
+                          fontSize: st(context, 14)),
                     ),
                   ),
                 ],
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: sh(context, 20)),
 
-              // --- Login Button ---
+              // Login Button
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2563EB),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(vertical: sh(context, 16)),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(sw(context, 10))),
                 ),
                 onPressed: _isLoading ? null : _onSubmit,
                 child: Text(
-                  _isLoading
-                      ? "Logging in..."
-                      : loc.translate("login_button"),
-                  style: const TextStyle(fontSize: 16, color: Colors.white),
+                  _isLoading ? "Logging in..." : loc.translate("login_button"),
+                  style: TextStyle(fontSize: st(context, 16), color: Colors.white),
                 ),
               ),
-              const SizedBox(height: 24),
 
-              // --- Divider ---
+              // Divider + Google + Register
+              SizedBox(height: sh(context, 24)),
               Row(
                 children: [
-                  const Expanded(child: Divider(thickness: 1)),
+                  Expanded(child: Divider(thickness: 1)),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding: EdgeInsets.symmetric(horizontal: sw(context, 12)),
                     child: Text(
                       loc.translate("or_continue_with"),
-                      style: t.bodySmall?.copyWith(color: Colors.grey),
+                      style: t.bodySmall
+                          ?.copyWith(color: Colors.grey, fontSize: st(context, 12)),
                     ),
                   ),
-                  const Expanded(child: Divider(thickness: 1)),
+                  Expanded(child: Divider(thickness: 1)),
                 ],
               ),
-              const SizedBox(height: 24),
-
-              // --- Google Button ---
+              SizedBox(height: sh(context, 24)),
               OutlinedButton.icon(
                 onPressed: () {},
-                icon: const Icon(Icons.g_mobiledata,
-                    size: 28, color: Colors.black),
+                icon: Icon(Icons.g_mobiledata, size: sw(context, 28),
+                ),
                 label: Text(
                   loc.translate("login_google"),
-                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                  style: TextStyle(fontSize: st(context, 16),
+                  ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: EdgeInsets.symmetric(vertical: sh(context, 14)),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                   side: const BorderSide(color: Colors.grey),
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // --- Register link ---
+              SizedBox(height: sh(context, 24)),
               Text.rich(
                 TextSpan(
                   text: loc.translate("no_account") + ' ',
-                  style: t.bodyMedium?.copyWith(color: Colors.grey),
+                  style: t.bodyMedium
+                      ?.copyWith(color: Colors.grey, fontSize: st(context, 14)),
                   children: [
                     TextSpan(
                       text: loc.translate("signup_now"),
-                      style: const TextStyle(
-                        color: Color(0xFF2563EB),
+                      style: TextStyle(
+                        color: const Color(0xFF2563EB),
                         fontWeight: FontWeight.w600,
+                        fontSize: st(context, 14),
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {

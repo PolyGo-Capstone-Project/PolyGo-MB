@@ -23,31 +23,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+    final isDesktop = screenWidth >= 1024;
+
+    // max width của form trên desktop/tablet
+    double maxFormWidth = isDesktop
+        ? 500
+        : isTablet
+        ? 450
+        : screenWidth * 0.9;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
       body: SafeArea(
         child: Column(
           children: [
+            // Top header actions
             Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(
+                  isDesktop ? 32 : isTablet ? 24 : 16,
+                ),
                 child: AppHeaderActions(onThemeToggle: _toggleTheme),
               ),
             ),
+
+            // Register form
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-                  child: const RegisterForm(),
-                ).animate().fadeIn(duration: 400.ms),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isDesktop ? 64 : isTablet ? 48 : 24,
+                    vertical: isDesktop ? 64 : isTablet ? 48 : 32,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxFormWidth),
+                    child: RegisterForm(
+                      isTablet: isTablet,
+                      isDesktop: isDesktop,
+                    ),
+                  ).animate().fadeIn(duration: 400.ms),
+                ),
               ),
             ),
           ],
         ),
       ),
-
     );
   }
 }
