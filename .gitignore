@@ -1,0 +1,40 @@
+# Flutter/Dart
+.dart_tool/
+.buildlog/
+.packages
+.pub-cache/
+.pub/
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.log
+
+# Build outputs
+build/
+ios/Flutter/Flutter.podspec
+ios/Pods/
+ios/Runner.xcworkspace/
+ios/Flutter/Generated.xcconfig
+android/.gradle/
+android/app/build/
+*.apk
+*.aab
+*.ipa
+
+# MacOS
+.DS_Store
+
+# Keys and secrets
+*.jks
+*.keystore
+*.env
+lib/core/config/*.dart
+
+# Generated plugin registrant files
+generated_plugin_registrant.dart
+
+# IntelliJ / VSCode
+*.swp
+*.lock
