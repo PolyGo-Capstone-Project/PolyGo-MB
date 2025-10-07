@@ -1,9 +1,15 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../core/api/api_client.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../data/models/auth/login_request.dart';
+import '../../../data/repositories/auth_repository.dart';
+import '../../../data/services/auth_service.dart';
 import '../../../routes/app_routes.dart';
-import '../../../../core/utils/responsive.dart'; // import responsive helper
+import '../../../../core/utils/responsive.dart';
 
 class LoginForm extends StatefulWidget {
   final bool isTablet;
@@ -28,11 +34,33 @@ class _LoginFormState extends State<LoginForm> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isLoading = false);
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Login successful!')));
+    try {
+      final req = LoginRequest(
+        mail: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      final repo = AuthRepository(AuthService(ApiClient()));
+      final token = await repo.login(req);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', token);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login successful!')),
+      );
+
+      Navigator.pushNamed(context, AppRoutes.home);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: ${e.toString()}')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -42,7 +70,6 @@ class _LoginFormState extends State<LoginForm> {
     final loc = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // --- Max width container ---
     final containerWidth = screenWidth < 500
         ? screenWidth * 0.9
         : screenWidth < 800
@@ -88,15 +115,15 @@ class _LoginFormState extends State<LoginForm> {
                 loc.translate("login_title"),
                 textAlign: TextAlign.center,
                 style: t.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: st(context, 24)),
+                    fontWeight: FontWeight.bold, fontSize: st(context, 24)),
               ),
               SizedBox(height: sh(context, 6)),
               Text(
                 loc.translate("login_subtitle"),
                 textAlign: TextAlign.center,
                 style: t.bodyMedium?.copyWith(
-                    color: theme.colorScheme.outline, fontSize: st(context, 14)),
+                    color: theme.colorScheme.outline,
+                    fontSize: st(context, 14)),
               ),
               SizedBox(height: sh(context, 32)),
 
@@ -115,7 +142,7 @@ class _LoginFormState extends State<LoginForm> {
                   ),
                 ),
                 validator: (v) =>
-                (v == null || !v.contains('@')) ? "Invalid email" : null,
+                (v == null || !v.contains('@')) ? loc.translate("invalid_email") : null,
               ),
               SizedBox(height: sh(context, 16)),
 
@@ -141,7 +168,7 @@ class _LoginFormState extends State<LoginForm> {
                   ),
                 ),
                 validator: (v) =>
-                (v == null || v.length < 6) ? "Min 6 characters" : null,
+                (v == null || v.length < 6) ? loc.translate("min_6_char") : null,
               ),
               SizedBox(height: sh(context, 12)),
 
@@ -164,36 +191,31 @@ class _LoginFormState extends State<LoginForm> {
                       ],
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      loc.translate("forgot_password"),
-                      style: TextStyle(
-                          color: const Color(0xFF2563EB),
-                          fontSize: st(context, 14)),
-                    ),
+                  AppButton(
+                    text: loc.translate("forgot_password"),
+                    variant: ButtonVariant.link,
+                    size: ButtonSize.sm,
+                    onPressed: () {
+                      Navigator.pushNamed(context, AppRoutes.forgetPassword);
+                    },
                   ),
                 ],
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
               ),
               SizedBox(height: sh(context, 20)),
 
-              // Login Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  padding: EdgeInsets.symmetric(vertical: sh(context, 16)),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(sw(context, 10))),
-                ),
+              // Login Button (Primary)
+              AppButton(
+                text: _isLoading
+                    ? "Logging in..."
+                    : loc.translate("login_button"),
                 onPressed: _isLoading ? null : _onSubmit,
-                child: Text(
-                  _isLoading ? "Logging in..." : loc.translate("login_button"),
-                  style: TextStyle(fontSize: st(context, 16), color: Colors.white),
-                ),
+                size: ButtonSize.lg,
+                variant: ButtonVariant.primary,
+                disabled: _isLoading,
               ),
 
-              // Divider + Google + Register
+              // Divider
               SizedBox(height: sh(context, 24)),
               Row(
                 children: [
@@ -202,37 +224,31 @@ class _LoginFormState extends State<LoginForm> {
                     padding: EdgeInsets.symmetric(horizontal: sw(context, 12)),
                     child: Text(
                       loc.translate("or_continue_with"),
-                      style: t.bodySmall
-                          ?.copyWith(color: Colors.grey, fontSize: st(context, 12)),
+                      style: t.bodySmall?.copyWith(
+                          color: Colors.grey, fontSize: st(context, 12)),
                     ),
                   ),
                   Expanded(child: Divider(thickness: 1)),
                 ],
               ),
+
+              // Google login
               SizedBox(height: sh(context, 24)),
-              OutlinedButton.icon(
+              AppButton(
+                text: loc.translate("login_google"),
+                icon: const Icon(Icons.g_mobiledata, size: 28),
+                variant: ButtonVariant.outline,
+                size: ButtonSize.lg,
                 onPressed: () {},
-                icon: Icon(Icons.g_mobiledata, size: sw(context, 28),
-                ),
-                label: Text(
-                  loc.translate("login_google"),
-                  style: TextStyle(fontSize: st(context, 16),
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: sh(context, 14)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(sw(context, 10)),
-                  ),
-                  side: const BorderSide(color: Colors.grey),
-                ),
               ),
+
+              // Signup link
               SizedBox(height: sh(context, 24)),
               Text.rich(
                 TextSpan(
                   text: loc.translate("no_account") + ' ',
-                  style: t.bodyMedium
-                      ?.copyWith(color: Colors.grey, fontSize: st(context, 14)),
+                  style: t.bodyMedium?.copyWith(
+                      color: Colors.grey, fontSize: st(context, 14)),
                   children: [
                     TextSpan(
                       text: loc.translate("signup_now"),

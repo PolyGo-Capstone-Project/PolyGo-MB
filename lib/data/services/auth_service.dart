@@ -1,33 +1,44 @@
-// core/api/auth_service.dart
 import 'package:dio/dio.dart';
 import '../../core/api/api_client.dart';
 import '../../core/config/api_constants.dart';
+import '../models/auth/register_request.dart';
+import '../models/auth/login_request.dart';
+import '../models/api_response.dart';
 
 class AuthService {
   final ApiClient apiClient;
 
   AuthService(this.apiClient);
 
-  /// Login với email + password
-  Future<String> login(String mail, String password) async {
+  /// Gửi OTP
+  Future<ApiResponse<void>> sendOtp({required String mail, int? verificationType}) async {
+    final query = <String, dynamic>{'mail': mail};
+    if (verificationType != null) query['verificationType'] = verificationType;
     try {
-      final response = await apiClient.post(
-        ApiConstants.login,
-        data: {
-          "mail": mail,
-          "password": password,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        // trả về body JSON (token hoặc thông tin user)
-        return response.data.toString();
-      } else {
-        throw Exception('Login failed: ${response.statusCode}');
-      }
+      final response = await apiClient.get(ApiConstants.sendOtp, queryParameters: query);
+      return ApiResponse.fromJson(response.data as Map<String, dynamic>, (_) => null);
     } on DioError catch (e) {
-      // Xử lý lỗi mạng hoặc server
-      throw Exception('Login error: ${e.response?.data ?? e.message}');
+      rethrow;
+    }
+  }
+
+  /// Đăng ký
+  Future<ApiResponse<void>> register(RegisterRequest req) async {
+    try {
+      final response = await apiClient.post(ApiConstants.register, data: req.toJson());
+      return ApiResponse.fromJson(response.data as Map<String, dynamic>, (_) => null);
+    } on DioError catch (e) {
+      rethrow;
+    }
+  }
+
+  /// 🔐 Đăng nhập
+  Future<ApiResponse<String>> login(LoginRequest req) async {
+    try {
+      final response = await apiClient.post(ApiConstants.login, data: req.toJson());
+      return ApiResponse.fromJson(response.data as Map<String, dynamic>, (data) => data as String);
+    } on DioError catch (e) {
+      rethrow;
     }
   }
 }
