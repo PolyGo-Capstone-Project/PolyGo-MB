@@ -2,45 +2,35 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../core/api/api_client.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../data/models/auth/register_request.dart';
-import '../../../data/repositories/auth_repository.dart';
-import '../../../data/services/auth_service.dart';
 import '../../../routes/app_routes.dart';
 import '../../../../core/utils/responsive.dart';
 
-class RegisterForm extends StatefulWidget {
+class ForgetPasswordForm extends StatefulWidget {
   final bool isTablet;
   final bool isDesktop;
 
-  const RegisterForm({super.key, this.isTablet = false, this.isDesktop = false});
+  const ForgetPasswordForm({super.key, this.isTablet = false, this.isDesktop = false});
 
   @override
-  State<RegisterForm> createState() => _RegisterFormState();
+  State<ForgetPasswordForm> createState() => _ForgetPasswordFormState();
 }
 
-class _RegisterFormState extends State<RegisterForm> {
+class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
   final _formKey = GlobalKey<FormState>();
-  bool _showPassword = false;
-  bool _showConfirmPassword = false;
-  bool _agreeTerms = false;
-  bool _isLoading = false;
 
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _otpController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  final _otpController = TextEditingController();
   bool _isSendingOtp = false;
-
-  final apiClient = ApiClient();
-  late final AuthRepository authRepository;
-
+  bool _isLoading = false;
   bool _showOtpField = false;
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
 
-  Future<void> _sendOtp() async {
+  void _sendOtp() async {
     if (_emailController.text.isEmpty || !_emailController.text.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).translate("invalid_email"))),
@@ -49,75 +39,31 @@ class _RegisterFormState extends State<RegisterForm> {
     }
 
     setState(() => _isSendingOtp = true);
+    await Future.delayed(const Duration(seconds: 2)); // Giả lập gửi OTP
+    setState(() {
+      _showOtpField = true;
+      _isSendingOtp = false;
+    });
 
-    try {
-      // Gọi API gửi OTP thật
-      await authRepository.sendOtp(
-        mail: _emailController.text.trim(),
-        verificationType: 0, // 0 là dành cho register
-      );
-
-      setState(() {
-        _showOtpField = true;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).translate("otp_sent_success")),
-        ),
-      );
-    } catch (e) {
-      print("Send OTP error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).translate("otp_sent_failed")),
-        ),
-      );
-    } finally {
-      setState(() => _isSendingOtp = false);
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context).translate("otp_sent_success"))),
+    );
   }
 
-  Future<void> _onSubmit() async {
+  void _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (!_agreeTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).translate("agree_terms_error"))),
-      );
-      return;
-    }
 
     setState(() => _isLoading = true);
-    try {
-      final req = RegisterRequest(
-        name: _nameController.text.trim(),
-        mail: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-        otp: _otpController.text.trim(),
-      );
+    await Future.delayed(const Duration(seconds: 1)); // giả lập xử lý
 
-      await authRepository.register(req);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context).translate("reset_success"))),
+    );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).translate("register_success"))),
-      );
+    if (!mounted) return;
+    Navigator.pushNamed(context, AppRoutes.login);
 
-      Navigator.pushNamed(context, AppRoutes.login);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).translate("register_failed"))),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-
-  @override
-  void initState() {
-    super.initState();
-    final authService = AuthService(apiClient);
-    authRepository = AuthRepository(authService);
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -153,7 +99,7 @@ class _RegisterFormState extends State<RegisterForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Logo
+              // Icon
               Center(
                 child: Container(
                   padding: EdgeInsets.all(sw(context, 12)),
@@ -162,7 +108,7 @@ class _RegisterFormState extends State<RegisterForm> {
                     borderRadius: BorderRadius.circular(sw(context, 12)),
                   ),
                   child: Icon(
-                    Icons.person_add_alt_1_rounded,
+                    Icons.lock_reset_rounded,
                     size: sw(context, 36),
                     color: const Color(0xFF2563EB),
                   ),
@@ -172,40 +118,25 @@ class _RegisterFormState extends State<RegisterForm> {
 
               // Title
               Text(
-                loc.translate("signup_title"),
+                loc.translate("forget_password_title"),
                 textAlign: TextAlign.center,
                 style: t.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold, fontSize: st(context, 24)),
+                  fontWeight: FontWeight.bold,
+                  fontSize: st(context, 24),
+                ),
               ),
               SizedBox(height: sh(context, 6)),
               Text(
-                loc.translate("signup_subtitle"),
+                loc.translate("forget_password_subtitle"),
                 textAlign: TextAlign.center,
                 style: t.bodyMedium?.copyWith(
-                    color: theme.colorScheme.outline,
-                    fontSize: st(context, 14)),
+                  color: theme.colorScheme.outline,
+                  fontSize: st(context, 14),
+                ),
               ),
               SizedBox(height: sh(context, 32)),
 
-              // Name
-              Text(loc.translate("full_name"),
-                  style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
-              SizedBox(height: sh(context, 8)),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  hintText: "Nguyễn Văn A",
-                  prefixIcon: Icon(Icons.person_outline, size: sw(context, 20)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(sw(context, 10)),
-                  ),
-                ),
-                validator: (v) =>
-                (v == null || v.isEmpty) ? loc.translate("null") : null,
-              ),
-              SizedBox(height: sh(context, 16)),
-
-              // Email + Gửi OTP trong cùng hàng
+              // Email + Gửi OTP
               Text(
                 loc.translate("email"),
                 style: t.labelLarge?.copyWith(fontSize: st(context, 14)),
@@ -215,65 +146,32 @@ class _RegisterFormState extends State<RegisterForm> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Ô nhập Email
                   Expanded(
                     flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            hintText: "user@example.com",
-                            prefixIcon: Icon(Icons.mail_outline, size: sw(context, 20)),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(sw(context, 10)),
-                            ),
-                            errorStyle: const TextStyle(height: 0), // ẩn chỗ trống lỗi
-                          ),
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return loc.translate("null");
-                            }
-                            if (!v.contains('@')) {
-                              return loc.translate("invalid_email");
-                            }
-                            return null;
-                          },
+                    child: TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        hintText: "user@example.com",
+                        prefixIcon: Icon(Icons.mail_outline, size: sw(context, 20)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(sw(context, 10)),
                         ),
-
-                        // Hiển thị lỗi riêng (ngoài Row, không đẩy layout)
-                        ValueListenableBuilder<TextEditingValue>(
-                          valueListenable: _emailController,
-                          builder: (context, value, _) {
-                            final text = value.text.trim();
-                            if (text.isEmpty) return const SizedBox.shrink(); // không hiển thị khi chưa nhập
-                            if (!text.contains('@')) {
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 4, left: 4),
-                                child: Text(
-                                  loc.translate("invalid_email"),
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: st(context, 12),
-                                  ),
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                      ],
+                      ),
+                      validator: (v) {
+                        if (v == null || v.isEmpty) {
+                          return loc.translate("null");
+                        }
+                        if (!v.contains('@')) {
+                          return loc.translate("invalid_email");
+                        }
+                        return null;
+                      },
                     ),
                   ),
-
                   SizedBox(width: sw(context, 8)),
-
-                  // Nút Gửi OTP
                   SizedBox(
-                    height: 56, // cố định chiều cao để không bị lệch
+                    height: 56,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2563EB),
@@ -282,9 +180,8 @@ class _RegisterFormState extends State<RegisterForm> {
                           borderRadius: BorderRadius.circular(sw(context, 10)),
                         ),
                         padding: EdgeInsets.symmetric(horizontal: sw(context, 16)),
-                        minimumSize: Size(0, 56),
                       ),
-                      onPressed: _isLoading ? null : _sendOtp,
+                      onPressed: _isSendingOtp ? null : _sendOtp,
                       child: _isSendingOtp
                           ? const SizedBox(
                         width: 16,
@@ -308,7 +205,7 @@ class _RegisterFormState extends State<RegisterForm> {
 
               SizedBox(height: sh(context, 16)),
 
-              // Ô nhập OTP (hiện ra sau khi gửi)
+              // OTP field
               if (_showOtpField) ...[
                 Text(loc.translate("enter_otp"),
                     style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
@@ -329,8 +226,8 @@ class _RegisterFormState extends State<RegisterForm> {
                 SizedBox(height: sh(context, 16)),
               ],
 
-              // Password
-              Text(loc.translate("password"),
+              // New password
+              Text(loc.translate("new_password"),
                   style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
               SizedBox(height: sh(context, 8)),
               TextFormField(
@@ -357,7 +254,7 @@ class _RegisterFormState extends State<RegisterForm> {
               SizedBox(height: sh(context, 16)),
 
               // Confirm password
-              Text(loc.translate("confirm_password"),
+              Text(loc.translate("confirm_new_password"),
                   style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
               SizedBox(height: sh(context, 8)),
               TextFormField(
@@ -380,69 +277,25 @@ class _RegisterFormState extends State<RegisterForm> {
                 validator: (v) =>
                 (v != _passwordController.text) ? loc.translate("not_match") : null,
               ),
-              SizedBox(height: sh(context, 12)),
 
-              // Agree terms
-              Row(
-                children: [
-                  Checkbox(
-                    value: _agreeTerms,
-                    onChanged: (v) => setState(() => _agreeTerms = v!),
-                  ),
-                  Expanded(
-                    child: Text(
-                      loc.translate("agree_terms"),
-                      style:
-                      t.bodyMedium?.copyWith(fontSize: st(context, 14)),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: sh(context, 20)),
+              SizedBox(height: sh(context, 24)),
 
-              // Register Button (AppButton)
+              // Reset button
               AppButton(
                 text: _isLoading
-                    ? loc.translate("signing_up")
-                    : loc.translate("signup_button"),
+                    ? loc.translate("resetting_password")
+                    : loc.translate("reset_password_button"),
                 onPressed: _isLoading ? null : _onSubmit,
                 size: ButtonSize.lg,
                 variant: ButtonVariant.primary,
                 disabled: _isLoading,
               ),
 
-              // Divider
-              SizedBox(height: sh(context, 24)),
-              Row(
-                children: [
-                  const Expanded(child: Divider(thickness: 1)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: sw(context, 12)),
-                    child: Text(
-                      loc.translate("or_continue_with"),
-                      style: t.bodySmall?.copyWith(
-                          color: Colors.grey, fontSize: st(context, 12)),
-                    ),
-                  ),
-                  const Expanded(child: Divider(thickness: 1)),
-                ],
-              ),
-
-              // Google signup
-              SizedBox(height: sh(context, 24)),
-              AppButton(
-                text: loc.translate("signup_google"),
-                icon: const Icon(Icons.g_mobiledata, size: 28),
-                variant: ButtonVariant.outline,
-                size: ButtonSize.lg,
-                onPressed: () {},
-              ),
-
-              // Login link
+              // Back to login link
               SizedBox(height: sh(context, 24)),
               Text.rich(
                 TextSpan(
-                  text: loc.translate("have_account") + ' ',
+                  text: loc.translate("remember_password") + ' ',
                   style: t.bodyMedium?.copyWith(
                       color: Colors.grey, fontSize: st(context, 14)),
                   children: [

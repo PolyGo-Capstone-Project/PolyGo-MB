@@ -15,6 +15,7 @@ class AppLocalizations {
   }
 
   Future<bool> load() async {
+    print('🔵 Loading localization for: ${locale.languageCode}');
     final String jsonString =
     await rootBundle.loadString('lib/core/localization/${locale.languageCode}/auth.json');
     Map<String, dynamic> jsonMap = json.decode(jsonString);
