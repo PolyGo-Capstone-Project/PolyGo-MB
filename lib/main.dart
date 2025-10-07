@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/localization/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:device_preview/device_preview.dart';
@@ -26,13 +27,39 @@ class _MyAppState extends State<MyApp> {
   Locale _locale = const Locale('en');
   ThemeMode _themeMode = ThemeMode.system;
 
-  void _setLocale(Locale locale) {
-    print('🟢 Locale changing to: ${locale.languageCode}');
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _setLocale(Locale locale) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('locale', locale.languageCode);
     setState(() => _locale = locale);
   }
 
-  void _setThemeMode(ThemeMode mode) {
+  Future<void> _setThemeMode(ThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('themeMode', mode.name);
     setState(() => _themeMode = mode);
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Language
+    final langCode = prefs.getString('locale') ?? 'en';
+    _locale = Locale(langCode);
+
+    // Theme mode
+    final themeString = prefs.getString('themeMode') ?? 'system';
+    _themeMode = ThemeMode.values.firstWhere(
+          (e) => e.name == themeString,
+      orElse: () => ThemeMode.system,
+    );
+
+    if (mounted) setState(() {});
   }
 
   @override

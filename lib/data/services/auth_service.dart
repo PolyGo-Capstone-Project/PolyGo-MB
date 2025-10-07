@@ -4,6 +4,7 @@ import '../../core/config/api_constants.dart';
 import '../models/auth/register_request.dart';
 import '../models/auth/login_request.dart';
 import '../models/api_response.dart';
+import '../models/auth/reset_password_request.dart';
 
 class AuthService {
   final ApiClient apiClient;
@@ -32,11 +33,21 @@ class AuthService {
     }
   }
 
-  /// 🔐 Đăng nhập
+  /// Đăng nhập
   Future<ApiResponse<String>> login(LoginRequest req) async {
     try {
       final response = await apiClient.post(ApiConstants.login, data: req.toJson());
       return ApiResponse.fromJson(response.data as Map<String, dynamic>, (data) => data as String);
+    } on DioError catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Reset password bằng mail + otp + password mới
+  Future<ApiResponse<void>> resetPassword(ResetPasswordRequest req) async {
+    try {
+      final response = await apiClient.post(ApiConstants.resetPassword, data: req.toJson());
+      return ApiResponse.fromJson(response.data as Map<String, dynamic>, (_) => null);
     } on DioError catch (e) {
       rethrow;
     }

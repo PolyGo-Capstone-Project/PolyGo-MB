@@ -2,7 +2,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../core/api/api_client.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../data/models/auth/reset_password_request.dart';
+import '../../../data/repositories/auth_repository.dart';
+import '../../../data/services/auth_service.dart';
 import '../../../routes/app_routes.dart';
 import '../../../../core/utils/responsive.dart';
 
@@ -14,6 +18,7 @@ class ForgetPasswordForm extends StatefulWidget {
 
   @override
   State<ForgetPasswordForm> createState() => _ForgetPasswordFormState();
+
 }
 
 class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
@@ -30,7 +35,17 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
   bool _showPassword = false;
   bool _showConfirmPassword = false;
 
-  void _sendOtp() async {
+  late final AuthRepository _authRepository;
+  final apiClient = ApiClient();
+
+  @override
+  void initState() {
+    super.initState();
+    final authService = AuthService(apiClient);
+    _authRepository = AuthRepository(authService);
+  }
+
+  Future<void> _sendOtp() async {
     if (_emailController.text.isEmpty || !_emailController.text.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).translate("invalid_email"))),
@@ -39,31 +54,52 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
     }
 
     setState(() => _isSendingOtp = true);
-    await Future.delayed(const Duration(seconds: 2)); // Giả lập gửi OTP
-    setState(() {
-      _showOtpField = true;
-      _isSendingOtp = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context).translate("otp_sent_success"))),
-    );
+    try {
+      await _authRepository.sendOtp(
+        mail: _emailController.text.trim(),
+        verificationType: 1, // 1 = reset password
+      );
+      setState(() => _showOtpField = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).translate("otp_sent_success"))),
+      );
+    } catch (e) {
+      print("Send OTP error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).translate("otp_sent_failed"))),
+      );
+    } finally {
+      setState(() => _isSendingOtp = false);
+    }
   }
 
-  void _onSubmit() async {
+  Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1)); // giả lập xử lý
+    try {
+      final req = ResetPasswordRequest(
+        mail: _emailController.text.trim(),
+        otp: _otpController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context).translate("reset_success"))),
-    );
+      await _authRepository.resetPassword(req);
 
-    if (!mounted) return;
-    Navigator.pushNamed(context, AppRoutes.login);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).translate("reset_success"))),
+      );
 
-    setState(() => _isLoading = false);
+      if (!mounted) return;
+      Navigator.pushNamed(context, AppRoutes.login);
+    } catch (e) {
+      print("Reset password error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).translate("reset_failed"))),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override

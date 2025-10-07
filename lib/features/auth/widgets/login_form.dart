@@ -56,7 +56,7 @@ class _LoginFormState extends State<LoginForm> {
       Navigator.pushNamed(context, AppRoutes.home);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: ${e.toString()}')),
+        SnackBar(content: Text('login_failed')),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);

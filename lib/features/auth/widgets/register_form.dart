@@ -112,7 +112,6 @@ class _RegisterFormState extends State<RegisterForm> {
     }
   }
 
-
   @override
   void initState() {
     super.initState();
