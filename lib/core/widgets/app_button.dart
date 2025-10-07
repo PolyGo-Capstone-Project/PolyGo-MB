@@ -22,7 +22,6 @@ class AppButton extends StatelessWidget {
     this.disabled = false,
   });
 
-  // ✅ Mapping kích thước
   double get _height {
     switch (size) {
       case ButtonSize.sm:
@@ -59,7 +58,6 @@ class AppButton extends StatelessWidget {
     }
   }
 
-  // ✅ Màu nền theo variant
   Color _backgroundColor(BuildContext context) {
     final c = Theme.of(context).colorScheme;
     switch (variant) {
@@ -77,18 +75,21 @@ class AppButton extends StatelessWidget {
   }
 
   Color _textColor(BuildContext context) {
-    final c = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final c = theme.colorScheme;
+
     switch (variant) {
       case ButtonVariant.primary:
-        return c.onPrimary;
+        return isDark ? Colors.white : c.onPrimary;
       case ButtonVariant.secondary:
-        return c.onSecondaryContainer;
+        return isDark ? Colors.white : c.onSecondaryContainer;
       case ButtonVariant.destructive:
         return Colors.white;
       case ButtonVariant.outline:
       case ButtonVariant.ghost:
       case ButtonVariant.link:
-        return c.primary;
+        return isDark ? Colors.white : c.primary;
     }
   }
 

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/app_header_actions.dart';
-import '../widgets/register_form.dart';
+import '../widgets/forget_password_form.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class ForgetPasswordScreen extends StatefulWidget {
+  const ForgetPasswordScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<ForgetPasswordScreen> createState() => _ForgetPasswordScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   ThemeMode _themeMode = ThemeMode.system;
 
   void _toggleTheme() {
@@ -44,24 +44,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: EdgeInsets.all(
-                  isDesktop ? 32 : isTablet ? 24 : 16,
-                ),
+                padding: EdgeInsets.all(isDesktop
+                    ? 32
+                    : isTablet
+                    ? 24
+                    : 16),
                 child: AppHeaderActions(onThemeToggle: _toggleTheme),
               ),
             ),
 
-            // Register form
+            // Login form
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 64 : isTablet ? 48 : 24,
-                    vertical: isDesktop ? 64 : isTablet ? 48 : 32,
+                    horizontal: isDesktop
+                        ? 64
+                        : isTablet
+                        ? 48
+                        : 24,
+                    vertical: isDesktop
+                        ? 64
+                        : isTablet
+                        ? 48
+                        : 32,
                   ),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: maxFormWidth),
-                    child: RegisterForm(
+                    child: ForgetPasswordForm(
                       isTablet: isTablet,
                       isDesktop: isDesktop,
                     ),

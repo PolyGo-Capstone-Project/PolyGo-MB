@@ -1,12 +1,19 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/localization/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:device_preview/device_preview.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/size_config.dart';
 import 'routes/app_routes.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    DevicePreview(
+    enabled: true,
+    builder: (context) => const MyApp(),
+  ),);
 }
 
 class MyApp extends StatefulWidget {
@@ -19,24 +26,59 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Locale _locale = const Locale('en');
   ThemeMode _themeMode = ThemeMode.system;
+  String? _token;
 
-  void _setLocale(Locale locale) {
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _setLocale(Locale locale) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('locale', locale.languageCode);
     setState(() => _locale = locale);
   }
 
-  void _setThemeMode(ThemeMode mode) {
+  Future<void> _setThemeMode(ThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('themeMode', mode.name);
     setState(() => _themeMode = mode);
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Language
+    final langCode = prefs.getString('locale') ?? 'en';
+    _locale = Locale(langCode);
+
+    // Theme mode
+    final themeString = prefs.getString('themeMode') ?? 'system';
+    _themeMode = ThemeMode.values.firstWhere(
+          (e) => e.name == themeString,
+      orElse: () => ThemeMode.system,
+    );
+
+    // token
+    _token = prefs.getString('token');
+
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig.init(context);
+
+    final initialRoute = _token != null ? AppRoutes.userInfo : AppRoutes.login;
+
     return MaterialApp(
       title: 'PolyGo App',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: _themeMode,
-      initialRoute: AppRoutes.login,
+      initialRoute: initialRoute,
       onGenerateRoute: AppRoutes.generateRoute,
       locale: _locale,
       supportedLocales: const [

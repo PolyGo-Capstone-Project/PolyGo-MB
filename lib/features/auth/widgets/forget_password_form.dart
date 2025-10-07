@@ -6,52 +6,51 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../data/models/auth/register_request.dart';
+import '../../../data/models/auth/reset_password_request.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../routes/app_routes.dart';
 import '../../../../core/utils/responsive.dart';
 
-class RegisterForm extends StatefulWidget {
+class ForgetPasswordForm extends StatefulWidget {
   final bool isTablet;
   final bool isDesktop;
 
-  const RegisterForm({super.key, this.isTablet = false, this.isDesktop = false});
+  const ForgetPasswordForm({super.key, this.isTablet = false, this.isDesktop = false});
 
   @override
-  State<RegisterForm> createState() => _RegisterFormState();
+  State<ForgetPasswordForm> createState() => _ForgetPasswordFormState();
+
 }
 
-class _RegisterFormState extends State<RegisterForm> {
+class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
   final _formKey = GlobalKey<FormState>();
-  bool _showPassword = false;
-  bool _showConfirmPassword = false;
-  bool _agreeTerms = false;
-  bool _isLoading = false;
 
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _otpController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _otpController = TextEditingController();
 
   bool _isSendingOtp = false;
+  bool _isLoading = false;
   bool _showOtpField = false;
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
 
-  String? _otpMessage;
-  bool _otpSuccess = false;
+  String? _otpMessage; // thông báo OTP
+  bool _otpSuccess = false; // để xác định màu
 
   int _otpCountdown = 0;
   Timer? _otpTimer;
 
+  late final AuthRepository _authRepository;
   final apiClient = ApiClient();
-  late final AuthRepository authRepository;
 
   @override
   void initState() {
     super.initState();
     final authService = AuthService(apiClient);
-    authRepository = AuthRepository(authService);
+    _authRepository = AuthRepository(authService);
   }
 
   @override
@@ -62,7 +61,7 @@ class _RegisterFormState extends State<RegisterForm> {
 
   void _startOtpCountdown() {
     setState(() => _otpCountdown = 90);
-    _otpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _otpTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (_otpCountdown == 0) {
         timer.cancel();
       } else {
@@ -86,9 +85,9 @@ class _RegisterFormState extends State<RegisterForm> {
     });
 
     try {
-      await authRepository.sendOtp(
+      await _authRepository.sendOtp(
         mail: _emailController.text.trim(),
-        verificationType: 0, // 0 = register
+        verificationType: 1,
       );
       setState(() {
         _showOtpField = true;
@@ -106,6 +105,39 @@ class _RegisterFormState extends State<RegisterForm> {
     }
   }
 
+  Future<void> _onSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final req = ResetPasswordRequest(
+        mail: _emailController.text.trim(),
+        otp: _otpController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      await _authRepository.resetPassword(req);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(AppLocalizations.of(context).translate("reset_success"))),
+      );
+
+      if (!mounted) return;
+      Navigator.pushNamed(context, AppRoutes.login);
+    } catch (e) {
+      print("Reset password error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            backgroundColor: Colors.red,
+            content: Text(AppLocalizations.of(context).translate("reset_failed"))),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   String? _passwordValidator(String? v) {
     final loc = AppLocalizations.of(context);
     if (v == null || v.isEmpty) return AppLocalizations.of(context).translate("null");
@@ -119,45 +151,6 @@ class _RegisterFormState extends State<RegisterForm> {
     return null;
   }
 
-  Future<void> _onSubmit() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (!_agreeTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).translate("agree_terms_error"))),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-    try {
-      final req = RegisterRequest(
-        name: _nameController.text.trim(),
-        mail: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-        otp: _otpController.text.trim(),
-      );
-
-      await authRepository.register(req);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            backgroundColor: Colors.green,
-            content: Text(AppLocalizations.of(context).translate("register_success"))),
-      );
-
-      if (!mounted) return;
-      Navigator.pushNamed(context, AppRoutes.login);
-    } catch (e) {
-      print("Register error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            backgroundColor: Colors.red,
-            content: Text(AppLocalizations.of(context).translate("register_failed"))),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +185,7 @@ class _RegisterFormState extends State<RegisterForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Logo
+              // Icon
               Center(
                 child: Container(
                   padding: EdgeInsets.all(sw(context, 12)),
@@ -201,7 +194,7 @@ class _RegisterFormState extends State<RegisterForm> {
                     borderRadius: BorderRadius.circular(sw(context, 12)),
                   ),
                   child: Icon(
-                    Icons.person_add_alt_1_rounded,
+                    Icons.lock_reset_rounded,
                     size: sw(context, 36),
                     color: const Color(0xFF2563EB),
                   ),
@@ -211,38 +204,23 @@ class _RegisterFormState extends State<RegisterForm> {
 
               // Title
               Text(
-                loc.translate("signup_title"),
+                loc.translate("forget_password_title"),
                 textAlign: TextAlign.center,
                 style: t.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold, fontSize: st(context, 24)),
+                  fontWeight: FontWeight.bold,
+                  fontSize: st(context, 24),
+                ),
               ),
               SizedBox(height: sh(context, 6)),
               Text(
-                loc.translate("signup_subtitle"),
+                loc.translate("forget_password_subtitle"),
                 textAlign: TextAlign.center,
                 style: t.bodyMedium?.copyWith(
-                    color: theme.colorScheme.outline,
-                    fontSize: st(context, 14)),
+                  color: theme.colorScheme.outline,
+                  fontSize: st(context, 14),
+                ),
               ),
               SizedBox(height: sh(context, 32)),
-
-              // Name
-              Text(loc.translate("full_name"),
-                  style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
-              SizedBox(height: sh(context, 8)),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  hintText: "Nguyễn Văn A",
-                  prefixIcon: Icon(Icons.person_outline, size: sw(context, 20)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(sw(context, 10)),
-                  ),
-                ),
-                validator: (v) =>
-                (v == null || v.isEmpty) ? loc.translate("null") : null,
-              ),
-              SizedBox(height: sh(context, 16)),
 
               // Email + Gửi OTP
               Text(
@@ -250,38 +228,26 @@ class _RegisterFormState extends State<RegisterForm> {
                 style: t.labelLarge?.copyWith(fontSize: st(context, 14)),
               ),
               SizedBox(height: sh(context, 8)),
-
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            hintText: "user@example.com",
-                            prefixIcon: Icon(Icons.mail_outline, size: sw(context, 20)),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(sw(context, 10)),
-                            ),
-                            errorStyle: const TextStyle(height: 0),
-                          ),
+                    child: TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        hintText: "user@example.com",
+                        prefixIcon: Icon(Icons.mail_outline, size: sw(context, 20)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(sw(context, 10)),
                         ),
-                        if (_otpMessage != null) ...[
-                          SizedBox(height: sh(context, 4)),
-                          Text(
-                            _otpMessage!,
-                            style: TextStyle(
-                              color: _otpSuccess ? Colors.green : Colors.red,
-                              fontSize: st(context, 12),
-                            ),
-                          ),
-                        ]
-                      ],
+                      ),
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return loc.translate("null");
+                        if (!v.contains('@')) return loc.translate("invalid_email");
+                        return null;
+                      },
                     ),
                   ),
                   SizedBox(width: sw(context, 8)),
@@ -301,28 +267,35 @@ class _RegisterFormState extends State<RegisterForm> {
                           ? const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                           : Text(
-                        _otpCountdown > 0
-                            ? "Resend in $_otpCountdown s"
-                            : loc.translate("send_otp"),
-                        style: TextStyle(
-                          fontSize: st(context, 14),
-                          fontWeight: FontWeight.w600,
-                        ),
+                        _otpCountdown > 0 ? "Resend in $_otpCountdown s" : loc.translate("send_otp"),
+                        style: TextStyle(fontSize: st(context, 14), fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
                 ],
               ),
+
+              if (_otpMessage != null) ...[
+                SizedBox(height: sh(context, 4)),
+                Text(
+                  _otpMessage!,
+                  style: TextStyle(
+                    color: _otpSuccess ? Colors.green : Colors.red,
+                    fontSize: st(context, 12),
+                  ),
+                ),
+              ],
+
               SizedBox(height: sh(context, 16)),
 
-              // Ô nhập OTP
+              // OTP field
               if (_showOtpField) ...[
+                Text(loc.translate("enter_otp"),
+                    style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
+                SizedBox(height: sh(context, 8)),
                 TextFormField(
                   controller: _otpController,
                   keyboardType: TextInputType.number,
@@ -333,13 +306,14 @@ class _RegisterFormState extends State<RegisterForm> {
                       borderRadius: BorderRadius.circular(sw(context, 10)),
                     ),
                   ),
-                  validator: (v) => (v == null || v.isEmpty) ? loc.translate("null") : null,
+                  validator: (v) =>
+                  (v == null || v.isEmpty) ? loc.translate("null") : null,
                 ),
                 SizedBox(height: sh(context, 16)),
               ],
 
-              // Password
-              Text(loc.translate("password"),
+              // New password
+              Text(loc.translate("new_password"),
                   style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
               SizedBox(height: sh(context, 8)),
               TextFormField(
@@ -358,12 +332,12 @@ class _RegisterFormState extends State<RegisterForm> {
                     borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                 ),
-                validator: _passwordValidator,
+                validator: _passwordValidator, // <-- dùng validator mới
               ),
               SizedBox(height: sh(context, 16)),
 
               // Confirm password
-              Text(loc.translate("confirm_password"),
+              Text(loc.translate("confirm_new_password"),
                   style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
               SizedBox(height: sh(context, 8)),
               TextFormField(
@@ -386,69 +360,25 @@ class _RegisterFormState extends State<RegisterForm> {
                 validator: (v) =>
                 (v != _passwordController.text) ? loc.translate("not_match") : null,
               ),
-              SizedBox(height: sh(context, 12)),
 
-              // Agree terms
-              Row(
-                children: [
-                  Checkbox(
-                    value: _agreeTerms,
-                    onChanged: (v) => setState(() => _agreeTerms = v!),
-                  ),
-                  Expanded(
-                    child: Text(
-                      loc.translate("agree_terms"),
-                      style:
-                      t.bodyMedium?.copyWith(fontSize: st(context, 14)),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: sh(context, 20)),
+              SizedBox(height: sh(context, 24)),
 
-              // Register Button (AppButton)
+              // Reset button
               AppButton(
                 text: _isLoading
-                    ? loc.translate("signing_up")
-                    : loc.translate("signup_button"),
+                    ? loc.translate("resetting_password")
+                    : loc.translate("reset_password_button"),
                 onPressed: _isLoading ? null : _onSubmit,
                 size: ButtonSize.lg,
                 variant: ButtonVariant.primary,
                 disabled: _isLoading,
               ),
 
-              // Divider
-              SizedBox(height: sh(context, 24)),
-              Row(
-                children: [
-                  const Expanded(child: Divider(thickness: 1)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: sw(context, 12)),
-                    child: Text(
-                      loc.translate("or_continue_with"),
-                      style: t.bodySmall?.copyWith(
-                          color: Colors.grey, fontSize: st(context, 12)),
-                    ),
-                  ),
-                  const Expanded(child: Divider(thickness: 1)),
-                ],
-              ),
-
-              // Google signup
-              SizedBox(height: sh(context, 24)),
-              AppButton(
-                text: loc.translate("signup_google"),
-                icon: const Icon(Icons.g_mobiledata, size: 28),
-                variant: ButtonVariant.outline,
-                size: ButtonSize.lg,
-                onPressed: () {},
-              ),
-
-              // Login link
+              // Back to login link
               SizedBox(height: sh(context, 24)),
               Text.rich(
                 TextSpan(
-                  text: loc.translate("have_account"),
+                  text: loc.translate("remember_password") + ' ',
                   style: t.bodyMedium?.copyWith(
                       color: Colors.grey, fontSize: st(context, 14)),
                   children: [

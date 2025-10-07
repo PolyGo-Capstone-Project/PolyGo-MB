@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/register_screen.dart';
+import '../features/auth/screens/forget_password_screen.dart';
+import '../features/profile/screens/user_info_screen.dart';
+import '../features/shared/temp.dart';
 
 class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
+  static const String home = '/home';
+  static const String forgetPassword = '/forget-password';
+  static const String userInfo = '/user-information';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -12,6 +18,12 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
+      case home:
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case forgetPassword:
+        return MaterialPageRoute(builder: (_) => const ForgetPasswordScreen());
+      case userInfo:
+        return MaterialPageRoute(builder: (_) => const UserInfoScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(

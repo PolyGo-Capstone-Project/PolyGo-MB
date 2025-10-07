@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../core/widgets/app_dropdown.dart';
 import '../../../main.dart';
 
 class AppHeaderActions extends StatelessWidget {
@@ -16,85 +17,48 @@ class AppHeaderActions extends StatelessWidget {
     final lang = inherited.locale.languageCode;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
     final loc = AppLocalizations.of(context);
+    final inheritedTheme = InheritedThemeMode.of(context);
 
-    Widget buildPopupItem(String value, String label, bool selected) {
-      return Row(
-        children: [
-          if (selected)
-            const Icon(Icons.check, size: 18)
-          else
-            const SizedBox(width: 18),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: selected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurface,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ],
-      );
-    }
+    final languageItems = ['English', 'Tiếng Việt'];
+    final currentLangLabel = lang == 'vi' ? 'Tiếng Việt' : 'English';
+
+    final themeItems = [
+      loc.translate('light_mode'),
+      loc.translate('dark_mode')
+    ];
+    final currentThemeLabel = isDark
+        ? loc.translate('dark_mode')
+        : loc.translate('light_mode');
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // --- Language Icon + Popup ---
-        PopupMenuButton<String>(
-          tooltip: loc.translate('login_title'),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          position: PopupMenuPosition.under,
-          color: Theme.of(context).colorScheme.surface,
-          offset: const Offset(0, 8),
-          icon: const Icon(Icons.language),
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'en',
-              child: buildPopupItem('en', 'English', lang == 'en'),
-            ),
-            PopupMenuItem(
-              value: 'vi',
-              child: buildPopupItem('vi', 'Tiếng Việt', lang == 'vi'),
-            ),
-          ],
+        AppDropdown(
+          icon: Icons.language,
+          currentValue: currentLangLabel,
+          items: languageItems,
           onSelected: (value) {
-            inherited.setLocale(Locale(value));
+            final newLang = (value == 'Tiếng Việt') ? 'vi' : 'en';
+            if (newLang != lang) {
+              inherited.setLocale(Locale(newLang));
+            }
           },
         ),
         const SizedBox(width: 12),
 
-        // --- Theme Icon + Popup ---
-        PopupMenuButton<String>(
-          tooltip: loc.translate('login_title'),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          position: PopupMenuPosition.under,
-          color: Theme.of(context).colorScheme.surface,
-          offset: const Offset(0, 8),
-          icon: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'light',
-              child: buildPopupItem('light', loc.translate('light_mode'), !isDark),
-            ),
-            PopupMenuItem(
-              value: 'dark',
-              child: buildPopupItem('dark', loc.translate('dark_mode'), isDark),
-            ),
-          ],
+        AppDropdown(
+          icon: isDark ? Icons.nightlight_round : Icons.wb_sunny_outlined,
+          currentValue: currentThemeLabel,
+          items: themeItems,
           onSelected: (value) {
-            final inheritedTheme = InheritedThemeMode.of(context);
-            if (value == 'dark') {
+            if (value == loc.translate('dark_mode')) {
               inheritedTheme.setThemeMode(ThemeMode.dark);
             } else {
               inheritedTheme.setThemeMode(ThemeMode.light);
             }
           },
         ),
-
       ],
     );
   }
