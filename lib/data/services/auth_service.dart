@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../../core/api/api_client.dart';
 import '../../core/config/api_constants.dart';
+import '../models/auth/me_response.dart';
 import '../models/auth/register_request.dart';
 import '../models/auth/login_request.dart';
 import '../models/api_response.dart';
@@ -12,13 +13,19 @@ class AuthService {
   AuthService(this.apiClient);
 
   /// Gửi OTP
-  Future<ApiResponse<void>> sendOtp({required String mail, int? verificationType}) async {
-    final query = <String, dynamic>{'mail': mail};
-    if (verificationType != null) query['verificationType'] = verificationType;
+  Future<ApiResponse<void>> sendOtp({
+    required String mail,
+    required int verificationType,
+  }) async {
     try {
-      final response = await apiClient.get(ApiConstants.sendOtp, queryParameters: query);
-      return ApiResponse.fromJson(response.data as Map<String, dynamic>, (_) => null);
+      final url = '${ApiConstants.sendOtp}?mail=$mail&verificationType=$verificationType';
+      final response = await apiClient.post(url);
+      final json = response.data as Map<String, dynamic>;
+      return ApiResponse.fromJson(json, (_) => null);
     } on DioError catch (e) {
+      if (e.response != null) {
+        print('Send OTP error response: ${e.response?.data}');
+      }
       rethrow;
     }
   }
@@ -37,7 +44,8 @@ class AuthService {
   Future<ApiResponse<String>> login(LoginRequest req) async {
     try {
       final response = await apiClient.post(ApiConstants.login, data: req.toJson());
-      return ApiResponse.fromJson(response.data as Map<String, dynamic>, (data) => data as String);
+      final json = response.data as Map<String, dynamic>;
+      return ApiResponse.fromJson(json, (data) => data.toString());
     } on DioError catch (e) {
       rethrow;
     }
@@ -48,6 +56,21 @@ class AuthService {
     try {
       final response = await apiClient.post(ApiConstants.resetPassword, data: req.toJson());
       return ApiResponse.fromJson(response.data as Map<String, dynamic>, (_) => null);
+    } on DioError catch (e) {
+      rethrow;
+    }
+  }
+
+  /// User info
+  Future<ApiResponse<MeResponse>> me(String token) async {
+    try {
+      final response = await apiClient.get(
+        ApiConstants.me,
+        headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
+      );
+
+      final json = response.data as Map<String, dynamic>;
+      return ApiResponse.fromJson(json, (data) => MeResponse.fromJson(data));
     } on DioError catch (e) {
       rethrow;
     }

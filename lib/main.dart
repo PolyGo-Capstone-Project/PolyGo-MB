@@ -26,6 +26,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Locale _locale = const Locale('en');
   ThemeMode _themeMode = ThemeMode.system;
+  String? _token;
 
   @override
   void initState() {
@@ -59,19 +60,25 @@ class _MyAppState extends State<MyApp> {
       orElse: () => ThemeMode.system,
     );
 
+    // token
+    _token = prefs.getString('token');
+
     if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
+
+    final initialRoute = _token != null ? AppRoutes.userInfo : AppRoutes.login;
+
     return MaterialApp(
       title: 'PolyGo App',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: _themeMode,
-      initialRoute: AppRoutes.login,
+      initialRoute: initialRoute,
       onGenerateRoute: AppRoutes.generateRoute,
       locale: _locale,
       supportedLocales: const [

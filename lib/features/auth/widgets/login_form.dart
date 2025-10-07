@@ -48,15 +48,21 @@ class _LoginFormState extends State<LoginForm> {
       await prefs.setString('token', token);
 
       if (!mounted) return;
-
+      final loc = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful!')),
+        SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(loc.translate("login_success"))),
       );
 
-      Navigator.pushNamed(context, AppRoutes.home);
+      Navigator.pushNamed(context, AppRoutes.userInfo);
     } catch (e) {
+      final loc = AppLocalizations.of(context);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('login_failed')),
+        SnackBar(
+            backgroundColor: Colors.red,
+            content: Text(loc.translate("login_failed"))),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -174,6 +180,7 @@ class _LoginFormState extends State<LoginForm> {
 
               // Remember me / Forgot password
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Flexible(
                     child: Row(
@@ -200,7 +207,6 @@ class _LoginFormState extends State<LoginForm> {
                     },
                   ),
                 ],
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
               ),
               SizedBox(height: sh(context, 20)),
 

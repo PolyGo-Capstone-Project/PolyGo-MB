@@ -16,11 +16,24 @@ class AppLocalizations {
 
   Future<bool> load() async {
     print('🔵 Loading localization for: ${locale.languageCode}');
-    final String jsonString =
-    await rootBundle.loadString('lib/core/localization/${locale.languageCode}/auth.json');
-    Map<String, dynamic> jsonMap = json.decode(jsonString);
 
-    _localizedStrings = jsonMap.map((key, value) => MapEntry(key, value.toString()));
+    // Danh sách file
+    final files = [
+      'auth.json',
+      'profile.json',
+    ];
+
+    _localizedStrings = {};
+
+    for (var file in files) {
+      final String jsonString =
+      await rootBundle.loadString('lib/core/localization/${locale.languageCode}/$file');
+      final Map<String, dynamic> jsonMap = json.decode(jsonString);
+
+      // Merge vào _localizedStrings
+      _localizedStrings.addAll(jsonMap.map((key, value) => MapEntry(key, value.toString())));
+    }
+
     return true;
   }
 

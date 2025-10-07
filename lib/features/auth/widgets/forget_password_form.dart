@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -35,6 +37,12 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
   bool _showPassword = false;
   bool _showConfirmPassword = false;
 
+  String? _otpMessage; // thông báo OTP
+  bool _otpSuccess = false; // để xác định màu
+
+  int _otpCountdown = 0;
+  Timer? _otpTimer;
+
   late final AuthRepository _authRepository;
   final apiClient = ApiClient();
 
@@ -45,29 +53,53 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
     _authRepository = AuthRepository(authService);
   }
 
+  @override
+  void dispose() {
+    _otpTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startOtpCountdown() {
+    setState(() => _otpCountdown = 90);
+    _otpTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_otpCountdown == 0) {
+        timer.cancel();
+      } else {
+        setState(() => _otpCountdown--);
+      }
+    });
+  }
+
   Future<void> _sendOtp() async {
     if (_emailController.text.isEmpty || !_emailController.text.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).translate("invalid_email"))),
-      );
+      setState(() {
+        _otpMessage = AppLocalizations.of(context).translate("invalid_email");
+        _otpSuccess = false;
+      });
       return;
     }
 
-    setState(() => _isSendingOtp = true);
+    setState(() {
+      _isSendingOtp = true;
+      _otpMessage = null;
+    });
+
     try {
       await _authRepository.sendOtp(
         mail: _emailController.text.trim(),
-        verificationType: 1, // 1 = reset password
+        verificationType: 1,
       );
-      setState(() => _showOtpField = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).translate("otp_sent_success"))),
-      );
+      setState(() {
+        _showOtpField = true;
+        _otpMessage = AppLocalizations.of(context).translate("otp_sent_success");
+        _otpSuccess = true;
+      });
+      _startOtpCountdown();
     } catch (e) {
-      print("Send OTP error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).translate("otp_sent_failed"))),
-      );
+      setState(() {
+        _otpMessage = AppLocalizations.of(context).translate("otp_sent_failed");
+        _otpSuccess = false;
+      });
     } finally {
       setState(() => _isSendingOtp = false);
     }
@@ -87,7 +119,9 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
       await _authRepository.resetPassword(req);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).translate("reset_success"))),
+        SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(AppLocalizations.of(context).translate("reset_success"))),
       );
 
       if (!mounted) return;
@@ -95,12 +129,28 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
     } catch (e) {
       print("Reset password error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).translate("reset_failed"))),
+        SnackBar(
+            backgroundColor: Colors.red,
+            content: Text(AppLocalizations.of(context).translate("reset_failed"))),
       );
     } finally {
       setState(() => _isLoading = false);
     }
   }
+
+  String? _passwordValidator(String? v) {
+    final loc = AppLocalizations.of(context);
+    if (v == null || v.isEmpty) return AppLocalizations.of(context).translate("null");
+    if (v.length < 6) return AppLocalizations.of(context).translate("min_6_char");
+    final upperCase = RegExp(r'[A-Z]');
+    final number = RegExp(r'\d');
+    final special = RegExp(r'[!@#$%^&*(),.?":{}|<>]');
+    if (!upperCase.hasMatch(v)) return loc.translate("min_6_char");
+    if (!number.hasMatch(v)) return loc.translate("min_6_char");
+    if (!special.hasMatch(v)) return loc.translate("min_6_char");
+    return null;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +228,6 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
                 style: t.labelLarge?.copyWith(fontSize: st(context, 14)),
               ),
               SizedBox(height: sh(context, 8)),
-
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -195,12 +244,8 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
                         ),
                       ),
                       validator: (v) {
-                        if (v == null || v.isEmpty) {
-                          return loc.translate("null");
-                        }
-                        if (!v.contains('@')) {
-                          return loc.translate("invalid_email");
-                        }
+                        if (v == null || v.isEmpty) return loc.translate("null");
+                        if (!v.contains('@')) return loc.translate("invalid_email");
                         return null;
                       },
                     ),
@@ -210,34 +255,39 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
                     height: 56,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2563EB),
+                        backgroundColor: _otpCountdown > 0 ? Colors.grey : const Color(0xFF2563EB),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(sw(context, 10)),
                         ),
                         padding: EdgeInsets.symmetric(horizontal: sw(context, 16)),
                       ),
-                      onPressed: _isSendingOtp ? null : _sendOtp,
+                      onPressed: (_isSendingOtp || _otpCountdown > 0) ? null : _sendOtp,
                       child: _isSendingOtp
                           ? const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                           : Text(
-                        loc.translate("send_otp"),
-                        style: TextStyle(
-                          fontSize: st(context, 14),
-                          fontWeight: FontWeight.w600,
-                        ),
+                        _otpCountdown > 0 ? "Resend in $_otpCountdown s" : loc.translate("send_otp"),
+                        style: TextStyle(fontSize: st(context, 14), fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
                 ],
               ),
+
+              if (_otpMessage != null) ...[
+                SizedBox(height: sh(context, 4)),
+                Text(
+                  _otpMessage!,
+                  style: TextStyle(
+                    color: _otpSuccess ? Colors.green : Colors.red,
+                    fontSize: st(context, 12),
+                  ),
+                ),
+              ],
 
               SizedBox(height: sh(context, 16)),
 
@@ -276,16 +326,13 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
                     icon: Icon(_showPassword
                         ? Icons.visibility_off_outlined
                         : Icons.visibility_outlined),
-                    onPressed: () =>
-                        setState(() => _showPassword = !_showPassword),
+                    onPressed: () => setState(() => _showPassword = !_showPassword),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                 ),
-                validator: (v) => (v == null || v.length < 6)
-                    ? loc.translate("min_6_char")
-                    : null,
+                validator: _passwordValidator, // <-- dùng validator mới
               ),
               SizedBox(height: sh(context, 16)),
 

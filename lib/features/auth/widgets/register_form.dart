@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -31,51 +33,90 @@ class _RegisterFormState extends State<RegisterForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-
   final _otpController = TextEditingController();
+
   bool _isSendingOtp = false;
+  bool _showOtpField = false;
+
+  String? _otpMessage;
+  bool _otpSuccess = false;
+
+  int _otpCountdown = 0;
+  Timer? _otpTimer;
 
   final apiClient = ApiClient();
   late final AuthRepository authRepository;
 
-  bool _showOtpField = false;
+  @override
+  void initState() {
+    super.initState();
+    final authService = AuthService(apiClient);
+    authRepository = AuthRepository(authService);
+  }
+
+  @override
+  void dispose() {
+    _otpTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startOtpCountdown() {
+    setState(() => _otpCountdown = 90);
+    _otpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_otpCountdown == 0) {
+        timer.cancel();
+      } else {
+        setState(() => _otpCountdown--);
+      }
+    });
+  }
 
   Future<void> _sendOtp() async {
     if (_emailController.text.isEmpty || !_emailController.text.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).translate("invalid_email"))),
-      );
+      setState(() {
+        _otpMessage = AppLocalizations.of(context).translate("invalid_email");
+        _otpSuccess = false;
+      });
       return;
     }
 
-    setState(() => _isSendingOtp = true);
+    setState(() {
+      _isSendingOtp = true;
+      _otpMessage = null;
+    });
 
     try {
-      // Gọi API gửi OTP thật
       await authRepository.sendOtp(
         mail: _emailController.text.trim(),
-        verificationType: 0, // 0 là dành cho register
+        verificationType: 0, // 0 = register
       );
-
       setState(() {
         _showOtpField = true;
+        _otpMessage = AppLocalizations.of(context).translate("otp_sent_success");
+        _otpSuccess = true;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).translate("otp_sent_success")),
-        ),
-      );
+      _startOtpCountdown();
     } catch (e) {
-      print("Send OTP error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).translate("otp_sent_failed")),
-        ),
-      );
+      setState(() {
+        _otpMessage = AppLocalizations.of(context).translate("otp_sent_failed");
+        _otpSuccess = false;
+      });
     } finally {
       setState(() => _isSendingOtp = false);
     }
+  }
+
+  String? _passwordValidator(String? v) {
+    final loc = AppLocalizations.of(context);
+    if (v == null || v.isEmpty) return AppLocalizations.of(context).translate("null");
+    if (v.length < 6) return AppLocalizations.of(context).translate("min_6_char");
+    final upperCase = RegExp(r'[A-Z]');
+    final number = RegExp(r'\d');
+    final special = RegExp(r'[!@#$%^&*(),.?":{}|<>]');
+    if (!upperCase.hasMatch(v)) return loc.translate("min_6_char");
+    if (!number.hasMatch(v)) return loc.translate("min_6_char");
+    if (!special.hasMatch(v)) return loc.translate("min_6_char");
+    return null;
   }
 
   Future<void> _onSubmit() async {
@@ -99,24 +140,23 @@ class _RegisterFormState extends State<RegisterForm> {
       await authRepository.register(req);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).translate("register_success"))),
+        SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(AppLocalizations.of(context).translate("register_success"))),
       );
 
+      if (!mounted) return;
       Navigator.pushNamed(context, AppRoutes.login);
     } catch (e) {
+      print("Register error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).translate("register_failed"))),
+        SnackBar(
+            backgroundColor: Colors.red,
+            content: Text(AppLocalizations.of(context).translate("register_failed"))),
       );
     } finally {
       setState(() => _isLoading = false);
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    final authService = AuthService(apiClient);
-    authRepository = AuthRepository(authService);
   }
 
   @override
@@ -204,7 +244,7 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               SizedBox(height: sh(context, 16)),
 
-              // Email + Gửi OTP trong cùng hàng
+              // Email + Gửi OTP
               Text(
                 loc.translate("email"),
                 style: t.labelLarge?.copyWith(fontSize: st(context, 14)),
@@ -214,7 +254,6 @@ class _RegisterFormState extends State<RegisterForm> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Ô nhập Email
                   Expanded(
                     flex: 3,
                     child: Column(
@@ -229,61 +268,35 @@ class _RegisterFormState extends State<RegisterForm> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(sw(context, 10)),
                             ),
-                            errorStyle: const TextStyle(height: 0), // ẩn chỗ trống lỗi
+                            errorStyle: const TextStyle(height: 0),
                           ),
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return loc.translate("null");
-                            }
-                            if (!v.contains('@')) {
-                              return loc.translate("invalid_email");
-                            }
-                            return null;
-                          },
                         ),
-
-                        // Hiển thị lỗi riêng (ngoài Row, không đẩy layout)
-                        ValueListenableBuilder<TextEditingValue>(
-                          valueListenable: _emailController,
-                          builder: (context, value, _) {
-                            final text = value.text.trim();
-                            if (text.isEmpty) return const SizedBox.shrink(); // không hiển thị khi chưa nhập
-                            if (!text.contains('@')) {
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 4, left: 4),
-                                child: Text(
-                                  loc.translate("invalid_email"),
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: st(context, 12),
-                                  ),
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
+                        if (_otpMessage != null) ...[
+                          SizedBox(height: sh(context, 4)),
+                          Text(
+                            _otpMessage!,
+                            style: TextStyle(
+                              color: _otpSuccess ? Colors.green : Colors.red,
+                              fontSize: st(context, 12),
+                            ),
+                          ),
+                        ]
                       ],
                     ),
                   ),
-
                   SizedBox(width: sw(context, 8)),
-
-                  // Nút Gửi OTP
                   SizedBox(
-                    height: 56, // cố định chiều cao để không bị lệch
+                    height: 56,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2563EB),
+                        backgroundColor: _otpCountdown > 0 ? Colors.grey : const Color(0xFF2563EB),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(sw(context, 10)),
                         ),
                         padding: EdgeInsets.symmetric(horizontal: sw(context, 16)),
-                        minimumSize: Size(0, 56),
                       ),
-                      onPressed: _isLoading ? null : _sendOtp,
+                      onPressed: (_isSendingOtp || _otpCountdown > 0) ? null : _sendOtp,
                       child: _isSendingOtp
                           ? const SizedBox(
                         width: 16,
@@ -294,7 +307,9 @@ class _RegisterFormState extends State<RegisterForm> {
                         ),
                       )
                           : Text(
-                        loc.translate("send_otp"),
+                        _otpCountdown > 0
+                            ? "Resend in $_otpCountdown s"
+                            : loc.translate("send_otp"),
                         style: TextStyle(
                           fontSize: st(context, 14),
                           fontWeight: FontWeight.w600,
@@ -304,14 +319,10 @@ class _RegisterFormState extends State<RegisterForm> {
                   ),
                 ],
               ),
-
               SizedBox(height: sh(context, 16)),
 
-              // Ô nhập OTP (hiện ra sau khi gửi)
+              // Ô nhập OTP
               if (_showOtpField) ...[
-                Text(loc.translate("enter_otp"),
-                    style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
-                SizedBox(height: sh(context, 8)),
                 TextFormField(
                   controller: _otpController,
                   keyboardType: TextInputType.number,
@@ -322,8 +333,7 @@ class _RegisterFormState extends State<RegisterForm> {
                       borderRadius: BorderRadius.circular(sw(context, 10)),
                     ),
                   ),
-                  validator: (v) =>
-                  (v == null || v.isEmpty) ? loc.translate("null") : null,
+                  validator: (v) => (v == null || v.isEmpty) ? loc.translate("null") : null,
                 ),
                 SizedBox(height: sh(context, 16)),
               ],
@@ -342,16 +352,13 @@ class _RegisterFormState extends State<RegisterForm> {
                     icon: Icon(_showPassword
                         ? Icons.visibility_off_outlined
                         : Icons.visibility_outlined),
-                    onPressed: () =>
-                        setState(() => _showPassword = !_showPassword),
+                    onPressed: () => setState(() => _showPassword = !_showPassword),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                 ),
-                validator: (v) => (v == null || v.length < 6)
-                    ? loc.translate("min_6_char")
-                    : null,
+                validator: _passwordValidator,
               ),
               SizedBox(height: sh(context, 16)),
 
@@ -441,7 +448,7 @@ class _RegisterFormState extends State<RegisterForm> {
               SizedBox(height: sh(context, 24)),
               Text.rich(
                 TextSpan(
-                  text: loc.translate("have_account") + ' ',
+                  text: loc.translate("have_account"),
                   style: t.bodyMedium?.copyWith(
                       color: Colors.grey, fontSize: st(context, 14)),
                   children: [

@@ -1,13 +1,11 @@
-// lib/data/models/send_otp_params.dart
 class SendOtpParams {
   final String mail;
-  final int? verificationType;
+  final int verificationType; // bắt buộc
 
-  SendOtpParams({required this.mail, this.verificationType});
+  SendOtpParams({required this.mail, required this.verificationType});
 
-  Map<String, dynamic> toQueryParams() {
-    final m = <String, dynamic>{'mail': mail};
-    if (verificationType != null) m['verificationType'] = verificationType;
-    return m;
-  }
+  Map<String, dynamic> toQueryParams() => {
+    'mail': mail,
+    'verificationType': verificationType,
+  };
 }
