@@ -66,9 +66,9 @@ class _UserInfoState extends State<UserInfo> {
               // Avatar
               CircleAvatar(
                 radius: 60,
-                backgroundImage: _user!.avatarUrl != null
-                    ? NetworkImage(_user!.avatarUrl!)
-                    : const AssetImage('assets/default_avatar.png') as ImageProvider,
+                // backgroundImage: _user!.avatarUrl != null
+                //     ? NetworkImage(_user!.avatarUrl!)
+                //     : const AssetImage('assets/default_avatar.png') as ImageProvider,
               ),
               const SizedBox(height: 16),
 

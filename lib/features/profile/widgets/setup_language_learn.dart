@@ -9,12 +9,17 @@ import '../../../data/models/languages/language_model.dart';
 import '../../../data/repositories/language_repository.dart';
 import '../../../data/services/language_service.dart';
 import '../../../main.dart';
+import '../../shared/app_error_state.dart';
 
 class SetupLanguageLearn extends StatefulWidget {
   final void Function(List<String> selected) onNext;
   final List<String> initialSelected;
 
-  const SetupLanguageLearn({super.key, required this.onNext,  this.initialSelected = const [],});
+  const SetupLanguageLearn({
+    super.key,
+    required this.onNext,
+    this.initialSelected = const [],
+  });
 
   @override
   State<SetupLanguageLearn> createState() => _SetupLanguageLearnState();
@@ -40,7 +45,8 @@ class _SetupLanguageLearnState extends State<SetupLanguageLearn> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final locale = InheritedLocale.of(context).locale;
-    if (_currentLocale == null || _currentLocale!.languageCode != locale.languageCode) {
+    if (_currentLocale == null ||
+        _currentLocale!.languageCode != locale.languageCode) {
       _currentLocale = locale;
       _fetchLanguages(lang: locale.languageCode);
     }
@@ -90,20 +96,26 @@ class _SetupLanguageLearnState extends State<SetupLanguageLearn> {
     final backgroundDefault = theme.cardColor;
     final backgroundSelected = theme.colorScheme.primary.withOpacity(0.1);
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = (screenWidth ~/ 220).clamp(2, 6); // responsive grid
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(sw(context, 24)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          /// --- HEADER ICON ---
           Center(
             child: Container(
               padding: EdgeInsets.all(sw(context, 12)),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1), // background nhạt
-                borderRadius: BorderRadius.circular(sw(context, 12)), // bo tròn
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(sw(context, 12)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05), // shadow nhẹ
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.black.withOpacity(0.4)
+                        : Colors.black.withOpacity(0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -112,14 +124,14 @@ class _SetupLanguageLearnState extends State<SetupLanguageLearn> {
               child: Icon(
                 Icons.language,
                 size: sw(context, 36),
-                color: theme.colorScheme.primary, // icon màu chính
+                color: theme.colorScheme.primary,
               ),
             ),
           ),
 
           SizedBox(height: sh(context, 20)),
 
-          // Title + Subtitle
+          /// --- TITLE ---
           Text(
             loc.translate("step_1_title"),
             textAlign: TextAlign.center,
@@ -139,6 +151,7 @@ class _SetupLanguageLearnState extends State<SetupLanguageLearn> {
           ),
           SizedBox(height: sh(context, 20)),
 
+          /// --- GRID CONTAINER ---
           Container(
             padding: EdgeInsets.all(sw(context, 16)),
             decoration: BoxDecoration(
@@ -157,64 +170,85 @@ class _SetupLanguageLearnState extends State<SetupLanguageLearn> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                ? Text(
-              _error!,
-              style: TextStyle(color: theme.colorScheme.error),
-            )
-                : Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: _languages.map((lang) {
+                ? AppErrorState(onRetry: () => _fetchLanguages())
+                : GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _languages.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 3.8,
+              ),
+              itemBuilder: (context, index) {
+                final lang = _languages[index];
                 final selected = _selectedLangs.contains(lang.id);
                 return GestureDetector(
                   onTap: () => _toggle(lang.id),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: selected ? borderColorSelected : borderColorDefault,
+                        color: selected
+                            ? borderColorSelected
+                            : borderColorDefault,
                         width: 1,
                       ),
-                      color: selected ? backgroundSelected : backgroundDefault,
+                      color: selected
+                          ? backgroundSelected
+                          : backgroundDefault,
                     ),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         if (lang.flagIconUrl.isNotEmpty)
                           Image.network(
                             lang.fullFlagUrl,
                             width: 24,
                             height: 24,
-                            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                            errorBuilder: (_, __, ___) =>
+                            const SizedBox.shrink(),
                           ),
-                        if (lang.flagIconUrl.isNotEmpty) const SizedBox(width: 8),
-                        Text(
-                          lang.name,
-                          style: t.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            color: selected ? textColorSelected : textColorDefault,
+                        if (lang.flagIconUrl.isNotEmpty)
+                          const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            lang.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: t.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                              color: selected
+                                  ? textColorSelected
+                                  : textColorDefault,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                 );
-              }).toList(),
+              },
             ),
+
           ),
+
           SizedBox(height: sh(context, 32)),
 
+          /// --- BUTTONS ---
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
               AppButton(
                 text: loc.translate("skip"),
                 variant: ButtonVariant.outline,
                 onPressed: () => widget.onNext([]),
               ),
+              const SizedBox(width: 8),
               AppButton(
                 text: loc.translate("next"),
                 onPressed: _selectedLangs.isEmpty

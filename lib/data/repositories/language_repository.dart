@@ -9,13 +9,19 @@ class LanguageRepository {
 
   Future<List<LanguageModel>> getAllLanguages(String token, {String lang = 'vi'}) async {
     final res = await _service.getLanguages(token: token, lang: lang);
-    if (res.data == null) throw Exception(res.message ?? 'Get languages failed');
+    if (res.data == null)
+      {
+        // throw Exception(res.message ?? 'Get languages failed');
+      }
     return res.data!.items;
   }
 
   Future<LanguageModel> getLanguageById(String id, String token) async {
     final res = await _service.getLanguageById(id, token);
-    if (res.data == null) throw Exception(res.message ?? 'Get language failed');
+    if (res.data == null)
+      {
+        // throw Exception(res.message ?? 'Get language failed');
+      }
     return res.data!;
   }
 }

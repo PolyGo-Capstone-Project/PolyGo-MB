@@ -11,7 +11,7 @@ class UserRepository {
     try {
       await _service.profileSetup(token, req);
     } catch (e) {
-      throw Exception('Profile setup failed: $e');
+      // throw Exception('Profile setup failed: $e');
     }
   }
 }
