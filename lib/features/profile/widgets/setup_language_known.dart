@@ -211,15 +211,15 @@ class _SetupLanguageKnownState extends State<SetupLanguageKnown> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          if (lang.flagIconUrl.isNotEmpty)
+                          if (lang.iconUrl.isNotEmpty)
                             Image.network(
-                              lang.fullFlagUrl,
+                              lang.iconUrl,
                               width: 24,
                               height: 24,
                               errorBuilder: (_, __, ___) =>
                               const SizedBox.shrink(),
                             ),
-                          if (lang.flagIconUrl.isNotEmpty)
+                          if (lang.iconUrl.isNotEmpty)
                             const SizedBox(width: 8),
                           Expanded(
                             child: Text(

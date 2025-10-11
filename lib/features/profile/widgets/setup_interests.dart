@@ -6,7 +6,7 @@ import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/api/api_client.dart';
 import '../../../data/models/interests/interest_model.dart';
-import '../../../data/models/profile/profile_setup_request.dart';
+import '../../../data/models/user/profile_setup_request.dart';
 import '../../../data/repositories/interest_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../data/services/interest_service.dart';
@@ -251,7 +251,7 @@ class _SetupInterestsState extends State<SetupInterests> {
                         children: [
                           if (i.iconUrl.isNotEmpty)
                             Image.network(
-                              i.fullIconUrl,
+                              i.iconUrl,
                               width: 24,
                               height: 24,
                               errorBuilder: (_, __, ___) => const SizedBox.shrink(),

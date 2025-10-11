@@ -1,3 +1,4 @@
+import '../models/auth/change_password_request.dart';
 import '../models/auth/me_response.dart';
 import '../models/auth/register_request.dart';
 import '../models/auth/login_request.dart';
@@ -52,5 +53,13 @@ class AuthRepository {
         // throw Exception(res.message ?? 'Get user info failed');
       }
     return res.data!;
+  }
+
+  Future<void> changePassword(ChangePasswordRequest req, String token) async {
+    try {
+      await _service.changePassword(req, token);
+    } catch (e) {
+      // throw Exception('Change password failed: $e');
+    }
   }
 }

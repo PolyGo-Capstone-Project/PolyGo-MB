@@ -1,5 +1,6 @@
 import '../models/interests/interest_model.dart';
 import '../models/interests/interest_list_response.dart';
+import '../models/interests/me_interests_model.dart';
 import '../services/interest_service.dart';
 
 class InterestRepository {
@@ -25,5 +26,11 @@ class InterestRepository {
         // throw Exception(res.message ?? 'Get interest failed');
       }
         return res.data!;
+  }
+
+  Future<List<MeInterestModel>> getMeInterests(String token, {String lang = 'vi'}) async {
+    final res = await _service.getMeInterests(token: token, lang: lang);
+    if (res.data == null) return [];
+    return res.data!.items;
   }
 }

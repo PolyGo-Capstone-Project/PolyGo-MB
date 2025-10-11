@@ -9,6 +9,9 @@ class AppDropdown extends StatelessWidget {
   final VoidCallback? onTap;
   final double borderRadius;
   final IconData? icon;
+  final bool showIcon;   // hiển thị icon button
+  final bool showValue;  // hiển thị text currentValue
+  final bool showArrow;  // hiển thị mũi tên
 
   const AppDropdown({
     super.key,
@@ -18,6 +21,9 @@ class AppDropdown extends StatelessWidget {
     this.onTap,
     this.borderRadius = 8.0,
     this.icon,
+    this.showIcon = true,
+    this.showValue = true,
+    this.showArrow = true,
   });
 
   @override
@@ -42,9 +48,8 @@ class AppDropdown extends StatelessWidget {
 
               final RenderBox button =
               innerContext.findRenderObject() as RenderBox;
-              final RenderBox overlay = Overlay.of(innerContext)
-                  .context
-                  .findRenderObject() as RenderBox;
+              final RenderBox overlay =
+              Overlay.of(innerContext).context.findRenderObject() as RenderBox;
 
               final Offset position =
               button.localToGlobal(Offset.zero, ancestor: overlay);
@@ -69,9 +74,11 @@ class AppDropdown extends StatelessWidget {
                     child: Row(
                       children: [
                         if (isSelected)
-                          Icon(Icons.check,
-                              size: 18 * scale,
-                              color: theme.colorScheme.primary)
+                          Icon(
+                            Icons.check,
+                            size: 18 * scale,
+                            color: theme.colorScheme.primary,
+                          )
                         else
                           SizedBox(width: 18 * scale),
                         SizedBox(width: 8 * scale),
@@ -84,9 +91,8 @@ class AppDropdown extends StatelessWidget {
                               color: isSelected
                                   ? theme.colorScheme.primary
                                   : theme.colorScheme.onSurface,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
+                              fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
                         ),
@@ -120,24 +126,31 @@ class AppDropdown extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    icon ?? Icons.language,
-                    size: 20 * scale,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  SizedBox(width: 6 * scale),
-                  Flexible(
-                    child: Text(
-                      currentValue,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14 * scale,
-                        color: theme.colorScheme.onSurface,
+                  if (showIcon)
+                    Icon(
+                      icon ?? Icons.arrow_drop_down,
+                      size: 20 * scale,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  if (showIcon && (showValue || showArrow))
+                    SizedBox(width: 6 * scale),
+                  if (showValue)
+                    Flexible(
+                      child: Text(
+                        currentValue,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14 * scale,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
                     ),
-                  ),
-                  Icon(Icons.arrow_drop_down,
-                      size: 20 * scale, color: theme.colorScheme.onSurface),
+                  if (showArrow)
+                    Icon(
+                      Icons.arrow_drop_down,
+                      size: 20 * scale,
+                      color: theme.colorScheme.onSurface,
+                    ),
                 ],
               ),
             ),
