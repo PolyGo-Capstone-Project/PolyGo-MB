@@ -86,4 +86,45 @@ class LanguageService {
           (data) => LearnLanguageListResponse.fromJson(json),
     );
   }
+
+  Future<ApiResponse<LearnLanguageListResponse>> getLearningLanguagesMe({
+    String lang = 'vi',
+    int pageNumber = -1,
+    int pageSize = -1,
+    required String token,
+  }) async {
+    final response = await apiClient.get(
+      '${ApiConstants.learningLanguagesMe}?lang=$lang&pageNumber=$pageNumber&pageSize=$pageSize',
+      headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
+    );
+
+    final json = response.data as Map<String, dynamic>;
+    return ApiResponse.fromJson(
+      json,
+          (data) => LearnLanguageListResponse.fromJson(json),
+    );
+  }
+
+  Future<ApiResponse<SpeakLanguageListResponse>> getSpeakingLanguagesMe({
+    String lang = 'vi',
+    int pageNumber = -1,
+    int pageSize = -1,
+    required String token,
+  }) async {
+    try {
+      final response = await apiClient.get(
+        '${ApiConstants.speakingLanguagesMe}?lang=$lang&pageNumber=$pageNumber&pageSize=$pageSize',
+        headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
+      );
+
+      final json = response.data as Map<String, dynamic>;
+      return ApiResponse.fromJson(
+        json,
+            (data) => SpeakLanguageListResponse.fromJson(json),
+      );
+    } on DioError catch (e) {
+      rethrow;
+    }
+  }
+
 }

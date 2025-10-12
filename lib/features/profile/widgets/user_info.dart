@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:polygo_mobile/features/profile/widgets/update_user_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/responsive.dart';
@@ -9,6 +12,16 @@ import '../../../../data/repositories/auth_repository.dart';
 import '../../../../data/services/auth_service.dart';
 import '../../../../routes/app_routes.dart';
 import '../../../core/widgets/app_dropdown.dart';
+import '../../../data/models/user/update_userinfo_request.dart';
+import '../../../data/repositories/interest_repository.dart';
+import '../../../data/repositories/language_repository.dart';
+import '../../../data/repositories/media_repository.dart';
+import '../../../data/repositories/user_repository.dart';
+import '../../../data/services/interest_service.dart';
+import '../../../data/services/language_service.dart';
+import '../../../data/services/media_service.dart';
+import '../../../data/services/user_service.dart';
+import '../../../main.dart';
 import 'change_password_form.dart';
 
 class UserInfo extends StatefulWidget {
@@ -19,13 +32,33 @@ class UserInfo extends StatefulWidget {
 }
 
 class _UserInfoState extends State<UserInfo> {
+  Locale? _currentLocale;
   MeResponse? _user;
   bool _loading = true;
+  List<String> _learningLangs = [];
+  bool _loadingLearning = true;
+  List<String> _nativeLangs = [];
+  bool _loadingNative = true;
+  List<String> _interests = [];
+  bool _loadingInterests = true;
+
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = InheritedLocale.of(context).locale;
+    if (_currentLocale == null || _currentLocale!.languageCode != locale.languageCode) {
+      _currentLocale = locale;
+      _loadLearningLanguages(lang: locale.languageCode);
+      _loadNativeLanguages(lang: locale.languageCode);
+      _loadInterests(lang: locale.languageCode);
+    }
   }
 
   Future<void> _loadUser() async {
@@ -47,11 +80,197 @@ class _UserInfoState extends State<UserInfo> {
         _user = user;
         _loading = false;
       });
+      await Future.wait([
+        _loadLearningLanguages(),
+        _loadNativeLanguages(),
+        _loadInterests(),
+      ]);
+
     } catch (e) {
       await prefs.remove('token');
       if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (r) => false);
     }
+  }
+
+  Future<void> _loadInterests({String? lang}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token == null) return;
+
+    try {
+      setState(() => _loadingInterests = true);
+      final repo = InterestRepository(InterestService(ApiClient()));
+      final interests = await repo.getInterestsMe(token, lang: lang ?? 'vi');
+
+      if (!mounted) return;
+      setState(() {
+        _interests = interests.map((e) => e.name).toList();
+        _loadingInterests = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadingInterests = false);
+    }
+  }
+
+  Future<void> _loadLearningLanguages({String? lang}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token == null) return;
+
+    try {
+      setState(() => _loadingLearning = true);
+      final repo = LanguageRepository(LanguageService(ApiClient()));
+      final langs = await repo.getLearningLanguagesMe(token, lang: lang ?? 'vi');
+
+      if (!mounted) return;
+      setState(() {
+        _learningLangs = langs.map((e) => e.name).toList();
+        _loadingLearning = false;
+      });
+    } catch (e) {
+      setState(() => _loadingLearning = false);
+    }
+  }
+
+  Future<void> _loadNativeLanguages({String? lang}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token == null) return;
+
+    try {
+      setState(() => _loadingNative = true);
+      final repo = LanguageRepository(LanguageService(ApiClient()));
+      final langs = await repo.getSpeakingLanguagesMe(token, lang: lang ?? 'vi');
+
+      if (!mounted) return;
+      setState(() {
+        _nativeLangs = langs.map((e) => e.name).toList();
+        _loadingNative = false;
+      });
+    } catch (e) {
+      setState(() => _loadingNative = false);
+    }
+  }
+
+  void _showFullAvatar(BuildContext context) {
+    final avatarUrl = _user?.avatarUrl;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black87,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            Center(
+              child: avatarUrl != null && avatarUrl.isNotEmpty
+                  ? Image.network(avatarUrl, fit: BoxFit.contain)
+                  : Container(
+                width: 200,
+                height: 200,
+                color: Colors.grey[400],
+                child: const Icon(Icons.person, size: 100, color: Colors.white),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: FloatingActionButton(
+                mini: true,
+                backgroundColor: Colors.blue,
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _updateAvatar(); // chọn và update avatar
+                },
+                child: const Icon(Icons.edit, color: Colors.white),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              left: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _updateAvatar() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token == null) return;
+
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile == null) return;
+
+    final file = File(pickedFile.path);
+
+    try {
+      setState(() => _loading = true);
+
+      final mediaRepo = MediaRepository(MediaService(ApiClient()));
+      final uploadRes = await mediaRepo.uploadFile(token, file);
+
+      if (uploadRes.data == null || uploadRes.data!.url.isEmpty) return;
+
+      final String avatarUrl = uploadRes.data!.url;
+
+      final userRepo = UserRepository(UserService(ApiClient()));
+      final req = UpdateInfoRequest(
+        name: _user?.name ?? '',
+        introduction: _user?.introduction ?? '',
+        gender: _user?.gender ?? 'Female',
+        avatarUrl: avatarUrl,
+      );
+
+      await userRepo.updateUserInfo(token, req);
+
+      if (!mounted) return;
+      setState(() {
+        _user = _user?.copyWith(avatarUrl: avatarUrl);
+        _loading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Avatar đã được cập nhật thành công!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+    }
+  }
+
+  void _showUpdateInfoForm() {
+    if (_user == null) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black54,
+      builder: (_) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        backgroundColor: Colors.transparent,
+        child: UpdateUserInfoForm(
+          user: _user!,
+          onUpdated: (updatedUser) {
+            setState(() => _user = updatedUser); // hiển thị ngay thông tin mới
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -81,13 +300,13 @@ class _UserInfoState extends State<UserInfo> {
       );
     }
 
-    final name = _user?.name ?? "Unknown User";
-    final avatarUrl =
-        _user?.avatarUrl ?? "https://randomuser.me/api/portraits/men/32.jpg";
-    const rating = "Level 13";
-    const spoken = "1402 EXP";
-    const introduction =
-        "Passionate about learning languages and sharing Vietnamese culture!";
+    if (_user == null) return const SizedBox.shrink();
+
+    final avatarUrl = _user?.avatarUrl;
+    final name = _user?.name ?? '';
+    final meritLevel = _user?.meritLevel;
+    final experiencePoints = _user?.experiencePoints;
+    final introduction = _user?.introduction;
 
     return Align(
       alignment: Alignment.topCenter,
@@ -98,70 +317,73 @@ class _UserInfoState extends State<UserInfo> {
           color: isDark ? const Color(0xFF1E1E1E) : theme.cardColor,
           borderRadius: BorderRadius.circular(sw(context, 16)),
           boxShadow: const [
-            BoxShadow(
-              color: Color(0x11000000),
-              blurRadius: 20,
-              offset: Offset(0, 8),
-            ),
+            BoxShadow(color: Color(0x11000000), blurRadius: 20, offset: Offset(0, 8))
           ],
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- Avatar & Name ---
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CircleAvatar(
-                  radius: sw(context, 36),
-                  backgroundImage: NetworkImage(avatarUrl),
+                GestureDetector(
+                  onTap: () => _showFullAvatar(context),
+                  child: CircleAvatar(
+                    radius: sw(context, 36),
+                    backgroundImage:
+                    (avatarUrl != null && avatarUrl.isNotEmpty) ? NetworkImage(avatarUrl) : null,
+                    child: (avatarUrl == null || avatarUrl.isEmpty)
+                        ? Container(
+                      width: sw(context, 72),
+                      height: sw(context, 72),
+                      color: Colors.grey[400],
+                      child: const Icon(Icons.person, size: 36, color: Colors.white),
+                    )
+                        : null,
+                  ),
                 ),
                 SizedBox(width: sw(context, 16)),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        name,
-                        overflow: TextOverflow.ellipsis,
-                        style: t.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: st(context, 20),
+                      if (name.isNotEmpty)
+                        Text(
+                          name,
+                          style: t.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: st(context, 20),
+                          ),
                         ),
-                      ),
-                      SizedBox(height: sh(context, 4)),
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 4,
-                        runSpacing: 2,
-                        children: [
-                          const Icon(Icons.star,
-                              color: Colors.blueAccent, size: 18),
-                          Text(rating, style: t.bodyMedium),
-                          const Text("•"),
-                          Text(spoken, style: t.bodyMedium),
-                        ],
-                      ),
+                      if (meritLevel != null && experiencePoints != null)
+                        SizedBox(height: sh(context, 4)),
+                      if (meritLevel != null && experiencePoints != null)
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 4,
+                          runSpacing: 2,
+                          children: [
+                            const Icon(Icons.star, color: Colors.blueAccent, size: 18),
+                            Text(meritLevel, style: t.bodyMedium),
+                            const Text("•"),
+                            Text("$experiencePoints EXP", style: t.bodyMedium),
+                          ],
+                        ),
                     ],
                   ),
                 ),
                 AppDropdown(
                   icon: Icons.settings,
                   currentValue: "",
-                  items: [
-                    "Thông tin cá nhân",
-                    "Ngôn ngữ và sở thích",
-                    "Đổi mật khẩu"
-                  ],
+                  items: ["Thông tin cá nhân", "Ngôn ngữ và sở thích", "Đổi mật khẩu"],
                   showIcon: true,
                   showValue: false,
                   showArrow: false,
                   onSelected: (value) {
-                    if (!mounted) return;
                     switch (value) {
                       case "Thông tin cá nhân":
-                        Navigator.pushNamed(context, AppRoutes.updateProfile);
+                        _showUpdateInfoForm();
                         break;
                       case "Ngôn ngữ và sở thích":
                         Navigator.pushNamed(context, AppRoutes.updateProfile);
@@ -172,7 +394,7 @@ class _UserInfoState extends State<UserInfo> {
                           barrierDismissible: true,
                           barrierColor: Colors.black54,
                           builder: (_) => Dialog(
-                            insetPadding: EdgeInsets.symmetric(horizontal: 24),
+                            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
                             backgroundColor: Colors.transparent,
                             child: const ChangePasswordForm(),
                           ),
@@ -186,20 +408,25 @@ class _UserInfoState extends State<UserInfo> {
             SizedBox(height: sh(context, 20)),
 
             // --- Giới thiệu ---
-            Text(
-              loc.translate("introduction"),
-              style: t.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: st(context, 16),
+            if (introduction != null && introduction.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    loc.translate("introduction"),
+                    style: t.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: st(context, 16),
+                    ),
+                  ),
+                  SizedBox(height: sh(context, 8)),
+                  Text(
+                    introduction,
+                    style: t.bodyMedium?.copyWith(fontSize: st(context, 14)),
+                  ),
+                  SizedBox(height: sh(context, 20)),
+                ],
               ),
-            ),
-            SizedBox(height: sh(context, 8)),
-            Text(
-              introduction,
-              style: t.bodyMedium?.copyWith(fontSize: st(context, 14)),
-            ),
-
-            SizedBox(height: sh(context, 20)),
 
             // --- Ngôn ngữ ---
             LayoutBuilder(
@@ -213,10 +440,12 @@ class _UserInfoState extends State<UserInfo> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: _buildLangSectionLimited(
+                      child: _loadingNative
+                          ? const Center(child: CircularProgressIndicator())
+                          : _buildLangSectionLimited(
                         context,
                         title: loc.translate("native_language"),
-                        tags: ["Vietnamese", "English", "Thai"],
+                        tags: _nativeLangs,
                         color: Colors.green[100]!,
                         visibleCount: visibleNative,
                         partialNext: true,
@@ -224,17 +453,12 @@ class _UserInfoState extends State<UserInfo> {
                     ),
                     SizedBox(width: sw(context, 16)),
                     Expanded(
-                      child: _buildLangSectionLimited(
+                      child: _loadingLearning
+                          ? const Center(child: CircularProgressIndicator())
+                          : _buildLangSectionLimited(
                         context,
                         title: loc.translate("learning"),
-                        tags: [
-                          "French",
-                          "Japanese",
-                          "Korean",
-                          "Chinese",
-                          "Spanish",
-                          "Italian"
-                        ],
+                        tags: _learningLangs,
                         color: Colors.blue[100]!,
                         visibleCount: visibleLearning,
                         partialNext: true,
@@ -256,14 +480,14 @@ class _UserInfoState extends State<UserInfo> {
               ),
             ),
             SizedBox(height: sh(context, 8)),
-            Wrap(
+            _loadingInterests
+                ? const Center(child: CircularProgressIndicator())
+                : Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: [
-                _buildTag(context, "travel"),
-                _buildTag(context, "food"),
-                _buildTag(context, "movies"),
-              ],
+              children: _interests
+                  .map((e) => _buildTag(context, e))
+                  .toList(),
             ),
           ],
         ),
@@ -275,8 +499,8 @@ class _UserInfoState extends State<UserInfo> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    Color backgroundColor = color ??
-        (isDark ? Colors.grey[800]! : const Color(0xFFF3F4F6));
+    Color backgroundColor =
+        color ?? (isDark ? Colors.grey[800]! : const Color(0xFFF3F4F6));
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -291,7 +515,7 @@ class _UserInfoState extends State<UserInfo> {
         text,
         style: theme.textTheme.bodySmall?.copyWith(
           fontSize: st(context, 13),
-          color: Colors.black, // luôn màu đen
+          color: Colors.black,
         ),
       ),
     );
@@ -343,4 +567,20 @@ class _UserInfoState extends State<UserInfo> {
       ],
     );
   }
+}
+
+extension MeResponseCopy on MeResponse {
+MeResponse copyWith({String? avatarUrl, String? name, String? introduction, String? gender}) {
+  return MeResponse(
+    id: id,
+    name: name ?? this.name,
+    mail: mail,
+    avatarUrl: avatarUrl ?? this.avatarUrl,
+    meritLevel: meritLevel,
+    introduction: introduction ?? this.introduction,
+    gender: gender ?? this.gender,
+    experiencePoints: experiencePoints,
+    role: role,
+  );
+}
 }

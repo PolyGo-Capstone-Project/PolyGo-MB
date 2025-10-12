@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/register_screen.dart';
 import '../features/auth/screens/forget_password_screen.dart';
+import '../features/badges/screens/all_badges_screen.dart';
 import '../features/profile/screens/profile_setup_screen.dart';
 import '../features/profile/screens/user_info_screen.dart';
 import '../features/profile/screens/update_profile_screen.dart';
-import '../features/shared/temp.dart';
+import '../features/home/screens/home_screen.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -15,6 +16,7 @@ class AppRoutes {
   static const String userInfo = '/user-information';
   static const String profileSetup = '/profile-setup';
   static const String updateProfile = '/update-profile';
+  static const String allBadges = '/badges';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -32,6 +34,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const ProfileSetupScreen());
       case updateProfile:
         return MaterialPageRoute(builder: (_) => const UpdateProfileScreen());
+      case allBadges:
+        return MaterialPageRoute(builder: (_) => const AllBadgesScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(

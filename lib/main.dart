@@ -70,7 +70,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     SizeConfig.init(context);
 
-    final initialRoute = _token != null ? AppRoutes.userInfo : AppRoutes.login;
+    final initialRoute = _token != null ? AppRoutes.home : AppRoutes.login;
 
     return MaterialApp(
       title: 'PolyGo App',

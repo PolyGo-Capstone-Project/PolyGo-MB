@@ -4,6 +4,7 @@ import '../../core/config/api_constants.dart';
 import '../models/api_response.dart';
 import '../models/user/profile_setup_request.dart';
 import '../models/user/update_profile_request.dart';
+import '../models/user/update_userinfo_request.dart';
 
 class UserService {
   final ApiClient apiClient;
@@ -25,7 +26,7 @@ class UserService {
       return ApiResponse.fromJson(json, (_) => null);
     } on DioError catch (e) {
       if (e.response != null) {
-        print('Profile setup error: ${e.response?.data}');
+        // print('Profile setup error: ${e.response?.data}');
       }
       rethrow;
     }
@@ -43,6 +44,29 @@ class UserService {
       );
       return ApiResponse.fromJson(response.data as Map<String, dynamic>, (_) => null);
     } on DioError catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<ApiResponse<void>> updateUserInfo({
+    required String token,
+    required UpdateInfoRequest req,
+  }) async {
+    try {
+      final response = await apiClient.put(
+        ApiConstants.userInfo,
+        data: req.toJson(),
+        headers: {
+          ApiConstants.headerAuthorization: 'Bearer $token',
+          ApiConstants.headerContentType: ApiConstants.contentTypeJson,
+        },
+      );
+
+      return ApiResponse.fromJson(response.data as Map<String, dynamic>, (_) => null);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        print('Update profile (me) error: ${e.response?.data}');
+      }
       rethrow;
     }
   }

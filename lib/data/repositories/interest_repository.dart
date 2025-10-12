@@ -33,4 +33,11 @@ class InterestRepository {
     if (res.data == null) return [];
     return res.data!.items;
   }
+
+  Future<List<MeInterestModel>> getInterestsMe(String token, {String lang = 'vi'}) async {
+    final res = await _service.getInterestsMe(token: token, lang: lang);
+    if (res.data == null) return [];
+    return res.data!.items;
+  }
+
 }

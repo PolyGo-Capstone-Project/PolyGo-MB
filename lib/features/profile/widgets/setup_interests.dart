@@ -125,7 +125,7 @@ class _SetupInterestsState extends State<SetupInterests> {
         );
       }
 
-      Navigator.pushReplacementNamed(context, AppRoutes.userInfo);
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

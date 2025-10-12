@@ -1,0 +1,26 @@
+import 'package:flutter/material.dart';
+import '../../../../core/localization/app_localizations.dart';
+import '../../shared/app_bottom_bar.dart';
+import '../widgets/all_badges.dart';
+
+class AllBadgesScreen extends StatelessWidget {
+  const AllBadgesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final t = Theme.of(context).textTheme;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          loc.translate("my_badges") ?? "My Badges",
+          style: t.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
+      body: const AllBadges(),
+      bottomNavigationBar: const AppBottomBar(currentIndex: 4),
+    );
+  }
+}

@@ -18,9 +18,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: const SafeArea(
-        child: AppBottomBar(),
-      ),
+      bottomNavigationBar: const AppBottomBar(),
     );
   }
 }

@@ -52,13 +52,35 @@ class InterestService {
 
   Future<ApiResponse<MeInterestListResponse>> getMeInterests({
     required String token,
-    String lang = 'vi', // thêm lang
+    String lang = 'vi',
     int pageNumber = -1,
     int pageSize = -1,
   }) async {
     try {
       final response = await apiClient.get(
         '${ApiConstants.interestsMeAll}?lang=$lang&pageNumber=$pageNumber&pageSize=$pageSize',
+        headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
+      );
+
+      final json = response.data as Map<String, dynamic>;
+      return ApiResponse.fromJson(
+        json,
+            (data) => MeInterestListResponse.fromJson(json),
+      );
+    } on DioError catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<ApiResponse<MeInterestListResponse>> getInterestsMe({
+    required String token,
+    String lang = 'vi',
+    int pageNumber = -1,
+    int pageSize = -1,
+  }) async {
+    try {
+      final response = await apiClient.get(
+        '${ApiConstants.interestsMe}?lang=$lang&pageNumber=$pageNumber&pageSize=$pageSize',
         headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
       );
 
