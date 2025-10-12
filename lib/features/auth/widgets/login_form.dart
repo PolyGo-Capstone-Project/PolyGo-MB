@@ -64,7 +64,7 @@ class _LoginFormState extends State<LoginForm> {
       if (isNew) {
         Navigator.pushReplacementNamed(context, AppRoutes.profileSetup);
       } else {
-        Navigator.pushReplacementNamed(context, AppRoutes.userInfo);
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
       }
     } catch (e) {
       final loc = AppLocalizations.of(context);

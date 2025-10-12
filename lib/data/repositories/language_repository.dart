@@ -40,4 +40,19 @@ class LanguageRepository {
     if (res.data == null) return [];
     return res.data!.items;
   }
+
+  /// Get learning languages for current user (new endpoint)
+  Future<List<LearnLanguageModel>> getLearningLanguagesMe(String token, {String lang = 'vi'}) async {
+    final res = await _service.getLearningLanguagesMe(token: token, lang: lang);
+    if (res.data == null) return [];
+    return res.data!.items;
+  }
+
+  /// Get speaking languages for current user (new endpoint)
+  Future<List<SpeakLanguageModel>> getSpeakingLanguagesMe(String token, {String lang = 'vi'}) async {
+    final res = await _service.getSpeakingLanguagesMe(token: token, lang: lang);
+    if (res.data == null) return [];
+    return res.data!.items;
+  }
+
 }

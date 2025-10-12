@@ -1,5 +1,6 @@
 import '../models/user/profile_setup_request.dart';
 import '../models/user/update_profile_request.dart';
+import '../models/user/update_userinfo_request.dart';
 import '../services/user_service.dart';
 
 class UserRepository {
@@ -21,6 +22,14 @@ class UserRepository {
       await _service.updateProfile(token: token, req: req);
     } catch (e) {
       // throw Exception('Update profile failed: $e');
+    }
+  }
+
+  Future<void> updateUserInfo(String token, UpdateInfoRequest req) async {
+    try {
+      await _service.updateUserInfo(token: token, req: req);
+    } catch (e) {
+      rethrow;
     }
   }
 

@@ -4,6 +4,7 @@ class MeResponse {
   final String mail;
   final String? avatarUrl;
   final String meritLevel;
+  final String introduction;
   final String gender;
   final int experiencePoints;
   final String role;
@@ -14,6 +15,7 @@ class MeResponse {
     required this.mail,
     this.avatarUrl,
     required this.meritLevel,
+    required this.introduction,
     required this.gender,
     required this.experiencePoints,
     required this.role,
@@ -21,14 +23,18 @@ class MeResponse {
 
   factory MeResponse.fromJson(Map<String, dynamic> json) {
     return MeResponse(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      mail: json['mail'] as String,
-      avatarUrl: json['avatarUrl'] as String?,
-      meritLevel: json['meritLevel'] as String,
-      gender: json['gender'] as String,
-      experiencePoints: json['experiencePoints'] as int,
-      role: json['role'] as String,
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      mail: json['mail']?.toString() ?? '',
+      avatarUrl: json['avatarUrl']?.toString(),
+      meritLevel: json['meritLevel']?.toString() ?? '',
+      introduction: json['introduction']?.toString() ?? '',
+      gender: json['gender']?.toString() ?? '',
+      experiencePoints: (json['experiencePoints'] is int)
+          ? json['experiencePoints'] as int
+          : int.tryParse(json['experiencePoints']?.toString() ?? '0') ?? 0,
+      role: json['role']?.toString() ?? '',
     );
   }
+
 }

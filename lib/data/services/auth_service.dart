@@ -25,7 +25,7 @@ class AuthService {
       return ApiResponse.fromJson(json, (_) => null);
     } on DioError catch (e) {
       if (e.response != null) {
-        print('Send OTP error response: ${e.response?.data}');
+        // print('Send OTP error response: ${e.response?.data}');
       }
       rethrow;
     }
