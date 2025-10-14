@@ -8,6 +8,11 @@ class MeResponse {
   final String gender;
   final int experiencePoints;
   final String role;
+  final bool autoRenewSubscription;
+  final int streakDays;
+  final bool isNew;
+  final double balance;
+  final DateTime? lastLoginAt;
 
   MeResponse({
     required this.id,
@@ -19,6 +24,11 @@ class MeResponse {
     required this.gender,
     required this.experiencePoints,
     required this.role,
+    required this.autoRenewSubscription,
+    required this.streakDays,
+    required this.isNew,
+    required this.balance,
+    this.lastLoginAt,
   });
 
   factory MeResponse.fromJson(Map<String, dynamic> json) {
@@ -34,7 +44,17 @@ class MeResponse {
           ? json['experiencePoints'] as int
           : int.tryParse(json['experiencePoints']?.toString() ?? '0') ?? 0,
       role: json['role']?.toString() ?? '',
+      autoRenewSubscription: json['autoRenewSubscription'] == true,
+      streakDays: (json['streakDays'] is int)
+          ? json['streakDays'] as int
+          : int.tryParse(json['streakDays']?.toString() ?? '0') ?? 0,
+      isNew: json['isNew'] == true,
+      balance: (json['balance'] is num)
+          ? (json['balance'] as num).toDouble()
+          : double.tryParse(json['balance']?.toString() ?? '0') ?? 0.0,
+      lastLoginAt: json['lastLoginAt'] != null
+          ? DateTime.tryParse(json['lastLoginAt'])
+          : null,
     );
   }
-
 }

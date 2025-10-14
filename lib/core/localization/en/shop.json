@@ -11,5 +11,16 @@
   "wallet": "Wallet",
   "gifts_content_coming": "Gifts Content (coming soon)",
   "wallet_content_coming": "Wallet Content (coming soon)",
-  "search_gifts": "Search gifts"
+  "search_gifts": "Search gifts",
+  "my_wallet": "My wallet",
+  "add_balance": "Add balance",
+  "withdraw": "Withdraw",
+  "transaction_history": "Transaction history",
+
+  "current_subscription": "Current subscription",
+  "days_remaining": "days remaining",
+  "start_at": "Start at",
+  "end_at": "End at",
+  "cancel": "Cancel",
+  "auto_renew": "Auto renew"
 }

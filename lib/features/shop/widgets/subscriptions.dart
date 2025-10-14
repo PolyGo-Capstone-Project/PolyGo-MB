@@ -3,8 +3,15 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../core/api/api_client.dart';
+import '../../../data/models/api_response.dart';
+import '../../../data/models/subscription/subscription_cancel_request.dart';
+import '../../../data/models/subscription/subscription_current_response.dart';
 import '../../../data/models/subscription/subscription_plan_model.dart';
+import '../../../data/models/subscription/subscription_request.dart';
+import '../../../data/models/subscription/subscription_response.dart';
+import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/subscription_repository.dart';
+import '../../../data/services/auth_service.dart';
 import '../../../data/services/subscription_service.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../main.dart';
@@ -21,6 +28,8 @@ class _SubscriptionsState extends State<Subscriptions> {
   List<SubscriptionPlan> _plans = [];
   String? _error;
   Locale? _currentLocale;
+  CurrentSubscription? _currentSubscription;
+  bool _isCurrentLoading = true;
 
   late final SubscriptionRepository _repo;
 
@@ -28,6 +37,7 @@ class _SubscriptionsState extends State<Subscriptions> {
   void initState() {
     super.initState();
     _repo = SubscriptionRepository(SubscriptionService(ApiClient()));
+    _loadCurrentSubscription();
   }
 
   @override
@@ -38,6 +48,306 @@ class _SubscriptionsState extends State<Subscriptions> {
         _currentLocale!.languageCode != locale.languageCode) {
       _currentLocale = locale;
       _fetchPlans(lang: locale.languageCode);
+    }
+  }
+
+  Future<void> _updateAutoRenewDialog() async {
+    if (_currentSubscription == null) return;
+
+    bool autoRenew = _currentSubscription!.autoRenew;
+    final loc = AppLocalizations.of(context);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(loc.translate("auto_renew") ?? "Tự động gia hạn"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          loc.translate("enable_auto_renew") ?? "Bật tự động gia hạn?",
+                        ),
+                      ),
+                      Switch(
+                        value: autoRenew,
+                        activeColor: Theme.of(context).colorScheme.primary,
+                        onChanged: (value) => setState(() => autoRenew = value),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(loc.translate("cancel") ?? "Hủy"),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(loc.translate("save") ?? "Lưu"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token == null || token.isEmpty) return;
+
+    try {
+      final res = await _repo.updateAutoRenew(token: token, autoRenew: autoRenew);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            loc.translate("update_success") ?? "Cập nhật thành công!",
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Refresh current subscription
+      await _loadCurrentSubscription();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Cập nhật thất bại: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _loadCurrentSubscription() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token == null || token.isEmpty) return;
+
+    try {
+      final res = await _repo.getCurrentSubscription(token: token);
+      if (!mounted) return;
+      setState(() {
+        _currentSubscription = res.data;
+        _isCurrentLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isCurrentLoading = false;
+      });
+    }
+  }
+
+  Future<void> _subscribePlan(SubscriptionPlan plan) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null || token.isEmpty) return;
+
+    bool autoRenew = true;
+
+    final authRepo = AuthRepository(AuthService(ApiClient()));
+    final user = await authRepo.me(token);
+    final balance = user.balance;
+    final planCost = plan.price;
+
+    if (balance < planCost) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Số dư không đủ để đăng ký gói '${plan.name}'. Vui lòng nạp thêm tiền.",
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // 🔹 Hiển thị dialog xác nhận
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Xác nhận đăng ký'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Bạn có chắc muốn sử dụng gói "${plan.name}" với giá ${plan.price.toStringAsFixed(2)} đ?',
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: autoRenew,
+                        onChanged: (v) => setState(() => autoRenew = v ?? true),
+                      ),
+                      const Expanded(child: Text('Tự động gia hạn')),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Hủy'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Xác nhận'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result != true) return;
+
+    try {
+      final repo = SubscriptionRepository(SubscriptionService(ApiClient()));
+      final request = SubscriptionRequest(
+        subscriptionPlanId: plan.id,
+        autoRenew: autoRenew,
+      );
+
+      final ApiResponse<SubscriptionResponse> res =
+      await repo.subscribe(token: token, request: request);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đăng ký thành công!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // --- Refresh danh sách gói và current subscription ---
+      await Future.wait([
+        _fetchPlans(lang: _currentLocale?.languageCode),
+        _loadCurrentSubscription(),
+      ]);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đăng ký thất bại: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _cancelCurrentSubscription() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null || token.isEmpty || _currentSubscription == null) {
+      print('Cancel subscription aborted: token null/empty or no current subscription.');
+      return;
+    }
+
+    final reasonController = TextEditingController();
+
+    // Hiển thị dialog lấy lý do hủy với cảnh báo
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context).translate("cancel_subscription")),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppLocalizations.of(context).translate("cancel_warning") ??
+                    "Hủy trước thời hạn sẽ không được hoàn tiền.",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonController,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context).translate("reason"),
+                  hintText: "Nhập lý do hủy (tùy chọn)",
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 12,
+                  ),
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(AppLocalizations.of(context).translate("cancel")),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(AppLocalizations.of(context).translate("confirm")),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final reason = reasonController.text.isEmpty
+          ? "User requested cancellation"
+          : reasonController.text;
+
+      final request = SubscriptionCancelRequest(reason: reason);
+
+      final res = await _repo.cancelSubscription(token: token, request: request);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Hủy thành công!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Refresh subscription hiện tại
+      await _loadCurrentSubscription();
+      await _fetchPlans(lang: _currentLocale?.languageCode);
+    } catch (e, st) {
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Hủy thất bại: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -57,8 +367,7 @@ class _SubscriptionsState extends State<Subscriptions> {
           SnackBar(
             content: Text(
               AppLocalizations.of(context)
-                  .translate("please_log_in_first") ??
-                  'Please log in first.',
+                  .translate("please_log_in_first"),
             ),
             backgroundColor: Colors.red,
           ),
@@ -85,6 +394,146 @@ class _SubscriptionsState extends State<Subscriptions> {
     }
   }
 
+  Widget? _buildCurrentSubscriptionSection() {
+    final loc = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final t = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final colorPrimary = const Color(0xFF2563EB);
+
+    if (_isCurrentLoading || _currentSubscription == null) {
+      return null; // chưa load xong hoặc null
+    }
+
+    // Nếu planType là "Free", không hiển thị section
+    if (_currentSubscription!.planType.toLowerCase() == "free") {
+      return null;
+    }
+
+    return Container(
+      padding: EdgeInsets.all(sw(context, 16)),
+      decoration: BoxDecoration(
+        gradient: isDark
+            ? LinearGradient(
+          colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        )
+            : LinearGradient(colors: [Colors.white, Colors.white]),
+        borderRadius: BorderRadius.circular(sw(context, 16)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title section
+          Text(
+            loc.translate("current_subscription"),
+            style: t.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: st(context, 20),
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          SizedBox(height: sh(context, 12)),
+
+          // Inner gradient xanh chứa các thông tin chi tiết
+          Container(
+            padding: EdgeInsets.all(sw(context, 16)),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [colorPrimary, colorPrimary.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(sw(context, 12)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      _currentSubscription!.planType.toLowerCase() == "premium"
+                          ? Icons.workspace_premium_rounded
+                          : Icons.star_outline_rounded,
+                      color: Colors.white,
+                      size: sw(context, 28),
+                    ),
+                    SizedBox(width: sw(context, 10)),
+                    Expanded(
+                      child: Text(
+                        _currentSubscription!.planName,
+                        style: t.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      "${_currentSubscription!.daysRemaining} ${loc.translate("days_remaining")}",
+                      style: t.bodyMedium?.copyWith(color: Colors.white70),
+                    ),
+                  ],
+                ),
+                SizedBox(height: sh(context, 8)),
+                Text(
+                  "${loc.translate("start_at")}: ${_currentSubscription!.startAt.toLocal().toString().split(' ')[0]}",
+                  style: t.bodySmall?.copyWith(color: Colors.white70),
+                ),
+                Text(
+                  "${loc.translate("end_at")}: ${_currentSubscription!.endAt.toLocal().toString().split(' ')[0]}",
+                  style: t.bodySmall?.copyWith(color: Colors.white70),
+                ),
+                SizedBox(height: sh(context, 16)),
+
+                // Row nút Hủy + Tự động gia hạn
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _cancelCurrentSubscription,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: colorPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(sw(context, 8)),
+                          ),
+                        ),
+                        child: Text(loc.translate("cancel")),
+                      ),
+                    ),
+                    SizedBox(width: sw(context, 12)),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _updateAutoRenewDialog,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: colorPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(sw(context, 8)),
+                          ),
+                        ),
+                        child: Text(loc.translate("auto_renew") ?? "Tự động gia hạn"),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.2, end: 0);
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
@@ -102,14 +551,14 @@ class _SubscriptionsState extends State<Subscriptions> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              '${loc.translate("failed_to_load_subscription_plans") ?? "Failed to load subscription plans"}: $_error',
+              '${loc.translate("failed_to_load_subscription_plans")}: $_error',
               textAlign: TextAlign.center,
               style: t.bodyMedium?.copyWith(color: Colors.red),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => _fetchPlans(lang: _currentLocale?.languageCode),
-              child: Text(loc.translate("retry") ?? "Retry"),
+              child: Text(loc.translate("retry")),
             ),
           ],
         ),
@@ -119,24 +568,44 @@ class _SubscriptionsState extends State<Subscriptions> {
     if (_plans.isEmpty) {
       return Center(
         child: Text(
-          loc.translate("no_subscription_plans_available") ??
-              "No subscription plans available.",
+          loc.translate("no_subscription_plans_available"),
           style: t.titleMedium,
         ),
       );
     }
 
     return RefreshIndicator(
-      onRefresh: () => _fetchPlans(lang: _currentLocale?.languageCode),
+      onRefresh: () async {
+        await Future.wait([
+          _fetchPlans(lang: _currentLocale?.languageCode),
+          _loadCurrentSubscription(),
+        ]);
+      },
       child: ListView.separated(
         padding: EdgeInsets.symmetric(
           horizontal: sw(context, 16),
           vertical: sh(context, 16),
         ),
-        itemCount: _plans.length,
+        itemCount: _plans.length +
+            (_currentSubscription != null &&
+                _currentSubscription!.planType.toLowerCase() != "free"
+                ? 1
+                : 0),
         separatorBuilder: (_, __) => SizedBox(height: sh(context, 16)),
         itemBuilder: (context, index) {
-          final plan = _plans[index];
+          final showCurrentSection = _currentSubscription != null &&
+              _currentSubscription!.planType.toLowerCase() != "free";
+
+          // Hiển thị Current Subscription ở đầu
+          if (showCurrentSection && index == 0) {
+            final section = _buildCurrentSubscriptionSection();
+            if (section != null) return section;
+          }
+
+          // Xác định plan index trong _plans
+          final planIndex = index - (showCurrentSection ? 1 : 0);
+          final plan = _plans[planIndex];
+
           final isDark = Theme.of(context).brightness == Brightness.dark;
           final colorPrimary = const Color(0xFF2563EB);
           final loc = AppLocalizations.of(context);
@@ -150,7 +619,7 @@ class _SubscriptionsState extends State<Subscriptions> {
                 end: Alignment.bottomRight,
                 colors: isDark
                     ? [const Color(0xFF1E1E1E), const Color(0xFF2C2C2C)]
-                    : [const Color(0xFFFFFFFF), const Color(0xFFFFFFFF)],
+                    : [Colors.white, Colors.white],
               ),
               borderRadius: BorderRadius.circular(sw(context, 16)),
               boxShadow: [
@@ -212,7 +681,7 @@ class _SubscriptionsState extends State<Subscriptions> {
                       ),
                     ),
                     Text(
-                      "${plan.durationInDays} ${loc.translate("days") ?? "days"}",
+                      "${plan.durationInDays} ${loc.translate("days")}",
                       style: t.bodyMedium?.copyWith(
                         color: Colors.grey,
                         fontWeight: FontWeight.w500,
@@ -226,7 +695,7 @@ class _SubscriptionsState extends State<Subscriptions> {
                 if (plan.features.isNotEmpty &&
                     plan.features.any((f) => f.isEnabled)) ...[
                   Text(
-                    loc.translate("features") ?? "Features",
+                    loc.translate("features"),
                     style: t.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       fontSize: st(context, 16),
@@ -275,7 +744,7 @@ class _SubscriptionsState extends State<Subscriptions> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () => _subscribePlan(plan),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorPrimary,
                       foregroundColor: Colors.white,
@@ -285,7 +754,7 @@ class _SubscriptionsState extends State<Subscriptions> {
                       ),
                     ),
                     child: Text(
-                      loc.translate("subscribe") ?? "Subscribe",
+                      loc.translate("subscribe"),
                       style: TextStyle(
                         fontSize: st(context, 16),
                         fontWeight: FontWeight.w600,

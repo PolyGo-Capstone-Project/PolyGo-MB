@@ -41,7 +41,6 @@ class _AllBadgesState extends State<AllBadges> {
 
       if (!mounted) return;
       setState(() {
-        // 🔹 Sắp xếp badge: đạt được lên đầu
         badges.sort((a, b) => (b.has ? 1 : 0).compareTo(a.has ? 1 : 0));
         _badges = badges;
         _loading = false;
@@ -51,7 +50,11 @@ class _AllBadgesState extends State<AllBadges> {
       setState(() => _loading = false);
       final loc = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("${loc.translate("load_badges_error") ?? "Lỗi tải huy hiệu"}: $e")),
+        SnackBar(
+          content: Text(
+            "${loc.translate("load_badges_error") ?? "Lỗi tải huy hiệu"}: $e",
+          ),
+        ),
       );
     }
   }
@@ -87,18 +90,20 @@ class _AllBadgesState extends State<AllBadges> {
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
 
-        // 🔹 Tự động điều chỉnh layout
         final crossAxisCount = screenWidth < 600
             ? 2
             : screenWidth < 1000
             ? 3
             : 4;
 
-        final childAspectRatio =
-        screenWidth < 350 ? 0.6
-            : screenWidth < 450 ? 0.73
-            : screenWidth < 600 ? 0.9
-            : screenWidth < 1000 ? 1.0
+        final childAspectRatio = screenWidth < 350
+            ? 0.6
+            : screenWidth < 450
+            ? 0.73
+            : screenWidth < 600
+            ? 0.9
+            : screenWidth < 1000
+            ? 1.0
             : 1.0;
 
         final double iconSize = screenWidth < 600
@@ -133,12 +138,13 @@ class _AllBadgesState extends State<AllBadges> {
               final badge = _badges[index];
               final hasBadge = badge.has;
 
-              final BoxDecoration decoration = hasBadge
-                  ? BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+              final BoxDecoration decoration = BoxDecoration(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [const Color(0xFF1E1E1E), const Color(0xFF2C2C2C)]
+                      : [Colors.white, Colors.white],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: const [
@@ -148,11 +154,6 @@ class _AllBadgesState extends State<AllBadges> {
                     offset: Offset(0, 3),
                   ),
                 ],
-              )
-                  : BoxDecoration(
-                color: isDark ? const Color(0xFF262626) : Colors.grey[200],
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade300, width: 1),
               );
 
               return Stack(
@@ -183,51 +184,48 @@ class _AllBadgesState extends State<AllBadges> {
                           ),
                         ),
                         const SizedBox(height: 10),
-
                         Text(
                           badge.name,
                           style: t.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             fontSize: titleFontSize,
                             color: hasBadge
-                                ? Colors.white
+                                ? (isDark ? Colors.white : Colors.black)
                                 : (isDark ? Colors.white70 : Colors.grey[700]),
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-
                         const SizedBox(height: 6),
-
                         Text(
                           badge.description.isNotEmpty
                               ? badge.description
                               : loc.translate("no_description") ?? "Không có mô tả",
                           style: t.bodySmall?.copyWith(
                             color: hasBadge
-                                ? Colors.white.withOpacity(0.85)
-                                : Colors.grey[600],
+                                ? (isDark ? Colors.white.withOpacity(0.85) : Colors.black87)
+                                : (isDark ? Colors.grey[400] : Colors.grey[600]),
                             fontSize: descFontSize,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
-
                         if (hasBadge && badge.createdAt.isNotEmpty) ...[
                           const SizedBox(height: 10),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.2)
+                                  : Colors.grey.shade300,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               "${loc.translate("received_on") ?? "Đạt được"}: ${badge.createdAt.split('T').first}",
                               style: t.bodySmall?.copyWith(
-                                color: Colors.white,
+                                color: isDark ? Colors.white : Colors.black,
                                 fontSize: 12,
                               ),
                               textAlign: TextAlign.center,
@@ -237,8 +235,6 @@ class _AllBadgesState extends State<AllBadges> {
                       ],
                     ),
                   ),
-
-                  // Overlay toàn thẻ nếu chưa có badge
                   if (!hasBadge)
                     Positioned.fill(
                       child: Container(

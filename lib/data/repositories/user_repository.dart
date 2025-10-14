@@ -1,6 +1,7 @@
 import '../models/user/profile_setup_request.dart';
 import '../models/user/update_profile_request.dart';
 import '../models/user/update_userinfo_request.dart';
+import '../models/user/user_list_response.dart';
 import '../services/user_service.dart';
 
 class UserRepository {
@@ -33,4 +34,15 @@ class UserRepository {
     }
   }
 
+  Future<UserListResponse> getUsers(String token, {int page = 1, int size = 10}) async {
+    try {
+      return await _service.getUsers(
+        token: token,
+        pageNumber: page,
+        pageSize: size,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

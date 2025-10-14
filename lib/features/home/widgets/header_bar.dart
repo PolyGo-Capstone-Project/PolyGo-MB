@@ -49,11 +49,13 @@ class _HeaderBarState extends State<HeaderBar> with SingleTickerProviderStateMix
         color: theme.cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          )
+            color: Colors.grey.withOpacity(0.05),
+            blurRadius: 10,
+            spreadRadius: 1,
+            offset: const Offset(0, 8),
+          ),
         ],
+
       ),
       child: Row(
         children: [
@@ -108,9 +110,11 @@ class _HeaderBarState extends State<HeaderBar> with SingleTickerProviderStateMix
                       controller: _searchController,
                       focusNode: _focusNode,
                       style: const TextStyle(fontSize: 16),
+                      textAlignVertical: TextAlignVertical.center,
                       decoration: const InputDecoration(
                         hintText: "Search...",
                         border: InputBorder.none,
+                        isCollapsed: true,
                       ),
                       onSubmitted: (value) {
                         // TODO: hehe
