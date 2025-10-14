@@ -5,6 +5,7 @@ import '../models/api_response.dart';
 import '../models/user/profile_setup_request.dart';
 import '../models/user/update_profile_request.dart';
 import '../models/user/update_userinfo_request.dart';
+import '../models/user/user_list_response.dart';
 
 class UserService {
   final ApiClient apiClient;
@@ -66,6 +67,32 @@ class UserService {
     } on DioError catch (e) {
       if (e.response != null) {
         print('Update profile (me) error: ${e.response?.data}');
+      }
+      rethrow;
+    }
+  }
+
+  Future<UserListResponse> getUsers({
+    required String token,
+    int pageNumber = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      final response = await apiClient.get(
+        ApiConstants.getUsers,
+        queryParameters: {
+          'pageNumber': pageNumber,
+          'pageSize': pageSize,
+        },
+        headers: {
+          ApiConstants.headerAuthorization: 'Bearer $token',
+        },
+      );
+
+      return UserListResponse.fromJson(response.data as Map<String, dynamic>);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        print('Get users error: ${e.response?.data}');
       }
       rethrow;
     }

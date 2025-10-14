@@ -592,17 +592,36 @@ class _UserInfoState extends State<UserInfo> {
 }
 
 extension MeResponseCopy on MeResponse {
-MeResponse copyWith({String? avatarUrl, String? name, String? introduction, String? gender}) {
-  return MeResponse(
-    id: id,
-    name: name ?? this.name,
-    mail: mail,
-    avatarUrl: avatarUrl ?? this.avatarUrl,
-    meritLevel: meritLevel,
-    introduction: introduction ?? this.introduction,
-    gender: gender ?? this.gender,
-    experiencePoints: experiencePoints,
-    role: role,
-  );
-}
+  MeResponse copyWith({
+    String? avatarUrl,
+    String? name,
+    String? introduction,
+    String? gender,
+    int? experiencePoints,
+    String? role,
+    String? mail,
+    String? meritLevel,
+    double? balance,
+    int? streakDays,
+    bool? autoRenewSubscription,
+    bool? isNew,
+    DateTime? lastLoginAt,
+  }) {
+    return MeResponse(
+      id: id,
+      name: name ?? this.name,
+      mail: mail ?? this.mail,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      meritLevel: meritLevel ?? this.meritLevel,
+      introduction: introduction ?? this.introduction,
+      gender: gender ?? this.gender,
+      experiencePoints: experiencePoints ?? this.experiencePoints,
+      role: role ?? this.role,
+      balance: balance ?? this.balance,
+      streakDays: streakDays ?? this.streakDays,
+      autoRenewSubscription: autoRenewSubscription ?? this.autoRenewSubscription,
+      isNew: isNew ?? this.isNew,
+      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+    );
+  }
 }
