@@ -445,64 +445,78 @@ class _UserInfoState extends State<UserInfo> {
                 ],
               ),
 
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final width = constraints.maxWidth;
-
-                int visibleNative = width < 400 ? 1 : width < 700 ? 2 : 3;
-                int visibleLearning = width < 400 ? 1 : width < 700 ? 3 : 4;
-
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _loadingNative
-                          ? const Center(child: CircularProgressIndicator())
-                          : _buildLangSectionLimited(
-                        context,
-                        title: loc.translate("native_language"),
-                        tags: _nativeLangs,
-                        color: Colors.green[100]!,
-                        visibleCount: visibleNative,
-                        partialNext: true,
-                      ),
+            // Thay phần LayoutBuilder hiện tại bằng Column scroll ngang
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Native Language (Speaking)
+                Text(
+                  loc.translate("native_language"),
+                  style: t.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: st(context, 15),
+                  ),
+                ),
+                SizedBox(height: sh(context, 8)),
+                SizedBox(
+                  height: sh(context, 25),
+                  child: _loadingNative
+                      ? const Center(child: CircularProgressIndicator())
+                      : ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _nativeLangs.length,
+                    separatorBuilder: (_, __) => SizedBox(width: sw(context, 8)),
+                    itemBuilder: (_, index) => Center( // <-- thêm Center
+                      child: _buildTag(context, _nativeLangs[index], color: Colors.green[100]!),
                     ),
-                    SizedBox(width: sw(context, 16)),
-                    Expanded(
-                      child: _loadingLearning
-                          ? const Center(child: CircularProgressIndicator())
-                          : _buildLangSectionLimited(
-                        context,
-                        title: loc.translate("learning"),
-                        tags: _learningLangs,
-                        color: Colors.blue[100]!,
-                        visibleCount: visibleLearning,
-                        partialNext: true,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                  ),
+                ),
 
-            SizedBox(height: sh(context, 20)),
+                SizedBox(height: sh(context, 16)),
 
-            Text(
-              loc.translate("interests"),
-              style: t.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: st(context, 16),
-              ),
-            ),
-            SizedBox(height: sh(context, 8)),
-            _loadingInterests
-                ? const Center(child: CircularProgressIndicator())
-                : Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _interests
-                  .map((e) => _buildTag(context, e))
-                  .toList(),
+                // Learning Language
+                Text(
+                  loc.translate("learning"),
+                  style: t.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: st(context, 15),
+                  ),
+                ),
+                SizedBox(height: sh(context, 8)),
+                SizedBox(
+                  height: sh(context, 25),
+                  child: _loadingLearning
+                      ? const Center(child: CircularProgressIndicator())
+                      : ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _learningLangs.length,
+                    separatorBuilder: (_, __) => SizedBox(width: sw(context, 8)),
+                    itemBuilder: (_, index) => _buildTag(context, _learningLangs[index], color: Colors.blue[100]!),
+                  ),
+                ),
+                SizedBox(height: sh(context, 20)),
+
+                // Interests
+                Text(
+                  loc.translate("interests"),
+                  style: t.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: st(context, 16),
+                  ),
+                ),
+                SizedBox(height: sh(context, 8)),
+                SizedBox(
+                  height: sh(context, 25),
+                  child: _loadingInterests
+                      ? const Center(child: CircularProgressIndicator())
+                      : ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _interests.length,
+                    separatorBuilder: (_, __) => SizedBox(width: sw(context, 8)),
+                    itemBuilder: (_, index) => _buildTag(context, _interests[index]),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -520,66 +534,21 @@ class _UserInfoState extends State<UserInfo> {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: sw(context, 12),
-        vertical: sh(context, 6),
+        vertical: sh(context, 4), // giảm chiều cao padding
       ),
+      alignment: Alignment.center, // chữ luôn ở giữa
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(sw(context, 20)),
       ),
       child: Text(
         text,
+        textAlign: TextAlign.center, // chữ căn giữa
         style: theme.textTheme.bodySmall?.copyWith(
           fontSize: st(context, 13),
           color: Colors.black,
         ),
       ),
-    );
-  }
-
-  Widget _buildLangSectionLimited(
-      BuildContext context, {
-        required String title,
-        required List<String> tags,
-        required Color color,
-        int visibleCount = 1,
-        bool partialNext = false,
-      }) {
-    final t = Theme.of(context).textTheme;
-    final tagWidth = 90.0;
-    final visibleWidth =
-        (tagWidth * visibleCount) + (partialNext ? tagWidth * 0.4 : 0);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: t.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: st(context, 15),
-          ),
-        ),
-        SizedBox(height: sh(context, 8)),
-        ClipRect(
-          child: SizedBox(
-            height: sh(context, 40),
-            width: visibleWidth,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: tags
-                    .map(
-                      (e) => Padding(
-                    padding: EdgeInsets.only(right: sw(context, 8)),
-                    child: _buildTag(context, e, color: color),
-                  ),
-                )
-                    .toList(),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

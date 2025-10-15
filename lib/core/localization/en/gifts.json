@@ -1,0 +1,22 @@
+{
+  "load_gifts_error": "Error!",
+  "no_accepted_gifts": "You do not have any accepted gifts",
+  "my_gifts": "My gifts",
+  "unreceived": "Unreceived",
+  "received": "Received",
+  "failed_to_load_gifts": "Error",
+  "no_gifts_available": "No gifts available",
+  "no_unread_gifts": "No unread gifts",
+  "rejected_gift": "Reject",
+  "rejected_failed": "Rejected failed",
+  "accepted_failed": "Accepted failed",
+  "accepted_gift": "Accept",
+  "reject_gift_confirm": "Reject gift confirm",
+  "has_gifted": "Has gifted you",
+  "at_time": "at",
+  "message": "Message:",
+  "gifted": "gifted:",
+  "has_received": "received:",
+  "accept": "Accept",
+  "reject": "Reject"
+}

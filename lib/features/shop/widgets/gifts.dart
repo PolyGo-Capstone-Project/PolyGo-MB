@@ -385,7 +385,7 @@ class _GiftsState extends State<Gifts> {
                                 Padding(
                                   padding: EdgeInsets.only(top: sh(context, 4)),
                                   child: Text(
-                                    '${loc.translate("owned_gift")}: ${_ownedGiftQuantities[gift.id]}',
+                                    '${loc.translate("owned")}: ${_ownedGiftQuantities[gift.id]}',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: Colors.green.shade600,
                                       fontWeight: FontWeight.w500,

@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/app_bottom_bar.dart';
 import '../../shared/app_header_actions.dart';
 import '../widgets/user_info.dart';
-import '../../badges/widgets/badges_section.dart';
+import '../../inventories/widgets/achievements_gifts_.dart';
 import '../../../routes/app_routes.dart';
 
 class UserInfoScreen extends StatefulWidget {
@@ -65,9 +65,8 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                 ),
               ),
               const UserInfo(),
-              const SizedBox(height: 20),
-              const BadgesSection(),
-              const SizedBox(height: 250),
+              const AchievementsAndGiftsSection(),
+              const SizedBox(height: 260),
 
               // --- Logout button ---
               Padding(

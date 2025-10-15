@@ -22,7 +22,8 @@ class AppLocalizations {
       'shared.json',
       'badges.json',
       'shop.json',
-      'home_users.json'
+      'home_users.json',
+      'gifts.json'
     ];
 
     _localizedStrings = {};
