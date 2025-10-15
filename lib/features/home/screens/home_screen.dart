@@ -41,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> {
               onItemSelected: _onMenuSelected,
             ),
             Expanded(
-              // 👉 Hiển thị widget tương ứng với tab
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: _pages[_menuIndex],
@@ -50,7 +49,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const AppBottomBar(currentIndex: 0),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const AppBottomBar(currentIndex: 0),
+      ),
     );
   }
 }
