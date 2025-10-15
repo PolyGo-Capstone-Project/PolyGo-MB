@@ -63,7 +63,7 @@ class _SubscriptionsState extends State<Subscriptions> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(loc.translate("auto_renew") ?? "Tự động gia hạn"),
+              title: Text(loc.translate("auto_renew")),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -71,7 +71,7 @@ class _SubscriptionsState extends State<Subscriptions> {
                     children: [
                       Expanded(
                         child: Text(
-                          loc.translate("enable_auto_renew") ?? "Bật tự động gia hạn?",
+                          loc.translate("enable_auto_renew"),
                         ),
                       ),
                       Switch(
@@ -86,11 +86,11 @@ class _SubscriptionsState extends State<Subscriptions> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(loc.translate("cancel") ?? "Hủy"),
+                  child: Text(loc.translate("cancel")),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(loc.translate("save") ?? "Lưu"),
+                  child: Text(loc.translate("save")),
                 ),
               ],
             );
@@ -111,10 +111,8 @@ class _SubscriptionsState extends State<Subscriptions> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            loc.translate("update_success") ?? "Cập nhật thành công!",
-          ),
-          backgroundColor: Colors.green,
+          content: Text(loc.translate("update_enable_success")),
+          duration: const Duration(seconds: 2),
         ),
       );
 
@@ -124,8 +122,8 @@ class _SubscriptionsState extends State<Subscriptions> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Cập nhật thất bại: $e"),
-          backgroundColor: Colors.red,
+          content: Text(loc.translate("update_enable_failed")),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -154,6 +152,7 @@ class _SubscriptionsState extends State<Subscriptions> {
   Future<void> _subscribePlan(SubscriptionPlan plan) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
+    final loc = AppLocalizations.of(context);
 
     if (token == null || token.isEmpty) return;
 
@@ -169,27 +168,29 @@ class _SubscriptionsState extends State<Subscriptions> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "Số dư không đủ để đăng ký gói '${plan.name}'. Vui lòng nạp thêm tiền.",
+              '${loc.translate("not_enough_buy")} '
+                  '${plan.name} '
+                  '${loc.translate("please_add_money")} '
           ),
-          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 2),
         ),
       );
+
       return;
     }
 
-    // 🔹 Hiển thị dialog xác nhận
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Xác nhận đăng ký'),
+              title: Text(loc.translate("confirm_registration_sub")),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Bạn có chắc muốn sử dụng gói "${plan.name}" với giá ${plan.price.toStringAsFixed(2)} đ?',
+                    '${loc.translate("confirm_plan_use")} ${plan.name} ${loc.translate("with_price")} ${plan.price.toStringAsFixed(2)} đ?',
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -198,7 +199,7 @@ class _SubscriptionsState extends State<Subscriptions> {
                         value: autoRenew,
                         onChanged: (v) => setState(() => autoRenew = v ?? true),
                       ),
-                      const Expanded(child: Text('Tự động gia hạn')),
+                      Expanded(child: Text(loc.translate("auto_renew"))),
                     ],
                   ),
                 ],
@@ -206,11 +207,11 @@ class _SubscriptionsState extends State<Subscriptions> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Hủy'),
+                  child: Text(loc.translate("cancel")),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Xác nhận'),
+                  child: Text(loc.translate("confirm")),
                 ),
               ],
             );
@@ -235,12 +236,11 @@ class _SubscriptionsState extends State<Subscriptions> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Đăng ký thành công!'),
-          backgroundColor: Colors.green,
+          content: Text(AppLocalizations.of(context).translate("sub_success")),
+          duration: const Duration(seconds: 2),
         ),
       );
 
-      // --- Refresh danh sách gói và current subscription ---
       await Future.wait([
         _fetchPlans(lang: _currentLocale?.languageCode),
         _loadCurrentSubscription(),
@@ -249,10 +249,11 @@ class _SubscriptionsState extends State<Subscriptions> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Đăng ký thất bại: $e'),
-          backgroundColor: Colors.red,
+          content: Text(AppLocalizations.of(context).translate("sub_failed")),
+          duration: const Duration(seconds: 2),
         ),
       );
+
     }
   }
 
@@ -261,25 +262,23 @@ class _SubscriptionsState extends State<Subscriptions> {
     final token = prefs.getString('token');
 
     if (token == null || token.isEmpty || _currentSubscription == null) {
-      print('Cancel subscription aborted: token null/empty or no current subscription.');
+
       return;
     }
 
     final reasonController = TextEditingController();
 
-    // Hiển thị dialog lấy lý do hủy với cảnh báo
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(context).translate("cancel_subscription")),
+          title: Text(AppLocalizations.of(context).translate("cancel")),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppLocalizations.of(context).translate("cancel_warning") ??
-                    "Hủy trước thời hạn sẽ không được hoàn tiền.",
+                AppLocalizations.of(context).translate("cancel_warning"),
                 style: TextStyle(
                   color: Colors.red,
                   fontWeight: FontWeight.bold,
@@ -290,7 +289,6 @@ class _SubscriptionsState extends State<Subscriptions> {
                 controller: reasonController,
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context).translate("reason"),
-                  hintText: "Nhập lý do hủy (tùy chọn)",
                   border: OutlineInputBorder(),
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(
@@ -331,12 +329,11 @@ class _SubscriptionsState extends State<Subscriptions> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Hủy thành công!"),
-          backgroundColor: Colors.green,
+          content: Text(AppLocalizations.of(context).translate("cancel_success")),
+          duration: const Duration(seconds: 2),
         ),
       );
 
-      // Refresh subscription hiện tại
       await _loadCurrentSubscription();
       await _fetchPlans(lang: _currentLocale?.languageCode);
     } catch (e, st) {
@@ -344,8 +341,8 @@ class _SubscriptionsState extends State<Subscriptions> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Hủy thất bại: $e"),
-          backgroundColor: Colors.red,
+          content: Text(AppLocalizations.of(context).translate("cancel_failed")),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -402,10 +399,9 @@ class _SubscriptionsState extends State<Subscriptions> {
     final colorPrimary = const Color(0xFF2563EB);
 
     if (_isCurrentLoading || _currentSubscription == null) {
-      return null; // chưa load xong hoặc null
+      return null;
     }
 
-    // Nếu planType là "Free", không hiển thị section
     if (_currentSubscription!.planType.toLowerCase() == "free") {
       return null;
     }
@@ -443,7 +439,6 @@ class _SubscriptionsState extends State<Subscriptions> {
           ),
           SizedBox(height: sh(context, 12)),
 
-          // Inner gradient xanh chứa các thông tin chi tiết
           Container(
             padding: EdgeInsets.all(sw(context, 16)),
             decoration: BoxDecoration(
@@ -493,7 +488,6 @@ class _SubscriptionsState extends State<Subscriptions> {
                 ),
                 SizedBox(height: sh(context, 16)),
 
-                // Row nút Hủy + Tự động gia hạn
                 Row(
                   children: [
                     Expanded(
@@ -520,7 +514,7 @@ class _SubscriptionsState extends State<Subscriptions> {
                             borderRadius: BorderRadius.circular(sw(context, 8)),
                           ),
                         ),
-                        child: Text(loc.translate("auto_renew") ?? "Tự động gia hạn"),
+                        child: Text(loc.translate("auto_renew")),
                       ),
                     ),
                   ],

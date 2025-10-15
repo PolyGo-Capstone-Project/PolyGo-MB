@@ -1,10 +1,12 @@
 // repositories/gift_repository.dart
+import '../models/gift/gift_accept_response.dart';
 import '../models/gift/gift_list_response.dart';
 import '../models/gift/gift_me_response.dart';
 import '../models/gift/gift_present_request.dart';
 import '../models/gift/gift_present_response.dart';
 import '../models/gift/gift_purchase_request.dart';
 import '../models/gift/gift_purchase_response.dart';
+import '../models/gift/gift_received_response.dart';
 import '../services/gift_service.dart';
 
 class GiftRepository {
@@ -73,4 +75,55 @@ class GiftRepository {
       rethrow;
     }
   }
+
+  Future<GiftReceivedResponse?> getReceivedGifts({
+    required String token,
+    int pageNumber = 1,
+    int pageSize = 10,
+    String? lang,
+  }) async {
+    try {
+      final res = await _service.getReceivedGifts(
+        token: token,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+        lang: lang,
+      );
+      return res.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<GiftAcceptResponse?> acceptReceivedGift({
+    required String token,
+    required String presentationId,
+  }) async {
+    try {
+      final res = await _service.acceptReceivedGift(
+        token: token,
+        presentationId: presentationId,
+      );
+      return res.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<GiftAcceptResponse?> rejectReceivedGift({
+    required String token,
+    required String presentationId,
+  }) async {
+    try {
+      final res = await _service.rejectReceivedGift(
+        token: token,
+        presentationId: presentationId,
+      );
+      return res.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+
 }

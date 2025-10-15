@@ -3,7 +3,8 @@ import 'package:polygo_mobile/features/friends/screens/friend_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/register_screen.dart';
 import '../features/auth/screens/forget_password_screen.dart';
-import '../features/badges/screens/all_badges_screen.dart';
+import '../features/inventories/screens/all_badges_screen.dart';
+import '../features/inventories/screens/all_gifts_screen.dart';
 import '../features/profile/screens/profile_setup_screen.dart';
 import '../features/profile/screens/user_info_screen.dart';
 import '../features/profile/screens/update_profile_screen.dart';
@@ -21,6 +22,7 @@ class AppRoutes {
   static const String allBadges = '/badges';
   static const String friends = '/friends';
   static const String shop = '/shop';
+  static const String allGifts = '/gifts';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -44,6 +46,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const FriendScreen());
       case shop:
         return MaterialPageRoute(builder: (_) => const ShopScreen());
+      case allGifts:
+        return MaterialPageRoute(builder: (_) => const AllGiftsScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(

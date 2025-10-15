@@ -14,7 +14,7 @@ class FriendScreen extends StatelessWidget {
             Expanded(
               child: Center(
                 child: Text(
-                  'Friend',
+                  'Chưa có gì ở đây đâu ; ) ',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

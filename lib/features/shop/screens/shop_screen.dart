@@ -4,7 +4,7 @@
   import '../widgets/shop_menu_bar.dart';
   import '../widgets/subscriptions.dart';
   import '../widgets/gifts.dart';
-  import '../widgets/wallet.dart'; // ✅ import Wallet
+  import '../widgets/wallet.dart';
   import '../../../../core/localization/app_localizations.dart';
 
   class ShopScreen extends StatefulWidget {
@@ -26,8 +26,7 @@
       setState(() {
         _hasError = false;
       });
-      // Nếu tab là Wallet/Gifts/Subscriptions, gọi lại load data bên trong widget đó
-      // Ví dụ bạn có thể expose method loadData() trong mỗi widget
+
     }
 
     Widget _buildTabContent() {
@@ -71,7 +70,10 @@
             ],
           ),
         ),
-        bottomNavigationBar: const AppBottomBar(currentIndex: 2),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: const AppBottomBar(currentIndex: 2),
+        ),
       );
     }
   }

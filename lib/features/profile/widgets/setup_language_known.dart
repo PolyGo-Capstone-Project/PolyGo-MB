@@ -111,7 +111,6 @@ class _SetupLanguageKnownState extends State<SetupLanguageKnown> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          /// --- ICON HEADER ---
           Center(
             child: Container(
               padding: EdgeInsets.all(sw(context, 12)),
@@ -138,7 +137,6 @@ class _SetupLanguageKnownState extends State<SetupLanguageKnown> {
 
           SizedBox(height: sh(context, 20)),
 
-          /// --- TITLE ---
           Text(
             loc.translate("step_2_title"),
             textAlign: TextAlign.center,
@@ -158,7 +156,6 @@ class _SetupLanguageKnownState extends State<SetupLanguageKnown> {
           ),
           SizedBox(height: sh(context, 20)),
 
-          /// --- GRID LIST ---
           Container(
             padding: EdgeInsets.all(sw(context, 16)),
             decoration: BoxDecoration(
@@ -245,7 +242,6 @@ class _SetupLanguageKnownState extends State<SetupLanguageKnown> {
 
           SizedBox(height: sh(context, 32)),
 
-          /// --- BUTTONS ---
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

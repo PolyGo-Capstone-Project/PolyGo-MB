@@ -14,13 +14,16 @@ class AllBadgesScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          loc.translate("my_badges") ?? "My Badges",
+          loc.translate("my_badges"),
           style: t.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
       body: const AllBadges(),
-      bottomNavigationBar: const AppBottomBar(currentIndex: 4),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const AppBottomBar(currentIndex: 4),
+      ),
     );
   }
 }

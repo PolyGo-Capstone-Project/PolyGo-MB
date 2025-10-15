@@ -66,7 +66,6 @@ class _UpdateInterestsState extends State<UpdateInterests> {
 
       setState(() {
         _interests = interests;
-        // Nếu chưa có selection, lấy theo has=true
         if (_selected.isEmpty) {
           _selected = interests.where((e) => e.has).map((e) => e.id).toList();
         }

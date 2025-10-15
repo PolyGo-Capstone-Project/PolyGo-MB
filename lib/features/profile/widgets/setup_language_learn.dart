@@ -97,14 +97,13 @@ class _SetupLanguageLearnState extends State<SetupLanguageLearn> {
     final backgroundSelected = theme.colorScheme.primary.withOpacity(0.1);
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final crossAxisCount = (screenWidth ~/ 220).clamp(2, 6); // responsive grid
+    final crossAxisCount = (screenWidth ~/ 220).clamp(2, 6);
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(sw(context, 24)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          /// --- HEADER ICON ---
           Center(
             child: Container(
               padding: EdgeInsets.all(sw(context, 12)),
@@ -131,7 +130,6 @@ class _SetupLanguageLearnState extends State<SetupLanguageLearn> {
 
           SizedBox(height: sh(context, 20)),
 
-          /// --- TITLE ---
           Text(
             loc.translate("step_1_title"),
             textAlign: TextAlign.center,
@@ -151,7 +149,6 @@ class _SetupLanguageLearnState extends State<SetupLanguageLearn> {
           ),
           SizedBox(height: sh(context, 20)),
 
-          /// --- GRID CONTAINER ---
           Container(
             padding: EdgeInsets.all(sw(context, 16)),
             decoration: BoxDecoration(
@@ -239,7 +236,6 @@ class _SetupLanguageLearnState extends State<SetupLanguageLearn> {
 
           SizedBox(height: sh(context, 32)),
 
-          /// --- BUTTONS ---
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [

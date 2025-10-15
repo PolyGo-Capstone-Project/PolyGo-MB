@@ -1,0 +1,16 @@
+{
+  "token_missing": "Xảy ra lỗi, hãy thử lại sau",
+  "list_gift_error": "Xảy ra lỗi, hãy thử lại sau",
+  "gift_sent": "Gửi",
+  "to": "cho",
+  "gift_sent_failed": "Tặng quà thất bại",
+  "error": "Xảy ra lỗi, hãy thử lại sau",
+  "send_gift": "Tặng quà",
+  "quantity": "Số lượng",
+  "message_optional": "Lời nhắn",
+  "send_anonymously": "Gửi ẩn danh",
+  "choose_gift_for": "Chọn quà cho",
+  "gift_info": "Thông tin quà",
+  "back": "Quay lại",
+  "next": "Tiếp tục"
+}

@@ -120,8 +120,9 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            backgroundColor: Colors.green,
-            content: Text(AppLocalizations.of(context).translate("reset_success"))),
+          content: Text(AppLocalizations.of(context).translate("reset_success")),
+          duration: const Duration(seconds: 2),
+        ),
       );
 
       if (!mounted) return;
@@ -130,8 +131,9 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
       print("Reset password error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            backgroundColor: Colors.red,
-            content: Text(AppLocalizations.of(context).translate("reset_failed"))),
+          content: Text(AppLocalizations.of(context).translate("reset_failed")),
+          duration: const Duration(seconds: 2),
+        ),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -222,7 +224,6 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
               ),
               SizedBox(height: sh(context, 32)),
 
-              // Email + Gửi OTP
               Text(
                 loc.translate("email"),
                 style: t.labelLarge?.copyWith(fontSize: st(context, 14)),
@@ -291,7 +292,6 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
 
               SizedBox(height: sh(context, 16)),
 
-              // OTP field
               if (_showOtpField) ...[
                 Text(loc.translate("enter_otp"),
                     style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
@@ -312,7 +312,6 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
                 SizedBox(height: sh(context, 16)),
               ],
 
-              // New password
               Text(loc.translate("new_password"),
                   style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
               SizedBox(height: sh(context, 8)),
@@ -332,7 +331,7 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
                     borderRadius: BorderRadius.circular(sw(context, 10)),
                   ),
                 ),
-                validator: _passwordValidator, // <-- dùng validator mới
+                validator: _passwordValidator,
               ),
               SizedBox(height: sh(context, 16)),
 
@@ -363,7 +362,6 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
 
               SizedBox(height: sh(context, 24)),
 
-              // Reset button
               AppButton(
                 text: _isLoading
                     ? loc.translate("resetting_password")
@@ -374,7 +372,6 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
                 disabled: _isLoading,
               ),
 
-              // Back to login link
               SizedBox(height: sh(context, 24)),
               Text.rich(
                 TextSpan(

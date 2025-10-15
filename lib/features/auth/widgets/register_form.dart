@@ -88,7 +88,7 @@ class _RegisterFormState extends State<RegisterForm> {
     try {
       await authRepository.sendOtp(
         mail: _emailController.text.trim(),
-        verificationType: 0, // 0 = register
+        verificationType: 0,
       );
       setState(() {
         _showOtpField = true;
@@ -123,7 +123,10 @@ class _RegisterFormState extends State<RegisterForm> {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreeTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).translate("agree_terms_error"))),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).translate("agree_terms_error")),
+          duration: const Duration(seconds: 2),
+        ),
       );
       return;
     }
@@ -141,18 +144,19 @@ class _RegisterFormState extends State<RegisterForm> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            backgroundColor: Colors.green,
-            content: Text(AppLocalizations.of(context).translate("register_success"))),
+          content: Text(AppLocalizations.of(context).translate("register_success")),
+          duration: const Duration(seconds: 2),
+        ),
       );
 
       if (!mounted) return;
       Navigator.pushNamed(context, AppRoutes.login);
     } catch (e) {
-      print("Register error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            backgroundColor: Colors.red,
-            content: Text(AppLocalizations.of(context).translate("register_failed"))),
+          content: Text(AppLocalizations.of(context).translate("register_failed")),
+          duration: const Duration(seconds: 2),
+        ),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -192,7 +196,6 @@ class _RegisterFormState extends State<RegisterForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Logo
               Center(
                 child: Container(
                   padding: EdgeInsets.all(sw(context, 12)),
@@ -209,7 +212,6 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               SizedBox(height: sh(context, 20)),
 
-              // Title
               Text(
                 loc.translate("signup_title"),
                 textAlign: TextAlign.center,
@@ -226,7 +228,6 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               SizedBox(height: sh(context, 32)),
 
-              // Name
               Text(loc.translate("full_name"),
                   style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
               SizedBox(height: sh(context, 8)),
@@ -244,7 +245,6 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               SizedBox(height: sh(context, 16)),
 
-              // Email + Gửi OTP
               Text(
                 loc.translate("email"),
                 style: t.labelLarge?.copyWith(fontSize: st(context, 14)),
@@ -321,7 +321,6 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               SizedBox(height: sh(context, 16)),
 
-              // Ô nhập OTP
               if (_showOtpField) ...[
                 TextFormField(
                   controller: _otpController,
@@ -338,7 +337,6 @@ class _RegisterFormState extends State<RegisterForm> {
                 SizedBox(height: sh(context, 16)),
               ],
 
-              // Password
               Text(loc.translate("password"),
                   style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
               SizedBox(height: sh(context, 8)),
@@ -362,7 +360,6 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               SizedBox(height: sh(context, 16)),
 
-              // Confirm password
               Text(loc.translate("confirm_password"),
                   style: t.labelLarge?.copyWith(fontSize: st(context, 14))),
               SizedBox(height: sh(context, 8)),
@@ -388,7 +385,6 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               SizedBox(height: sh(context, 12)),
 
-              // Agree terms
               Row(
                 children: [
                   Checkbox(
@@ -406,7 +402,6 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               SizedBox(height: sh(context, 20)),
 
-              // Register Button (AppButton)
               AppButton(
                 text: _isLoading
                     ? loc.translate("signing_up")
@@ -417,7 +412,6 @@ class _RegisterFormState extends State<RegisterForm> {
                 disabled: _isLoading,
               ),
 
-              // Divider
               SizedBox(height: sh(context, 24)),
               Row(
                 children: [
@@ -434,7 +428,6 @@ class _RegisterFormState extends State<RegisterForm> {
                 ],
               ),
 
-              // Google signup
               SizedBox(height: sh(context, 24)),
               AppButton(
                 text: loc.translate("signup_google"),
@@ -444,7 +437,6 @@ class _RegisterFormState extends State<RegisterForm> {
                 onPressed: () {},
               ),
 
-              // Login link
               SizedBox(height: sh(context, 24)),
               Text.rich(
                 TextSpan(

@@ -114,7 +114,7 @@ class _WalletState extends State<Wallet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  loc.translate("my_wallet") ?? "My Wallet",
+                  loc.translate("my_wallet"),
                   style: t.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: st(context, 20),
@@ -123,7 +123,6 @@ class _WalletState extends State<Wallet> {
                 ),
                 SizedBox(height: sh(context, 16)),
 
-                // Inner gradient xanh
                 Container(
                   padding: EdgeInsets.all(sw(context, 16)),
                   decoration: BoxDecoration(
@@ -136,7 +135,6 @@ class _WalletState extends State<Wallet> {
                   ),
                   child: Column(
                     children: [
-                      // Hàng 1: Balance + Hide/Show
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -146,7 +144,7 @@ class _WalletState extends State<Wallet> {
                                 TextSpan(
                                   text: _balanceHidden
                                       ? "****"
-                                      : "${_balance.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => "${m[1]}.")}", // chèn dấu . mỗi 3 chữ số
+                                      : "${_balance.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => "${m[1]}.")}",
                                   style: t.headlineSmall?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -179,7 +177,6 @@ class _WalletState extends State<Wallet> {
                       ),
                       SizedBox(height: sh(context, 16)),
 
-                      // Hàng 2: 2 nút ngang nhau
                       Row(
                         children: [
                           Expanded(
@@ -193,7 +190,7 @@ class _WalletState extends State<Wallet> {
                                 ),
                               ),
                               child: Text(
-                                loc.translate("add_balance") ?? "Add Balance",
+                                loc.translate("add_balance"),
                               ),
                             ),
                           ),
@@ -209,7 +206,7 @@ class _WalletState extends State<Wallet> {
                                 ),
                               ),
                               child: Text(
-                                loc.translate("withdraw") ?? "Withdraw",
+                                loc.translate("withdraw"),
                               ),
                             ),
                           ),
@@ -223,7 +220,6 @@ class _WalletState extends State<Wallet> {
           ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.2, end: 0),
           SizedBox(height: sh(context, 24)),
 
-          // Section 2: Transaction History
           Container(
             padding: EdgeInsets.all(sw(context, 16)),
             decoration: BoxDecoration(
@@ -247,7 +243,7 @@ class _WalletState extends State<Wallet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  loc.translate("transaction_history") ?? "Transaction History",
+                  loc.translate("transaction_history"),
                   style: t.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: st(context, 20),
@@ -260,7 +256,7 @@ class _WalletState extends State<Wallet> {
                 else if (_transactions.isEmpty)
                   Center(
                     child: Text(
-                      loc.translate("no_transactions") ?? "No transactions yet",
+                      loc.translate("no_transactions"),
                       style: t.bodyMedium?.copyWith(color: Colors.grey),
                     ),
                   )

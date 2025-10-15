@@ -2,27 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/localization/app_localizations.dart';
 
-class ShopMenuBar extends StatefulWidget {
+class GiftsHeaderMenu extends StatefulWidget {
   final int currentIndex;
   final Function(int) onItemSelected;
 
-  const ShopMenuBar({
+  const GiftsHeaderMenu({
     super.key,
     this.currentIndex = 0,
     required this.onItemSelected,
   });
 
   @override
-  State<ShopMenuBar> createState() => _ShopMenuBarState();
+  State<GiftsHeaderMenu> createState() => _GiftsHeaderMenuState();
 }
 
-class _ShopMenuBarState extends State<ShopMenuBar> {
+class _GiftsHeaderMenuState extends State<GiftsHeaderMenu> {
   late int _selectedIndex;
 
   final _items = const [
-    {'icon': Icons.workspace_premium_rounded, 'label': 'subscriptions'},
-    {'icon': Icons.card_giftcard_rounded, 'label': 'gifts'},
-    {'icon': Icons.account_balance_wallet_rounded, 'label': 'wallet'},
+    {'icon': Icons.inbox_rounded, 'label': 'unreceived'},
+    {'icon': Icons.done_all_rounded, 'label': 'received'},
+    {'icon': Icons.card_giftcard_rounded, 'label': 'my_gifts'},
   ];
 
   @override
@@ -80,8 +80,9 @@ class _ShopMenuBarState extends State<ShopMenuBar> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 padding: EdgeInsets.symmetric(vertical: paddingV),
-                color:
-                selected ? colorActive.withOpacity(0.08) : Colors.transparent,
+                color: selected
+                    ? colorActive.withOpacity(0.08)
+                    : Colors.transparent,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

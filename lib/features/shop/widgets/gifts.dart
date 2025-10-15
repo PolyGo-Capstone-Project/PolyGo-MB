@@ -89,10 +89,9 @@ class _GiftsState extends State<Gifts> {
         });
       }
     } catch (e) {
-      print("Lỗi khi load my gifts: $e");
+
     }
   }
-
 
   Future<void> _loadGifts({String? lang}) async {
     setState(() {
@@ -107,14 +106,11 @@ class _GiftsState extends State<Gifts> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            AppLocalizations.of(context)
-                .translate("please_log_in_first") ??
-                'Please log in first.',
-          ),
-          backgroundColor: Colors.red,
+          content: Text(AppLocalizations.of(context).translate("token_missing")),
+          duration: const Duration(seconds: 2),
         ),
       );
+
       return;
     }
 
@@ -136,58 +132,11 @@ class _GiftsState extends State<Gifts> {
     }
   }
 
-  Future<void> _purchaseGift(GiftModel gift) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    if (token == null || token.isEmpty) return;
-
-    bool confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Xác nhận mua gift"),
-        content: Text(
-            "Bạn có chắc muốn mua '${gift.name}' với giá ${gift.price} đ?"),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("Hủy")),
-          ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("Xác nhận")),
-        ],
-      ),
-    ) ??
-        false;
-
-    if (!confirmed) return;
-
-    try {
-      final request = GiftPurchaseRequest(
-          giftId: gift.id, quantity: 1, paymentMethod: "System", notes: "");
-      final res = await _repo.purchaseGift(token: token, request: request);
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              "Mua thành công! ID giao dịch: ${res?.transactionId ?? 'N/A'}"),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Mua thất bại: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   Future<void> _purchaseGiftWithQuantity(GiftModel gift, int quantity) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
+    final loc = AppLocalizations.of(context);
+
     if (token == null || token.isEmpty) {
       return;
     }
@@ -202,27 +151,38 @@ class _GiftsState extends State<Gifts> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Số dư không đủ để mua ${gift.name}. Vui lòng nạp thêm tiền."),
-          backgroundColor: Colors.orange,
+          content: Text(
+              '${loc.translate("not_enough_buy")} '
+              '${gift.name}!'
+          ),
+          duration: const Duration(seconds: 3),
         ),
       );
+
       await _loadMyGifts();
       return;
     }
 
-    // 🔹 Xác nhận mua
     bool confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Xác nhận mua gift"),
-        content: Text("Bạn có chắc muốn mua '${gift.name}' x$quantity với giá $totalCost đ?"),
+        title: Text(loc.translate("confirm_purchase")),
+        content: Text(
+          '${loc.translate("purchase_gift_question")} '
+          '${gift.name} '
+          'x$quantity '
+          '${loc.translate("with_price")} '
+          '$totalCost đ?',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("Hủy")),
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(loc.translate("cancel")),
+          ),
           ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("Xác nhận")),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(loc.translate("confirm")),
+          ),
         ],
       ),
     ) ?? false;
@@ -242,18 +202,20 @@ class _GiftsState extends State<Gifts> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            "Mua thành công! ID giao dịch: ${res?.transactionId ?? 'N/A'}",
-          ),
-          backgroundColor: Colors.green,
+          content: Text(loc.translate("purchase_success")),
+          duration: const Duration(seconds: 2),
         ),
       );
+
+      await _loadGifts(lang: _currentLocale?.languageCode);
+      await _loadMyGifts();
+
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Mua thất bại: $e"),
-          backgroundColor: Colors.red,
+          content: Text(loc.translate("purchase_failed")),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -275,15 +237,14 @@ class _GiftsState extends State<Gifts> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              '${loc.translate("failed_to_load_gifts") ?? "Failed to load gifts"}: $_error',
+            Text(loc.translate("failed_to_load_gifts"),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(color: Colors.red),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => _loadGifts(lang: _currentLocale?.languageCode),
-              child: Text(loc.translate("retry") ?? "Retry"),
+              child: Text(loc.translate("retry")),
             ),
           ],
         ),
@@ -293,7 +254,7 @@ class _GiftsState extends State<Gifts> {
     if (_gifts.isEmpty) {
       return Center(
         child: Text(
-          loc.translate("no_gifts_available") ?? "No gifts available.",
+          loc.translate("no_gifts_available"),
           style: theme.textTheme.titleMedium,
         ),
       );
@@ -307,7 +268,7 @@ class _GiftsState extends State<Gifts> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: loc.translate("search_gifts") ?? "Search gifts",
+              hintText: loc.translate("search_gifts"),
               prefixIcon: Icon(Icons.search,
                   color: _searchController.text.isNotEmpty
                       ? colorPrimary
@@ -371,7 +332,6 @@ class _GiftsState extends State<Gifts> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Hình ảnh
                         ClipRRect(
                           borderRadius: BorderRadius.circular(sw(context, 12)),
                           child: Image.network(
@@ -390,7 +350,6 @@ class _GiftsState extends State<Gifts> {
                         ),
                         SizedBox(width: sw(context, 12)),
 
-                        // Tên và giá
                         Expanded(
                           flex: 3,
                           child: Column(
@@ -426,7 +385,7 @@ class _GiftsState extends State<Gifts> {
                                 Padding(
                                   padding: EdgeInsets.only(top: sh(context, 4)),
                                   child: Text(
-                                    "Đang sở hữu: ${_ownedGiftQuantities[gift.id]}",
+                                    '${loc.translate("owned")}: ${_ownedGiftQuantities[gift.id]}',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: Colors.green.shade600,
                                       fontWeight: FontWeight.w500,
@@ -437,13 +396,11 @@ class _GiftsState extends State<Gifts> {
                           ),
                         ),
 
-                        // Số lượng và nút
                         Expanded(
                           flex: 2,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Số lượng
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -500,7 +457,6 @@ class _GiftsState extends State<Gifts> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              // Nút mua
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
@@ -510,7 +466,7 @@ class _GiftsState extends State<Gifts> {
                                     foregroundColor: Colors.white,
                                     padding: EdgeInsets.symmetric(vertical: sh(context, 10)),
                                   ),
-                                  child: const Text("Mua"),
+                                  child: Text(loc.translate("buy"),),
                                 ),
                               ),
                             ],
