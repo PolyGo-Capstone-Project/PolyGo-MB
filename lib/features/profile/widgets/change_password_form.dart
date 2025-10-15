@@ -77,24 +77,23 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.green,
           content: Text(AppLocalizations.of(context).translate("change_password_success")),
+          duration: const Duration(seconds: 2),
         ),
       );
-      Navigator.pop(context); // đóng popup
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.red,
           content: Text(AppLocalizations.of(context).translate("change_password_failed")),
+          duration: const Duration(seconds: 2),
         ),
       );
     } finally {
       setState(() => _isLoading = false);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +150,6 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
                   ),
                   SizedBox(height: sh(context, 20)),
 
-                  // Title
                   Text(
                     loc.translate("change_password_title"),
                     textAlign: TextAlign.center,
@@ -160,7 +158,6 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
                   ),
                   SizedBox(height: sh(context, 24)),
 
-                // Current password
                 Text(loc.translate("current_password"), style: t.labelLarge),
                 SizedBox(height: sh(context, 8)),
                 TextFormField(
@@ -182,7 +179,6 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
                 ),
                 SizedBox(height: sh(context, 16)),
 
-                // New password
                 Text(loc.translate("new_password"), style: t.labelLarge),
                 SizedBox(height: sh(context, 8)),
                 TextFormField(
@@ -204,7 +200,6 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
                 ),
                 SizedBox(height: sh(context, 16)),
 
-                // Confirm password
                 Text(loc.translate("confirm_new_password"), style: t.labelLarge),
                 SizedBox(height: sh(context, 8)),
                 TextFormField(

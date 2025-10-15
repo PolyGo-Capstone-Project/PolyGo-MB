@@ -87,7 +87,6 @@ class _UserInfoState extends State<UserInfo> {
         _loading = false;
       });
 
-      // load ngay từ lần đầu với locale
       await Future.wait([
         _loadLearningLanguages(lang: locale.languageCode),
         _loadNativeLanguages(lang: locale.languageCode),
@@ -196,7 +195,6 @@ class _UserInfoState extends State<UserInfo> {
                 child: const Icon(Icons.edit, color: Colors.white),
               ),
             ),
-            // Nút đóng
             Positioned(
               top: 40,
               left: 20,
@@ -248,7 +246,6 @@ class _UserInfoState extends State<UserInfo> {
         _user = _user?.copyWith(avatarUrl: avatarUrl);
         _loading = false;
       });
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(loc.translate("avatar_update_success")),
@@ -341,7 +338,6 @@ class _UserInfoState extends State<UserInfo> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Avatar & Name ---
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -429,7 +425,6 @@ class _UserInfoState extends State<UserInfo> {
             ),
             SizedBox(height: sh(context, 20)),
 
-            // --- Giới thiệu ---
             if (introduction != null && introduction.isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,7 +445,6 @@ class _UserInfoState extends State<UserInfo> {
                 ],
               ),
 
-            // --- Ngôn ngữ ---
             LayoutBuilder(
               builder: (context, constraints) {
                 final width = constraints.maxWidth;
@@ -493,7 +487,6 @@ class _UserInfoState extends State<UserInfo> {
 
             SizedBox(height: sh(context, 20)),
 
-            // --- Sở thích ---
             Text(
               loc.translate("interests"),
               style: t.titleMedium?.copyWith(

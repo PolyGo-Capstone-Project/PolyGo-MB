@@ -15,14 +15,14 @@ class AppLocalizations {
   }
 
   Future<bool> load() async {
-    // print('🔵 Loading localization for: ${locale.languageCode}');
 
     final files = [
       'auth.json',
       'profile.json',
       'shared.json',
       'badges.json',
-      'shop.json'
+      'shop.json',
+      'home_users.json'
     ];
 
     _localizedStrings = {};
@@ -32,7 +32,6 @@ class AppLocalizations {
       await rootBundle.loadString('lib/core/localization/${locale.languageCode}/$file');
       final Map<String, dynamic> jsonMap = json.decode(jsonString);
 
-      // Merge vào _localizedStrings
       _localizedStrings.addAll(jsonMap.map((key, value) => MapEntry(key, value.toString())));
     }
 

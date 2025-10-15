@@ -10,6 +10,7 @@ class AuthRepository {
 
   AuthRepository(this._service);
 
+  /// Gửi OTP
   Future<void> sendOtp({required String mail, required int verificationType}) async {
     try {
       await _service.sendOtp(mail: mail, verificationType: verificationType);
@@ -18,6 +19,7 @@ class AuthRepository {
     }
   }
 
+  /// Đăng ký
   Future<void> register(RegisterRequest req) async {
     try {
       await _service.register(req);
@@ -26,7 +28,7 @@ class AuthRepository {
     }
   }
 
-  /// Login → trả về JWT token
+  /// Login
   Future<String> login(LoginRequest req) async {
     final res = await _service.login(req);
     if (res.data == null)

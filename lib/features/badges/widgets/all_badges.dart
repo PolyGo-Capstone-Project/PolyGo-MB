@@ -51,9 +51,8 @@ class _AllBadgesState extends State<AllBadges> {
       final loc = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            "${loc.translate("load_badges_error") ?? "Lỗi tải huy hiệu"}: $e",
-          ),
+          content: Text(loc.translate("load_badges_error")),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -80,7 +79,7 @@ class _AllBadgesState extends State<AllBadges> {
     if (_badges.isEmpty) {
       return Center(
         child: Text(
-          loc.translate("no_badges_found") ?? "No badges available",
+          loc.translate("no_badges_found"),
           style: t.bodyMedium,
         ),
       );
@@ -201,7 +200,7 @@ class _AllBadgesState extends State<AllBadges> {
                         Text(
                           badge.description.isNotEmpty
                               ? badge.description
-                              : loc.translate("no_description") ?? "Không có mô tả",
+                              : loc.translate("no_description"),
                           style: t.bodySmall?.copyWith(
                             color: hasBadge
                                 ? (isDark ? Colors.white.withOpacity(0.85) : Colors.black87)
@@ -223,7 +222,7 @@ class _AllBadgesState extends State<AllBadges> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              "${loc.translate("received_on") ?? "Đạt được"}: ${badge.createdAt.split('T').first}",
+                              "${loc.translate("received_on")}: ${badge.createdAt.split('T').first}",
                               style: t.bodySmall?.copyWith(
                                 color: isDark ? Colors.white : Colors.black,
                                 fontSize: 12,

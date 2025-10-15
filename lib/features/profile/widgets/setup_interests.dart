@@ -47,7 +47,7 @@ class _SetupInterestsState extends State<SetupInterests> {
   @override
   void initState() {
     super.initState();
-    _selected = List.from(widget.initialSelected); // copy từ parent
+    _selected = List.from(widget.initialSelected);
     _repo = InterestRepository(InterestService(ApiClient()));
   }
 
@@ -117,20 +117,22 @@ class _SetupInterestsState extends State<SetupInterests> {
           req.interestIds.isEmpty;
 
       if (!isAllEmpty) {
+        final loc = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: Colors.green,
-            content: Text(AppLocalizations.of(context).translate("profile_setup_success")),
+            content: Text(loc.translate("profile_setup_success")),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
 
       Navigator.pushReplacementNamed(context, AppRoutes.home);
     } catch (e) {
+      final loc = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.red,
-          content: Text(AppLocalizations.of(context).translate("profile_setup_failed")),
+          content: Text(loc.translate("profile_setup_failed")),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -154,7 +156,6 @@ class _SetupInterestsState extends State<SetupInterests> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Icon đầu
           Center(
             child: Container(
               padding: EdgeInsets.all(sw(context, 12)),
@@ -181,7 +182,6 @@ class _SetupInterestsState extends State<SetupInterests> {
 
           SizedBox(height: sh(context, 20)),
 
-          // Title + Subtitle
           Text(
             loc.translate("step_3_title"),
             textAlign: TextAlign.center,
@@ -277,11 +277,8 @@ class _SetupInterestsState extends State<SetupInterests> {
               ),
             ),
 
-
-
           SizedBox(height: sh(context, 32)),
 
-          // Buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

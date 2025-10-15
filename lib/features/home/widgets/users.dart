@@ -10,6 +10,8 @@ import '../../../data/repositories/user_repository.dart';
 import '../../../data/services/gift_service.dart';
 import '../../../data/services/user_service.dart';
 import '../../../core/utils/responsive.dart';
+import '../../../../core/localization/app_localizations.dart';
+
 
 class Users extends StatefulWidget {
   const Users({super.key});
@@ -36,11 +38,15 @@ class _UsersState extends State<Users> {
 
   Future<GiftMeResponse?> _loadMyGifts() async {
     try {
+      final loc = AppLocalizations.of(context);
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
       if (token == null || token.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thiếu token, vui lòng đăng nhập lại.')),
+          SnackBar(
+            content: Text(loc.translate("token_missing")),
+            duration: const Duration(seconds: 2),
+          ),
         );
         return null;
       }
@@ -48,12 +54,16 @@ class _UsersState extends State<Users> {
       final res = await _giftRepo.getMyGifts(
         token: token,
         pageNumber: 1,
-        pageSize: 50, // lấy nhiều một chút
+        pageSize: 50,
       );
       return res;
     } catch (e) {
+      final loc = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi tải danh sách quà: $e')),
+        SnackBar(
+          content: Text(loc.translate("list_gift_error")),
+          duration: const Duration(seconds: 2),
+        ),
       );
       return null;
     }
@@ -85,21 +95,29 @@ class _UsersState extends State<Users> {
       );
 
       if (response != null) {
+        final loc = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '🎁 Đã tặng "${response.giftName}" cho ${response.receiverName}!',
+                '${loc.translate("gift_sent")} '
+                '${response.giftName} '
+                '${loc.translate("to")} '
+                '${response.receiverName}'
             ),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
+      final loc = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi tặng quà: $e')),
+        SnackBar(
+          content: Text(loc.translate("gift_sent_failed")),
+          duration: const Duration(seconds: 2),
+        ),
       );
     }
   }
-
 
   Future<void> _loadUsers() async {
     setState(() {
@@ -136,6 +154,7 @@ class _UsersState extends State<Users> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorPrimary = const Color(0xFF2563EB);
+    final loc = AppLocalizations.of(context);
 
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -154,7 +173,7 @@ class _UsersState extends State<Users> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadUsers,
-              child: const Text("Retry"),
+              child: Text(loc.translate("retry")),
             ),
           ],
         ),
@@ -163,8 +182,7 @@ class _UsersState extends State<Users> {
 
     if (_users.isEmpty) {
       return Center(
-        child: Text(
-          "No users available.",
+        child: Text(loc.translate("error"),
           style: theme.textTheme.titleMedium,
         ),
       );
@@ -195,7 +213,6 @@ class _UsersState extends State<Users> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- Hàng thông tin người dùng ---
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -214,7 +231,6 @@ class _UsersState extends State<Users> {
                     ),
                     SizedBox(width: sw(context, 16)),
 
-                    // Tên + giới thiệu
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,14 +264,13 @@ class _UsersState extends State<Users> {
 
                 SizedBox(height: sh(context, 10)),
 
-                // --- Nút Tặng quà ---
                 Align(
                   alignment: Alignment.centerRight,
                   child: ElevatedButton(
                     onPressed: () => _showGiftDialog(context, user),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563EB), // xanh dương
-                      foregroundColor: Colors.white, // chữ trắng
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -264,8 +279,8 @@ class _UsersState extends State<Users> {
                         vertical: sh(context, 10),
                       ),
                     ),
-                    child: const Text(
-                      "Tặng quà",
+                    child: Text(
+                      loc.translate("send_gift"),
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -296,10 +311,15 @@ class _UsersState extends State<Users> {
 
   void _showGiftDialog(BuildContext context, UserItem user) async {
     final gifts = await _loadMyGifts();
+    final loc = AppLocalizations.of(context);
     if (gifts == null || gifts.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bạn chưa có quà nào để tặng.')),
+        SnackBar(
+          content: Text(loc.translate("gift_not_enough")),
+          duration: const Duration(seconds: 2),
+        ),
       );
+
       return;
     }
 
@@ -319,7 +339,6 @@ class _UsersState extends State<Users> {
           builder: (context, setState) {
             Widget stepContent() {
               if (currentStep == 0) {
-                // --- Step 1: Chọn quà ---
                 return GridView.builder(
                   shrinkWrap: true,
                   itemCount: gifts.items.length,
@@ -337,7 +356,7 @@ class _UsersState extends State<Users> {
                       onTap: () {
                         setState(() {
                           selectedGift = gift;
-                          quantity = 1; // reset khi chọn quà mới
+                          quantity = 1;
                         });
                       },
                       child: Container(
@@ -382,9 +401,11 @@ class _UsersState extends State<Users> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Số lượng: ${gift.quantity}',
+                              '${loc.translate("owned")}: ${gift.quantity}',
                               style: const TextStyle(
-                                  fontSize: 12, color: Colors.grey),
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
@@ -393,7 +414,6 @@ class _UsersState extends State<Users> {
                   },
                 );
               } else {
-                // --- Step 2: Nhập thông tin ---
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -401,7 +421,7 @@ class _UsersState extends State<Users> {
                       initialValue: quantity.toString(),
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: 'Số lượng',
+                        labelText: loc.translate('quantity'),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -415,7 +435,7 @@ class _UsersState extends State<Users> {
                     TextFormField(
                       initialValue: message,
                       decoration: InputDecoration(
-                        labelText: 'Tin nhắn (tùy chọn)',
+                        labelText: loc.translate('message_optional'),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -433,7 +453,7 @@ class _UsersState extends State<Users> {
                             });
                           },
                         ),
-                        const Text('Gửi ẩn danh'),
+                        Text(loc.translate('send_anonymously')),
                       ],
                     ),
                   ],
@@ -445,9 +465,11 @@ class _UsersState extends State<Users> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              title: Text(currentStep == 0
-                  ? 'Chọn quà cho ${user.name}'
-                  : 'Thông tin quà tặng'),
+              title: Text(
+                currentStep == 0
+                    ? '${loc.translate("choose_gift_for")} ${user.name}'
+                    : loc.translate("gift_info"),
+              ),
               content: SizedBox(
                 width: double.maxFinite,
                 child: stepContent(),
@@ -457,7 +479,7 @@ class _UsersState extends State<Users> {
                 if (currentStep == 1)
                   TextButton(
                     onPressed: () => setState(() => currentStep = 0),
-                    child: const Text('Back'),
+                    child: Text(loc.translate("back")),
                   ),
                 ElevatedButton(
                   onPressed: () {
@@ -479,7 +501,11 @@ class _UsersState extends State<Users> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: Text(currentStep == 0 ? 'Next' : 'Tặng'),
+                  child: Text(
+                    currentStep == 0
+                        ? loc.translate("next")
+                        : loc.translate("send_gift"),
+                  ),
                 ),
               ],
             );

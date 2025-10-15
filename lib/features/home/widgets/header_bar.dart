@@ -117,7 +117,6 @@ class _HeaderBarState extends State<HeaderBar> with SingleTickerProviderStateMix
                         isCollapsed: true,
                       ),
                       onSubmitted: (value) {
-                        // TODO: hehe
                         debugPrint("Searching for: $value");
                       },
                     ),

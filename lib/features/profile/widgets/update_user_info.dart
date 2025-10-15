@@ -71,12 +71,10 @@ class _UpdateUserInfoFormState extends State<UpdateUserInfoForm> {
       );
 
       widget.onUpdated(updatedUser);
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.green,
-          content: Text(AppLocalizations.of(context)
-              .translate("update_profile_success")),
+          content: Text(AppLocalizations.of(context).translate("update_profile_success")),
+          duration: const Duration(seconds: 2),
         ),
       );
 
@@ -85,9 +83,8 @@ class _UpdateUserInfoFormState extends State<UpdateUserInfoForm> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.red,
-          content: Text(AppLocalizations.of(context)
-              .translate("update_profile_failed")),
+          content: Text(AppLocalizations.of(context).translate("update_profile_failed")),
+          duration: const Duration(seconds: 2),
         ),
       );
     } finally {
@@ -159,7 +156,6 @@ class _UpdateUserInfoFormState extends State<UpdateUserInfoForm> {
                   ),
                   SizedBox(height: 24),
 
-                  // Name
                   TextFormField(
                     controller: _nameController,
                     maxLines: null,
@@ -190,7 +186,6 @@ class _UpdateUserInfoFormState extends State<UpdateUserInfoForm> {
                     SizedBox(height: 16),
                   ],
 
-                  // Gender radio buttons
                   Text(
                     loc.translate("gender"),
                     style: t.bodyLarge?.copyWith(fontWeight: FontWeight.w600),

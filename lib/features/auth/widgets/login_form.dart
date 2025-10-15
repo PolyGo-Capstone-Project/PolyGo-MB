@@ -56,8 +56,8 @@ class _LoginFormState extends State<LoginForm> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.green,
           content: Text(loc.translate("login_success")),
+          duration: const Duration(seconds: 2),
         ),
       );
 
@@ -70,8 +70,8 @@ class _LoginFormState extends State<LoginForm> {
       final loc = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.red,
           content: Text(loc.translate("login_failed")),
+          duration: const Duration(seconds: 2),
         ),
       );
     } finally {
@@ -188,7 +188,6 @@ class _LoginFormState extends State<LoginForm> {
               ),
               SizedBox(height: sh(context, 12)),
 
-              // Remember me / Forgot password
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -220,7 +219,6 @@ class _LoginFormState extends State<LoginForm> {
               ),
               SizedBox(height: sh(context, 20)),
 
-              // Login Button (Primary)
               AppButton(
                 text: _isLoading
                     ? "Logging in..."
@@ -231,7 +229,6 @@ class _LoginFormState extends State<LoginForm> {
                 disabled: _isLoading,
               ),
 
-              // Divider
               SizedBox(height: sh(context, 24)),
               Row(
                 children: [
@@ -248,7 +245,6 @@ class _LoginFormState extends State<LoginForm> {
                 ],
               ),
 
-              // Google login
               SizedBox(height: sh(context, 24)),
               AppButton(
                 text: loc.translate("login_google"),
@@ -258,7 +254,6 @@ class _LoginFormState extends State<LoginForm> {
                 onPressed: () {},
               ),
 
-              // Signup link
               SizedBox(height: sh(context, 24)),
               Text.rich(
                 TextSpan(

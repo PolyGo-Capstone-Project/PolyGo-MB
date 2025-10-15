@@ -27,7 +27,7 @@ class UpdateLearningLanguage extends StatefulWidget {
 }
 
 class _UpdateLearningLanguageState extends State<UpdateLearningLanguage> {
-  late List<String> _selected = []; // khởi tạo ngay
+  late List<String> _selected = [];
   List<LearnLanguageModel> _languages = [];
   bool _isLoading = true;
   String? _error;
@@ -65,7 +65,6 @@ class _UpdateLearningLanguageState extends State<UpdateLearningLanguage> {
 
       setState(() {
         _languages = langs;
-        // Chỉ cập nhật nếu _selected rỗng
         if (_selected.isEmpty) {
           _selected = langs.where((e) => e.isLearning).map((e) => e.id).toList();
         }
@@ -88,7 +87,6 @@ class _UpdateLearningLanguageState extends State<UpdateLearningLanguage> {
       }
     });
   }
-
 
   @override
   Widget build(BuildContext context) {

@@ -1,4 +1,4 @@
-import 'dart:math'; // thêm dòng này để random hình fallback
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/utils/responsive.dart';
@@ -7,8 +7,7 @@ import '../../../../data/models/badges/badge_model.dart';
 import '../../../../data/repositories/badge_repository.dart';
 import '../../../../data/services/badge_service.dart';
 import '../../../../routes/app_routes.dart';
-import '../../../../core/localization/app_localizations.dart'; // thêm
-
+import '../../../../core/localization/app_localizations.dart';
 class BadgesSection extends StatefulWidget {
   const BadgesSection({super.key});
 
@@ -63,7 +62,7 @@ class _BadgesSectionState extends State<BadgesSection> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context); // thêm
+    final loc = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final containerWidth = screenWidth < 500
         ? screenWidth * 0.9
@@ -175,7 +174,7 @@ class _BadgesSectionState extends State<BadgesSection> {
                 )
                     : Center(
                   child: Text(
-                    loc.translate("no_badges_yet") ?? "Bạn chưa đạt thành tựu nào.",
+                    loc.translate("no_badges_yet"),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.grey[600],
                     ),
@@ -203,7 +202,7 @@ class _BadgesSectionState extends State<BadgesSection> {
   }
 
   void _showBadgeDetail(BuildContext context, BadgeModel badge, String imageUrl) {
-    final loc = AppLocalizations.of(context); // thêm
+    final loc = AppLocalizations.of(context);
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -252,13 +251,13 @@ class _BadgesSectionState extends State<BadgesSection> {
               Text(
                 badge.description.isNotEmpty
                     ? badge.description
-                    : loc.translate("no_description") ?? "No description available.",
+                    : loc.translate("no_description"),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               SizedBox(height: sh(context, 8)),
               Text(
-                "${loc.translate("received_on") ?? "Received"}: ${badge.createdAt.split('T').first}",
+                "${loc.translate("received_on")}: ${badge.createdAt.split('T').first}",
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
