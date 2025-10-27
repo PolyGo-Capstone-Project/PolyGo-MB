@@ -5,7 +5,8 @@ import '../models/api_response.dart';
 import '../models/user/profile_setup_request.dart';
 import '../models/user/update_profile_request.dart';
 import '../models/user/update_userinfo_request.dart';
-import '../models/user/user_list_response.dart';
+import '../models/user/user_all_response.dart';
+import '../models/user/user_matching_response.dart';
 
 class UserService {
   final ApiClient apiClient;
@@ -72,28 +73,47 @@ class UserService {
     }
   }
 
-  Future<UserListResponse> getUsers({
-    required String token,
-    int pageNumber = 1,
-    int pageSize = 10,
-  }) async {
+  Future<ApiResponse<UserMatchingResponse>> getMatchingUsers(String token, {String lang = 'vi'}) async {
     try {
       final response = await apiClient.get(
-        ApiConstants.getUsers,
+        ApiConstants.userMatching,
+        queryParameters: {'lang': lang},
+        headers: {
+          ApiConstants.headerAuthorization: 'Bearer $token',
+        },
+      );
+
+      final json = response.data as Map<String, dynamic>;
+      return ApiResponse.fromJson(json, (data) => UserMatchingResponse.fromJson(data));
+    } on DioError catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<ApiResponse<UserAllResponse>> getAllUsers(
+      String token, {
+        String lang = 'en',
+        int pageNumber = 1,
+        int pageSize = 20,
+        String? name,
+      }) async {
+    try {
+      final response = await apiClient.get(
+        ApiConstants.usersAll,
         queryParameters: {
+          'lang': lang,
           'pageNumber': pageNumber,
           'pageSize': pageSize,
+          if (name != null && name.isNotEmpty) 'name': name,
         },
         headers: {
           ApiConstants.headerAuthorization: 'Bearer $token',
         },
       );
 
-      return UserListResponse.fromJson(response.data as Map<String, dynamic>);
+      final json = response.data as Map<String, dynamic>;
+      return ApiResponse.fromJson(json, (data) => UserAllResponse.fromJson(json));
     } on DioError catch (e) {
-      if (e.response != null) {
-        print('Get users error: ${e.response?.data}');
-      }
       rethrow;
     }
   }

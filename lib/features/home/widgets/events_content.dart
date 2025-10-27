@@ -36,7 +36,6 @@ class EventsContent extends StatelessWidget {
         children: [
           const SizedBox(height: 8),
 
-          // Filter Row
           Row(
             children: [
               ElevatedButton.icon(
@@ -167,7 +166,6 @@ class EventsContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image
               AspectRatio(
                 aspectRatio: 16 / 10,
                 child: Image.network(
@@ -177,7 +175,6 @@ class EventsContent extends StatelessWidget {
                 ),
               ),
 
-              // Title
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 child: Column(

@@ -24,7 +24,7 @@ class EventDetail extends StatelessWidget {
       elevation: 12,
       backgroundColor: isDark
           ? const Color(0xFF1E1E1E)
-          : theme.cardColor, // darker background for dark mode
+          : theme.cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(sw(context, 16)),
       ),
@@ -37,7 +37,6 @@ class EventDetail extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- Header ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -63,7 +62,6 @@ class EventDetail extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // --- Host info ---
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -99,7 +97,6 @@ class EventDetail extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // --- Event Info ---
               Text(
                 event['description'] ?? loc.translate('no_description'),
                 style: t.bodyMedium?.copyWith(
@@ -156,7 +153,6 @@ class EventDetail extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // --- Buttons ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

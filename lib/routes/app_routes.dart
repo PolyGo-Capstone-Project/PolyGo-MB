@@ -53,11 +53,7 @@ class AppRoutes {
       case notifications:
         return MaterialPageRoute(builder: (_) => const NotificationScreen());
       default:
-        return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text('Route không tồn tại')),
-          ),
-        );
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
     }
   }
 }
