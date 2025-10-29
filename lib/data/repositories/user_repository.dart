@@ -2,6 +2,7 @@ import '../models/user/profile_setup_request.dart';
 import '../models/user/update_profile_request.dart';
 import '../models/user/update_userinfo_request.dart';
 import '../models/user/user_all_response.dart';
+import '../models/user/user_by_id_response.dart';
 import '../models/user/user_matching_response.dart';
 import '../services/user_service.dart';
 
@@ -57,6 +58,12 @@ class UserRepository {
 
     return response.data?.items ?? [];
   }
+
+  Future<UserByIdResponse?> getUserById(String token, String id, {String lang = 'en'}) async {
+    final response = await _service.getUserById(token, id, lang: lang);
+    return response.data;
+  }
+
 }
 
 

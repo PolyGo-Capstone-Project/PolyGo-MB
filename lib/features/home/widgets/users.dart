@@ -5,9 +5,11 @@ import 'package:polygo_mobile/core/utils/string_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/api/api_client.dart';
 import '../../../data/models/user/user_all_response.dart';
+import '../../../data/models/user/user_matching_response.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../data/services/user_service.dart';
 import '../../../main.dart';
+import '../../../routes/app_routes.dart';
 import '../../shared/app_error_state.dart';
 import 'filter_pop_up.dart';
 
@@ -33,7 +35,11 @@ class _UsersState extends State<Users> {
   late final UserRepository _repository;
   bool _loading = true;
   bool _hasError = false;
-  List<UserItem> _users = [];
+
+  List<UserItem> _allUsers = [];
+  List<UserMatchingItem> _matchingUsers = [];
+
+  bool _isShowingMatching = true;
 
   List<Map<String, String>> _filterLearn = [];
   List<Map<String, String>> _filterKnown = [];
@@ -62,7 +68,7 @@ class _UsersState extends State<Users> {
     if (_currentLocale == null ||
         _currentLocale!.languageCode != locale.languageCode) {
       _currentLocale = locale;
-      _loadUsers(lang: locale.languageCode);
+      _loadMatchingUsers(lang: locale.languageCode);
     }
   }
 
@@ -70,14 +76,58 @@ class _UsersState extends State<Users> {
   void didUpdateWidget(covariant Users oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isRetrying && !oldWidget.isRetrying) {
-      _loadUsers(lang: _currentLocale?.languageCode);
+      if (_isShowingMatching) {
+        _loadMatchingUsers(lang: _currentLocale?.languageCode);
+      } else {
+        _loadAllUsers(lang: _currentLocale?.languageCode);
+      }
     }
   }
 
-  Future<void> _loadUsers({String? lang}) async {
+  Future<void> _loadMatchingUsers({String? lang}) async {
     setState(() {
       _loading = true;
       _hasError = false;
+      _isShowingMatching = true;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null || token.isEmpty) {
+        setState(() {
+          _hasError = true;
+          _loading = false;
+        });
+        widget.onError?.call();
+        return;
+      }
+
+      final response = await _repository.getMatchingUsers(token, lang: lang ?? "vi");
+
+      if (!mounted) return;
+
+      setState(() {
+        _matchingUsers = response;
+        _loading = false;
+        _hasError = false;
+      });
+      widget.onLoaded?.call();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _hasError = true;
+        _loading = false;
+      });
+      widget.onError?.call();
+    }
+  }
+
+  Future<void> _loadAllUsers({String? lang}) async {
+    setState(() {
+      _loading = true;
+      _hasError = false;
+      _isShowingMatching = false;
     });
 
     try {
@@ -96,7 +146,7 @@ class _UsersState extends State<Users> {
       if (!mounted) return;
 
       setState(() {
-        _users = response;
+        _allUsers = response;
         _loading = false;
         _hasError = false;
       });
@@ -111,26 +161,48 @@ class _UsersState extends State<Users> {
     }
   }
 
-  List<UserItem> get _filteredUsers {
+  bool get _hasActiveFilter =>
+      _filterLearn.isNotEmpty ||
+          _filterKnown.isNotEmpty ||
+          _filterInterests.isNotEmpty;
+
+  List<dynamic> get _filteredUsers {
     final query = widget.searchQuery.trim().normalize();
 
-    return _users.where((user) {
-      final learnMatch = _filterLearn.isEmpty ||
-          user.learningLanguages.any(
-                  (l) => _filterLearn.any((f) => f['id'] == l.id));
+    if (_hasActiveFilter) {
+      return _allUsers.where((user) {
+        final learnMatch = _filterLearn.isEmpty ||
+            user.learningLanguages.any(
+                    (l) => _filterLearn.any((f) => f['id'] == l.id));
 
-      final knownMatch = _filterKnown.isEmpty ||
-          user.speakingLanguages
-              .any((l) => _filterKnown.any((f) => f['id'] == l.id));
+        final knownMatch = _filterKnown.isEmpty ||
+            user.speakingLanguages
+                .any((l) => _filterKnown.any((f) => f['id'] == l.id));
 
-      final interestMatch = _filterInterests.isEmpty ||
-          user.interests.any((i) => _filterInterests.any((f) => f['id'] == i.id));
+        final interestMatch = _filterInterests.isEmpty ||
+            user.interests.any((i) => _filterInterests.any((f) => f['id'] == i.id));
 
-      final nameMatch =
-          query.isEmpty || user.name.fuzzyContains(query);
+        final nameMatch =
+            query.isEmpty || user.name.fuzzyContains(query);
 
-      return learnMatch && knownMatch && interestMatch && nameMatch;
-    }).toList();
+        return learnMatch && knownMatch && interestMatch && nameMatch;
+      }).toList();
+    } else {
+      final sourceList = _isShowingMatching ? _matchingUsers : _allUsers;
+
+      if (query.isEmpty) return sourceList;
+
+      return sourceList.where((user) {
+        if (user is UserMatchingItem) {
+          final name = (user.name ?? '').normalize();
+          return name.fuzzyContains(query);
+        } else if (user is UserItem) {
+          final name = (user.name ?? '').normalize();
+          return name.fuzzyContains(query);
+        }
+        return false;
+      }).toList();
+    }
   }
 
   @override
@@ -146,16 +218,25 @@ class _UsersState extends State<Users> {
     if (_hasError) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 32.0),
-        child: AppErrorState(onRetry: () => _loadUsers(lang: _currentLocale?.languageCode)),
+        child: AppErrorState(
+          onRetry: () {
+            if (_hasActiveFilter) {
+              _loadAllUsers(lang: _currentLocale?.languageCode);
+            } else {
+              _loadMatchingUsers(lang: _currentLocale?.languageCode);
+            }
+          },
+        ),
       );
     }
+
+    final usersToShow = _filteredUsers;
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
           Row(
             children: [
               ElevatedButton.icon(
@@ -171,6 +252,7 @@ class _UsersState extends State<Users> {
                       _filterKnown = List<Map<String, String>>.from(result['known'] ?? []);
                       _filterInterests = List<Map<String, String>>.from(result['interests'] ?? []);
                     });
+                    _loadAllUsers(lang: _currentLocale?.languageCode);
                   }
                 },
                 icon: const Icon(Icons.filter_alt_outlined),
@@ -223,12 +305,14 @@ class _UsersState extends State<Users> {
                                   _filterKnown.removeWhere((f) => f['name'] == tag);
                                   _filterInterests.removeWhere((f) => f['name'] == tag);
                                 });
+
+                                if (_hasActiveFilter) {
+                                  _loadAllUsers(lang: _currentLocale?.languageCode);
+                                } else {
+                                  _loadMatchingUsers(lang: _currentLocale?.languageCode);
+                                }
                               },
-                              child: const Icon(
-                                Icons.close_rounded,
-                                size: 16,
-                                color: Colors.grey,
-                              ),
+                              child: const Icon(Icons.close_rounded, size: 16, color: Colors.grey),
                             ),
                           ],
                         ),
@@ -242,14 +326,26 @@ class _UsersState extends State<Users> {
 
           const SizedBox(height: 16),
 
+          if (_isShowingMatching && !_hasActiveFilter)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                "Những người phù hợp với bạn",
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ),
+
           Expanded(
             child: MasonryGridView.count(
               crossAxisCount: crossAxisCount,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              itemCount: _filteredUsers.length,
+              itemCount: usersToShow.length,
               itemBuilder: (context, index) {
-                final user = _filteredUsers[index];
+                final user = usersToShow[index];
                 return _buildUserCard(context, user);
               },
             ),
@@ -259,7 +355,7 @@ class _UsersState extends State<Users> {
     );
   }
 
-  Widget _buildUserCard(BuildContext context, UserItem user) {
+  Widget _buildUserCard(BuildContext context, dynamic user) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -277,110 +373,112 @@ class _UsersState extends State<Users> {
       ...user.learningLanguages.map((e) => e.name),
     ];
 
-    final hasAvatar = user.avatarUrl.isNotEmpty;
+    final hasAvatar = (user.avatarUrl != null && user.avatarUrl.isNotEmpty);
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black12,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: hasAvatar
-                  ? Image.network(
-                user.avatarUrl,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                errorBuilder: (_, __, ___) => Container(
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.person,
-                      size: 80, color: Colors.white70),
-                ),
-              )
-                  : Container(
-                color: Colors.grey[400],
-                child: const Center(
-                  child: Icon(
-                    Icons.person,
-                    size: 80,
-                    color: Colors.white70,
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "XP: ${user.experiencePoints}",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: SizedBox(
-                height: 28,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  itemCount: tags.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, tagIndex) {
-                    return Container(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary
-                            .withOpacity(isDark ? 0.25 : 0.12),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        tags[tagIndex],
-                        style: TextStyle(
-                          color: theme.colorScheme.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          AppRoutes.userProfile,
+          arguments: {'id': user.id},
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: cardBackground,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black.withOpacity(0.3) : Colors.black12,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-      ),
-    ).animate().fadeIn(duration: 300.ms);
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: hasAvatar
+                    ? Image.network(
+                  user.avatarUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.person,
+                        size: 80, color: Colors.white70),
+                  ),
+                )
+                    : Container(
+                  color: Colors.grey[400],
+                  child: const Center(
+                    child: Icon(Icons.person,
+                        size: 80, color: Colors.white70),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.name ?? 'Unknown',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "XP: ${user.experiencePoints}",
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: SizedBox(
+                  height: 28,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    itemCount: tags.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, tagIndex) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary
+                              .withOpacity(isDark ? 0.25 : 0.12),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          tags[tagIndex],
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ).animate().fadeIn(duration: 300.ms),
+    );
   }
-
 }

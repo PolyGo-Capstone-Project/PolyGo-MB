@@ -54,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final List<Widget> pages = [
       EventsContent(
         key: const ValueKey('events'),
+        searchQuery: _searchQuery,
       ),
       Matching(
         key: const ValueKey('matching'),

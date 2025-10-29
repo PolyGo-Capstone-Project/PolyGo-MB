@@ -6,6 +6,7 @@ import '../models/user/profile_setup_request.dart';
 import '../models/user/update_profile_request.dart';
 import '../models/user/update_userinfo_request.dart';
 import '../models/user/user_all_response.dart';
+import '../models/user/user_by_id_response.dart';
 import '../models/user/user_matching_response.dart';
 
 class UserService {
@@ -117,4 +118,24 @@ class UserService {
       rethrow;
     }
   }
+
+  /// Get user by id
+  Future<ApiResponse<UserByIdResponse>> getUserById(String token, String id, {String lang = 'en'}) async {
+    try {
+      final endpoint = ApiConstants.userById.replaceFirst('{id}', id);
+      final response = await apiClient.get(
+        endpoint,
+        queryParameters: {'lang': lang},
+        headers: {
+          ApiConstants.headerAuthorization: 'Bearer $token',
+        },
+      );
+
+      final json = response.data as Map<String, dynamic>;
+      return ApiResponse.fromJson(json, (data) => UserByIdResponse.fromJson(data));
+    } on DioError catch (e) {
+      rethrow;
+    }
+  }
+
 }
