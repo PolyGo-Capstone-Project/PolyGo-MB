@@ -194,7 +194,6 @@ class _CalendarState extends State<Calendar> {
               markerBuilder: (context, date, events) {
                 if (events.isEmpty) return null;
 
-                // Lọc bỏ event Cancelled
                 final filtered = events
                     .where((e) => e.status.toLowerCase() != 'cancelled')
                     .toList();

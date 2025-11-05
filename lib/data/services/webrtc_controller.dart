@@ -46,7 +46,7 @@ class WebRTCController extends ChangeNotifier {
   final Map<String, RTCPeerConnection> _peerConnections = {};
   List<ChatMessage> chatMessages = [];
   final String eventId;
-  final String userName;
+  String userName;
   final bool isHost;
 
   final VoidCallback? onRoomEnded;
