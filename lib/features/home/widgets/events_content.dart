@@ -63,10 +63,6 @@ class _EventsContentState extends State<EventsContent> {
     super.didChangeDependencies();
     final locale = Localizations.localeOf(context);
 
-    if (locale.languageCode == "en" && !_initialized) {
-      return;
-    }
-
     if (!_initialized) {
       _initialized = true;
       _currentLocale = locale;
