@@ -48,7 +48,7 @@ class EventService {
     }
   }
 
-  Future<ApiResponse<ComingEventListResponse>> getUpcomingEvents({
+  Future<ApiResponse<EventListResponse>> getUpcomingEvents({
     required String token,
     String lang = 'en',
     int pageNumber = 1,
@@ -78,7 +78,7 @@ class EventService {
     final json = response.data as Map<String, dynamic>;
     return ApiResponse.fromJson(
       json,
-          (data) => ComingEventListResponse.fromJson(data),
+          (data) => EventListResponse.fromJson(data),
     );
   }
 

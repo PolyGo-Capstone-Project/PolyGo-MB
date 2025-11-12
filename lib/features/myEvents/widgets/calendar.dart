@@ -301,6 +301,11 @@ class _CalendarState extends State<Calendar> {
             eventRepository: _repository,
             token: token,
             parentContext: context,
+            onEventCanceled: () {
+              setState(() {
+                _joinedEvents.removeWhere((e) => e.id == event.id);
+              });
+            },
           ),
         );
       },

@@ -67,7 +67,7 @@ class EventRepository {
     );
   }
 
-  Future<List<ComingEventModel>> getUpcomingEvents(
+  Future<List<EventModel>> getUpcomingEvents(
       String token, {
         String lang = 'en',
         int pageNumber = 1,
@@ -88,7 +88,7 @@ class EventRepository {
     return res.data!.items;
   }
 
-  Future<ComingEventListResponse> getUpcomingEventsPaged(
+  Future<EventListResponse> getUpcomingEventsPaged(
       String token, {
         String lang = 'en',
         int pageNumber = 1,
@@ -106,7 +106,7 @@ class EventRepository {
     );
 
     if (res.data == null) {
-      return ComingEventListResponse(
+      return EventListResponse(
         items: [],
         totalItems: 0,
         currentPage: 1,

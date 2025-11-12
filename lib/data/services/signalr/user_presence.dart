@@ -15,7 +15,7 @@ class UserPresenceService {
   final OnUserStatusChanged? onUserStatusChanged;
 
   // === Hub URL giống React
-  final String hubUrl = "${ApiConstants.baseUrl}/userPresenceHub";
+  final String hubUrl = "${ApiConstants.baseUrl}/communicationHub";
 
   // === Trạng thái kết nối ===
   HubConnection? connection;

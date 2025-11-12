@@ -100,6 +100,23 @@ class WebRTCController extends ChangeNotifier {
     }
   }
 
+  Future<void> switchCamera() async {
+    if (localStream == null) return;
+
+    // Lấy track video đầu tiên
+    final videoTrack = localStream!.getVideoTracks().isNotEmpty
+        ? localStream!.getVideoTracks().first
+        : null;
+    if (videoTrack == null) return;
+
+    try {
+      await videoTrack.switchCamera();
+      print("🎥 Switched camera");
+    } catch (e) {
+      print("Error switching camera: $e");
+    }
+  }
+
   Future<RTCPeerConnection> createPeer(String remoteId) async {
     if (_peerConnections.containsKey(remoteId)) {
       return _peerConnections[remoteId]!;
