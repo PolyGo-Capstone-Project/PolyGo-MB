@@ -228,8 +228,8 @@ class WebRTCController extends ChangeNotifier {
         id: connId,
         name: name,
         role: connId == hostId ? "host" : "attendee",
-        audioEnabled: false, // default false
-        videoEnabled: false, // default false
+        audioEnabled: localVideoEnabled,
+        videoEnabled: localAudioEnabled,
       );
       notifyListeners();
 
