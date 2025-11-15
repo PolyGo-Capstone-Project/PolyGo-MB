@@ -268,7 +268,7 @@ class _JoinedEventDetailsState extends State<JoinedEventDetails> {
                                             );
                                           } catch (_) {
                                             ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-                                              SnackBar(content: Text(loc.translate('error_occurred'))),
+                                              SnackBar(content: Text(loc.translate('cancel_too_late'))),
                                             );
                                           }
                                         },

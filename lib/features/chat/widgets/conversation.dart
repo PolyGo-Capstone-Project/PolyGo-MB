@@ -23,6 +23,7 @@ import 'message_item.dart';
 class Conversation extends StatefulWidget {
   final String conversationId;
   final String userName;
+  final String receiverId;
   final String avatarHeader;
   final String lastActiveAt;
   final bool isOnline;
@@ -33,6 +34,7 @@ class Conversation extends StatefulWidget {
     required this.userName,
     required this.avatarHeader,
     required this.lastActiveAt,
+    required this.receiverId,
     required this.isOnline,
   });
 
@@ -347,6 +349,7 @@ class _ConversationState extends State<Conversation> {
 
     return Scaffold(
       appBar: ConversationAppBar(
+        receiverId: widget.receiverId,
         userName: widget.userName,
         avatarHeader: widget.avatarHeader,
         lastActiveAt: widget.lastActiveAt,

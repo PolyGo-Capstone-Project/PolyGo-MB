@@ -276,7 +276,7 @@ class _HostedEventDetailsState extends State<HostedEventDetails> {
                                                   SnackBar(
                                                     content: Text(
                                                       loc.translate(
-                                                        'error_occurred',
+                                                        'cancel_too_late',
                                                       ),
                                                     ),
                                                   ),

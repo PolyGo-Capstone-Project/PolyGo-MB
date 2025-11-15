@@ -278,6 +278,7 @@ class _ConversationListState extends State<ConversationList> {
                         builder: (_) => ConversationScreen(
                           conversationId: conv.id,
                           userName: conv.user.name,
+                          receiverId: conv.user.id,
                           lastActiveAt: conv.user.lastActiveAt ?? '',
                           isOnline: conv.user.isOnline,
                           avatarHeader: conv.user.avatarUrl ?? '',
