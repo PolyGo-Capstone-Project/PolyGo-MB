@@ -103,23 +103,16 @@ class _JoinedGamesState extends State<JoinedGames> {
 
   void _applyFilters() {
     var list = _wordSets;
-    //
-    // // Filter by languages
-    // if (_filterLanguages.isNotEmpty) {
-    //   list = list
-    //       .where((ws) =>
-    //       _filterLanguages.any((f) => ws.languageId == f['id']))
-    //       .toList();
-    // }
+
+    // Filter by languages
+    if (_filterLanguages.isNotEmpty) {
+      list = list.where((ws) =>
+          _filterLanguages.any((f) => ws.language.id == f['id'])).toList();
+    }
 
     // Filter by difficulty
     if (_filterDifficulty != null && _filterDifficulty!.isNotEmpty) {
       list = list.where((ws) => ws.difficulty == _filterDifficulty).toList();
-    }
-
-    // Filter by category
-    if (_filterCategory != null && _filterCategory!.isNotEmpty) {
-      list = list.where((ws) => ws.category == _filterCategory).toList();
     }
 
     // Filter by search query
