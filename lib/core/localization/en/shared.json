@@ -10,9 +10,9 @@
   "bottom_home": "Home",
 
   "about_merit_title": "Merit Score",
-  "merit_range_high": "+80 - 100: You are an active and trustworthy member",
-  "merit_range_mid": "+40 - 79: You have multiple warnings and will have limited features",
-  "merit_range_low": "+0 - 39: You are untrustworthy and will be temporarily banned",
+  "merit_range_high": "•70 - 100: You are an active and trustworthy member",
+  "merit_range_mid": "•51 - 69: You have multiple warnings, please be careful",
+  "merit_range_low": "•0 - 50: You are untrustworthy and will be temporarily banned",
 
   "about_plus_title": "Plus member",
   "about_plus_description": "Tag for Plus member only!",

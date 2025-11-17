@@ -56,7 +56,7 @@ class AboutMeritDialog extends StatelessWidget {
 
                 // Title
                 Text(
-                  loc.translate("about_merit_title") ?? "Merit Info",
+                  loc.translate("about_merit_title"),
                   textAlign: TextAlign.center,
                   style: t.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -70,20 +70,17 @@ class AboutMeritDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      loc.translate("merit_range_high") ??
-                          "+80 - 100: Active and trustworthy member",
+                      loc.translate("merit_range_high"),
                       style: t.bodyLarge?.copyWith(color: Colors.green),
                     ),
                     SizedBox(height: sh(context, 8)),
                     Text(
-                      loc.translate("merit_range_mid") ??
-                          "+40 - 79: Warned multiple times, some features restricted",
+                      loc.translate("merit_range_mid"),
                       style: t.bodyLarge?.copyWith(color: Colors.orange),
                     ),
                     SizedBox(height: sh(context, 8)),
                     Text(
-                      loc.translate("merit_range_low") ??
-                          "+0 - 39: Untrustworthy and temporarily banned",
+                      loc.translate("merit_range_low"),
                       style: t.bodyLarge?.copyWith(color: Colors.red),
                     ),
                   ],
