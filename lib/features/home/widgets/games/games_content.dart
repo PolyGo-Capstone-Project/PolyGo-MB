@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:polygo_mobile/core/utils/string_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -150,9 +151,7 @@ class _WordSetContentState extends State<WordSetContent> {
   List<WordSetModel> get _displayedWordSets {
     final query = widget.searchQuery.trim();
     if (query.isEmpty) return _wordSets;
-    return _wordSets
-        .where((e) => e.title.toLowerCase().contains(query.toLowerCase()))
-        .toList();
+    return _wordSets.where((e) => e.title.fuzzyContains(query)).toList();
   }
 
   bool get _canLoadMore => _currentPage < _totalPages && !_isLoadingMore;

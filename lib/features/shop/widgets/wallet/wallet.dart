@@ -27,13 +27,17 @@ class _WalletState extends State<Wallet> {
   double _pendingBalance = 0;
   List<WalletTransaction> _transactions = [];
   bool _loading = true;
+  bool _loadingTransactions = true;
   String? _error;
   int _currentPage = 1;
   int _totalPages = 1;
   bool _hasNextPage = false;
   bool _hasPreviousPage = false;
   List<WalletAccount> _walletAccounts = [];
-
+  String? _filterType;
+  String? _filterMethod;
+  String? _filterStatus;
+  bool? _filterInquiry;
   @override
   void initState() {
     super.initState();
@@ -47,22 +51,26 @@ class _WalletState extends State<Wallet> {
       _loadData();
     }
   }
-
-
   Future<void> _loadData() async {
     setState(() {
       _loading = true;
       _error = null;
     });
+
     try {
-      await Future.wait([_loadBalance(), _loadTransactions()]);
+      await _loadBalance(); // load balance trước
+      await _loadTransactions(); // load transactions sau
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _loading = false;
         _error = e.toString();
       });
       widget.onError?.call();
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _loading = false; // tắt spinner loadData
+      });
     }
   }
 
@@ -73,6 +81,7 @@ class _WalletState extends State<Wallet> {
 
     final wallet = await TransactionRepository(TransactionService(ApiClient())).getWalletInfo(token: token);
     if (!mounted) return;
+
     setState(() {
       _balance = wallet!.balance;
       _pendingBalance = wallet.pendingBalance;
@@ -81,28 +90,47 @@ class _WalletState extends State<Wallet> {
   }
 
   Future<void> _loadTransactions() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    if (token == null) throw Exception("Token not found");
-
-    final repo = TransactionRepository(TransactionService(ApiClient()));
-    final response = await repo.getWalletTransactions(token: token, pageNumber: _currentPage, pageSize: 10);
-
-    if (!mounted) return;
     setState(() {
-      _transactions = response?.items ?? [];
-      _currentPage = response?.currentPage ?? 1;
-      _totalPages = response?.totalPages ?? 1;
-      _hasNextPage = response?.hasNextPage ?? false;
-      _hasPreviousPage = response?.hasPreviousPage ?? false;
-      _loading = false;
+      _loadingTransactions = true;
     });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) throw Exception("Token not found");
+
+      final repo = TransactionRepository(TransactionService(ApiClient()));
+      final response = await repo.getWalletTransactions(
+        token: token,
+        pageNumber: _currentPage,
+        pageSize: 10,
+        transactionType: _filterType,
+        transactionMethod: _filterMethod,
+        transactionStatus: _filterStatus,
+        isInquiry: _filterInquiry,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _transactions = response?.items ?? [];
+        _currentPage = response?.currentPage ?? 1;
+        _totalPages = response?.totalPages ?? 1;
+        _hasNextPage = response?.hasNextPage ?? false;
+        _hasPreviousPage = response?.hasPreviousPage ?? false;
+      });
+    } catch (e) {
+      // Nếu muốn có error riêng cho transactions, xử lý ở đây
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _loadingTransactions = false; // tắt loading history
+      });
+    }
   }
 
   void _onPageChanged(int page) {
     setState(() {
       _currentPage = page;
-      _loading = true;
     });
     _loadTransactions();
   }
@@ -111,7 +139,9 @@ class _WalletState extends State<Wallet> {
   Widget build(BuildContext context) {
     final isTablet = MediaQuery.of(context).size.width >= 600;
 
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     if (_error != null) return AppErrorState(onRetry: _loadData);
 
     final walletWidget = MyWallet(
@@ -141,6 +171,18 @@ class _WalletState extends State<Wallet> {
           tx.isInquiry = true;
         });
       },
+      onFilterChanged: ({transactionType, transactionMethod, transactionStatus, required isInquiry}) {
+        setState(() {
+          _filterType = transactionType;
+          _filterMethod = transactionMethod;
+          _filterStatus = transactionStatus;
+          _filterInquiry = isInquiry;
+          _currentPage = 1;
+        });
+        _loadTransactions();
+      },
+
+      loading: _loadingTransactions, // thêm dòng này
     );
 
     if (isTablet) {

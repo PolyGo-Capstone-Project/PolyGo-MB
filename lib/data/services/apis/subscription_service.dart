@@ -9,7 +9,6 @@ import '../../models/subscription/subscription_current_response.dart';
 import '../../models/subscription/subscription_plan_list_response.dart';
 import '../../models/subscription/subscription_request.dart';
 import '../../models/subscription/subscription_response.dart';
-import '../../models/transaction/wallet_transaction_model.dart';
 
 class SubscriptionService {
   final ApiClient apiClient;

@@ -191,19 +191,49 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  CircleAvatar(
-                    radius: 36,
-                    backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
-                        ? NetworkImage(avatarUrl)
-                        : null,
-                    backgroundColor: Colors.grey[300],
-                    child: (avatarUrl == null || avatarUrl.isEmpty)
-                        ? const Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 36,
-                          )
-                        : null,
+                  GestureDetector(
+                    onTap: () {
+                      if (avatarUrl != null && avatarUrl.isNotEmpty) {
+                        showDialog(
+                          context: context,
+                          builder: (_) => Dialog(
+                            backgroundColor: Colors.transparent,
+                            insetPadding: EdgeInsets.zero, // bỏ khoảng cách mặc định của dialog
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                height: MediaQuery.of(context).size.height,
+                                child: InteractiveViewer(
+                                  maxScale: 5.0, // bạn có thể chỉnh mức phóng to tối đa
+                                  minScale: 1.0,
+                                  child: Image.network(
+                                    avatarUrl,
+                                    fit: BoxFit.contain,
+                                    width: MediaQuery.of(context).size.width,
+                                    height: MediaQuery.of(context).size.height,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: CircleAvatar(
+                      radius: 36,
+                      backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
+                          ? NetworkImage(avatarUrl)
+                          : null,
+                      backgroundColor: Colors.grey[300],
+                      child: (avatarUrl == null || avatarUrl.isEmpty)
+                          ? const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 36,
+                      )
+                          : null,
+                    ),
                   ),
 
                   // ===== LV badge =====

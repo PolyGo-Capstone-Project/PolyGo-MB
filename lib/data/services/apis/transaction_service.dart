@@ -44,18 +44,76 @@ class TransactionService {
     }
   }
 
+  // Future<ApiResponse<WalletTransactionListResponse>> getWalletTransactions({
+  //   required String token,
+  //   int pageNumber = 1,
+  //   int pageSize = 10,
+  // }) async {
+  //   try {
+  //     final response = await apiClient.get(
+  //       ApiConstants.transactions,
+  //       queryParameters: {
+  //         'pageNumber': pageNumber.toString(),
+  //         'pageSize': pageSize.toString(),
+  //       },
+  //       headers: {
+  //         ApiConstants.headerAuthorization: 'Bearer $token',
+  //       },
+  //     );
+  //
+  //     final json = response.data as Map<String, dynamic>;
+  //     return ApiResponse.fromJson(
+  //       json,
+  //           (data) => WalletTransactionListResponse.fromJson(json),
+  //     );
+  //   } on DioError catch (e) {
+  //     if (e.response != null && e.response?.data != null) {
+  //       return ApiResponse<WalletTransactionListResponse>(
+  //         data: null,
+  //         message: e.response?.data['message'] ?? e.message,
+  //         statusCode: e.response?.statusCode,
+  //       );
+  //     }
+  //     rethrow;
+  //   }
+  // }
+
   Future<ApiResponse<WalletTransactionListResponse>> getWalletTransactions({
     required String token,
     int pageNumber = 1,
     int pageSize = 10,
+    String? description,
+    String? transactionType,
+    String? transactionMethod,
+    String? transactionStatus,
+    bool? isInquiry,
   }) async {
     try {
+      final queryParams = {
+        'pageNumber': pageNumber.toString(),
+        'pageSize': pageSize.toString(),
+      };
+
+      // ⬇️ Chỉ thêm filter nếu có giá trị
+      if (description != null && description.isNotEmpty) {
+        queryParams['description'] = description;
+      }
+      if (transactionType != null && transactionType.isNotEmpty) {
+        queryParams['transactionType'] = transactionType;
+      }
+      if (transactionMethod != null && transactionMethod.isNotEmpty) {
+        queryParams['transactionMethod'] = transactionMethod;
+      }
+      if (transactionStatus != null && transactionStatus.isNotEmpty) {
+        queryParams['transactionStatus'] = transactionStatus;
+      }
+      if (isInquiry != null) {
+        queryParams['isInquiry'] = isInquiry.toString();
+      }
+
       final response = await apiClient.get(
         ApiConstants.transactions,
-        queryParameters: {
-          'pageNumber': pageNumber.toString(),
-          'pageSize': pageSize.toString(),
-        },
+        queryParameters: queryParams,
         headers: {
           ApiConstants.headerAuthorization: 'Bearer $token',
         },
@@ -226,6 +284,38 @@ class TransactionService {
     } on DioError catch (e) {
       if (e.response != null && e.response?.data != null) {
         return ApiResponse<SendInquiryResponse>(
+          data: null,
+          message: e.response?.data['message'] ?? e.message,
+          statusCode: e.response?.statusCode,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<ApiResponse<WalletTransaction>> getTransactionById({
+    required String token,
+    required String transactionId,
+  }) async {
+    try {
+      final endpoint = ApiConstants.transactionById.replaceAll("{id}", transactionId);
+
+      final response = await apiClient.get(
+        endpoint,
+        headers: {
+          ApiConstants.headerAuthorization: "Bearer $token",
+        },
+      );
+
+      final json = response.data as Map<String, dynamic>;
+
+      return ApiResponse.fromJson(
+        json,
+            (data) => WalletTransaction.fromJson(data as Map<String, dynamic>),
+      );
+    } on DioError catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return ApiResponse<WalletTransaction>(
           data: null,
           message: e.response?.data['message'] ?? e.message,
           statusCode: e.response?.statusCode,

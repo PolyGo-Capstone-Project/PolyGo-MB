@@ -1,6 +1,7 @@
 import 'dart:io';
 import '../models/media/upload_file_response.dart';
 import '../models/api_response.dart';
+import '../models/media/upload_files_response.dart';
 import '../services/apis/media_service.dart';
 
 class MediaRepository {
@@ -35,4 +36,19 @@ class MediaRepository {
       rethrow;
     }
   }
+
+  Future<ApiResponse<UploadFilesResponse>> uploadImages(
+      String token, List<File> files,
+      {bool addUniqueName = true}) async {
+    try {
+      return await _service.uploadImages(
+        token: token,
+        files: files,
+        addUniqueName: addUniqueName,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
 }
