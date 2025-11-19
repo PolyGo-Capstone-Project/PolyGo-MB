@@ -7,6 +7,7 @@ import '../models/gift/gift_present_response.dart';
 import '../models/gift/gift_purchase_request.dart';
 import '../models/gift/gift_purchase_response.dart';
 import '../models/gift/gift_received_response.dart';
+import '../models/gift/gift_sent_item.dart';
 import '../services/apis/gift_service.dart';
 
 class GiftRepository {
@@ -125,5 +126,24 @@ class GiftRepository {
     }
   }
 
+
+  Future<GiftSentResponse?> getSentGifts({
+    required String token,
+    int pageNumber = 1,
+    int pageSize = 10,
+    String? lang,
+  }) async {
+    try {
+      final res = await _service.getSentGifts(
+        token: token,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+        lang: lang,
+      );
+      return res.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
 
 }

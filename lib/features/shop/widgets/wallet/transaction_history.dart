@@ -1,11 +1,18 @@
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:polygo_mobile/features/shop/widgets/wallet/support_request_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/api/api_client.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../data/models/transaction/wallet_transaction_model.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-class TransactionHistory extends StatelessWidget {
+import '../../../../data/repositories/transaction_repository.dart';
+import '../../../../data/services/apis/transaction_service.dart';
+import 'filter_history.dart';
+
+class TransactionHistory extends StatefulWidget {
   final List<WalletTransaction> transactions;
   final bool balanceHidden;
   final double currentBalance;
@@ -15,6 +22,14 @@ class TransactionHistory extends StatelessWidget {
   final bool hasPreviousPage;
   final Function(int)? onPageChanged;
   final Function(String txId)? onInquirySuccess;
+  final bool loading;
+
+  final Function({
+  String? transactionType,
+  String? transactionMethod,
+  String? transactionStatus,
+  required bool isInquiry,
+  })? onFilterChanged;
 
   const TransactionHistory({
     super.key,
@@ -27,7 +42,19 @@ class TransactionHistory extends StatelessWidget {
     required this.hasPreviousPage,
     this.onPageChanged,
     this.onInquirySuccess,
+    this.onFilterChanged,
+    required this.loading,
   });
+
+  @override
+  State<TransactionHistory> createState() => _TransactionHistoryState();
+}
+
+class _TransactionHistoryState extends State<TransactionHistory> {
+  String? _selectedType;
+  String? _selectedMethod;
+  String? _selectedStatus;
+  String? _selectedInquiry;
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
@@ -40,6 +67,15 @@ class TransactionHistory extends StatelessWidget {
       default:
         return Colors.grey;
     }
+  }
+
+  void _onFilterChanged() {
+    widget.onFilterChanged?.call(
+      transactionType: _selectedType,
+      transactionMethod: _selectedMethod,
+      transactionStatus: _selectedStatus,
+      isInquiry: _selectedInquiry == 'Yes',
+    );
   }
 
   @override
@@ -55,8 +91,8 @@ class TransactionHistory extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: isDark
             ? const LinearGradient(
-                colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
-              )
+          colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+        )
             : const LinearGradient(colors: [Colors.white, Colors.white]),
         borderRadius: BorderRadius.circular(sw(context, 16)),
         boxShadow: [
@@ -70,6 +106,7 @@ class TransactionHistory extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Title
           Text(
             loc.translate("transaction_history"),
             style: t.titleLarge?.copyWith(
@@ -78,8 +115,36 @@ class TransactionHistory extends StatelessWidget {
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
+          SizedBox(height: sh(context, 12)),
+
+          // FILTER DROPDOWNS
+          TransactionFilter(
+            selectedType: _selectedType,
+            selectedMethod: _selectedMethod,
+            selectedStatus: _selectedStatus,
+            selectedInquiry: _selectedInquiry,
+            onFilterChanged: ({type, method, status, inquiry}) {
+              setState(() {
+                _selectedType = type;
+                _selectedMethod = method;
+                _selectedStatus = status;
+                _selectedInquiry = inquiry;
+              });
+
+              widget.onFilterChanged?.call(
+                transactionType: type,
+                transactionMethod: method,
+                transactionStatus: status,
+                isInquiry: inquiry == 'Yes',
+              );
+            },
+          ),
           SizedBox(height: sh(context, 16)),
-          if (transactions.isEmpty)
+
+          // Transaction List
+          if (widget.loading)
+            Center(child: CircularProgressIndicator())
+          else if (widget.transactions.isEmpty)
             Center(
               child: Text(
                 loc.translate("no_transactions"),
@@ -87,20 +152,19 @@ class TransactionHistory extends StatelessWidget {
               ),
             )
           else
-            ...transactions.asMap().entries.map((entry) {
+            ...widget.transactions.asMap().entries.map((entry) {
               final tx = entry.value;
               final color = tx.amount < 0 ? Colors.red : colorPrimary;
               final formattedAmount = tx.amount
                   .abs()
                   .toString()
                   .replaceAllMapped(
-                    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
                     (m) => "${m[1]}.",
-                  );
+              );
               final amountText =
                   "${tx.amount < 0 ? '-' : '+'}$formattedAmount đ";
 
-              // Tách ngày và giờ
               final dt = tx.createdAt.toLocal();
               final datePart =
                   "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}";
@@ -111,14 +175,28 @@ class TransactionHistory extends StatelessWidget {
                 padding: EdgeInsets.only(bottom: sh(context, 12)),
                 child: InkWell(
                   onTap: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    final token = prefs.getString('token');
+                    if (token == null) return;
+
+                    final repo = TransactionRepository(TransactionService(ApiClient()));
+
+                    // Lấy chi tiết giao dịch
+                    final detail = await repo.getTransactionDetail(
+                      token: token,
+                      transactionId: tx.id,
+                    );
+
+                    final userNotes = detail?.userNotes ?? [];
+
                     final success = await SupportRequestDialog.show(
                       context,
                       tx.id,
-                      tx.isInquiry,
+                      userNotes,
                     );
 
                     if (success == true) {
-                      onInquirySuccess?.call(tx.id);
+                      widget.onInquirySuccess?.call(tx.id);
                     }
                   },
                   child: Container(
@@ -126,16 +204,13 @@ class TransactionHistory extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: isDark
                           ? const LinearGradient(
-                              colors: [Color(0xFF2C2C2C), Color(0xFF3A3A3A)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
+                        colors: [Color(0xFF2C2C2C), Color(0xFF3A3A3A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
                           : LinearGradient(
-                              colors: [
-                                Colors.grey.shade100,
-                                Colors.grey.shade100,
-                              ],
-                            ),
+                        colors: [Colors.grey.shade100, Colors.grey.shade100],
+                      ),
                       borderRadius: BorderRadius.circular(sw(context, 12)),
                     ),
                     child: Column(
@@ -145,21 +220,17 @@ class TransactionHistory extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // LEFT SIDE
+                            // LEFT
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
                                     Text(
-                                      loc.translate(
-                                        tx.transactionType.toLowerCase(),
-                                      ),
+                                      loc.translate(tx.transactionType.toLowerCase()),
                                       style: t.titleMedium?.copyWith(
                                         fontWeight: FontWeight.w600,
-                                        color: isDark
-                                            ? Colors.white
-                                            : Colors.black87,
+                                        color: isDark ? Colors.white : Colors.black87,
                                       ),
                                     ),
                                     SizedBox(width: sw(context, 6)),
@@ -167,45 +238,25 @@ class TransactionHistory extends StatelessWidget {
                                       loc.translate("from"),
                                       style: t.bodySmall?.copyWith(
                                         fontSize: st(context, 12),
-                                        color: isDark
-                                            ? Colors.grey[400]
-                                            : Colors.grey[600],
+                                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                                       ),
                                     ),
                                     SizedBox(width: sw(context, 4)),
                                     Text(
-                                      loc.translate(
-                                        tx.transactionMethod.toLowerCase(),
-                                      ),
+                                      loc.translate(tx.transactionMethod.toLowerCase()),
                                       style: t.bodySmall?.copyWith(
                                         fontSize: st(context, 12),
-                                        color: isDark
-                                            ? Colors.grey[400]
-                                            : Colors.grey[600],
+                                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                                       ),
                                     ),
                                   ],
                                 ),
                                 SizedBox(height: sh(context, 4)),
-                                Text(
-                                  datePart,
-                                  style: t.bodySmall?.copyWith(
-                                    color: isDark
-                                        ? Colors.grey[400]
-                                        : Colors.grey[700],
-                                  ),
-                                ),
-                                Text(
-                                  timePart,
-                                  style: t.bodySmall?.copyWith(
-                                    color: isDark
-                                        ? Colors.grey[400]
-                                        : Colors.grey[700],
-                                  ),
-                                ),
+                                Text(datePart, style: t.bodySmall?.copyWith(color: isDark ? Colors.grey[400] : Colors.grey[700])),
+                                Text(timePart, style: t.bodySmall?.copyWith(color: isDark ? Colors.grey[400] : Colors.grey[700])),
                               ],
                             ),
-                            // RIGHT SIDE
+                            // RIGHT
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
@@ -218,19 +269,15 @@ class TransactionHistory extends StatelessWidget {
                                 ),
                                 SizedBox(height: sh(context, 4)),
                                 Text(
-                                  "${loc.translate("remaining_balance")}: ${balanceHidden ? "****" : tx.remainingBalance.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => "${m[1]}.")} đ",
+                                  "${loc.translate("remaining_balance")}: ${widget.balanceHidden ? "****" : tx.remainingBalance.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => "${m[1]}.")} đ",
                                   style: t.bodySmall?.copyWith(
                                     fontSize: st(context, 12),
-                                    color: isDark
-                                        ? Colors.grey[400]
-                                        : Colors.grey[600],
+                                    color: isDark ? Colors.grey[400] : Colors.grey[600],
                                   ),
                                 ),
                                 SizedBox(height: sh(context, 2)),
                                 Text(
-                                  loc.translate(
-                                    tx.transactionStatus.toLowerCase(),
-                                  ),
+                                  loc.translate(tx.transactionStatus.toLowerCase()),
                                   style: t.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: _statusColor(tx.transactionStatus),
@@ -246,23 +293,25 @@ class TransactionHistory extends StatelessWidget {
                 ),
               );
             }).toList(),
+
+          // Pagination
           SizedBox(height: sh(context, 8)),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                onPressed: hasPreviousPage
-                    ? () => onPageChanged?.call(currentPage - 1)
+                onPressed: widget.hasPreviousPage
+                    ? () => widget.onPageChanged?.call(widget.currentPage - 1)
                     : null,
                 icon: const Icon(Icons.arrow_back_ios),
               ),
               Text(
-                "$currentPage / $totalPages",
+                "${widget.currentPage} / ${widget.totalPages}",
                 style: t.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               IconButton(
-                onPressed: hasNextPage
-                    ? () => onPageChanged?.call(currentPage + 1)
+                onPressed: widget.hasNextPage
+                    ? () => widget.onPageChanged?.call(widget.currentPage + 1)
                     : null,
                 icon: const Icon(Icons.arrow_forward_ios),
               ),

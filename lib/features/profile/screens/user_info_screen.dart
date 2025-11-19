@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../inventories/widgets/friend_social.dart';
+import '../../inventories/widgets/friends/friend_social.dart';
 import '../../shared/app_bottom_bar.dart';
 import '../../shared/app_error_state.dart';
 import '../../shared/app_header_actions.dart';

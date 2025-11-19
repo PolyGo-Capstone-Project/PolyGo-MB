@@ -3,6 +3,7 @@ import '../../shared/app_bottom_bar.dart';
 import '../../shared/app_error_state.dart';
 import '../widgets/events/events_content.dart';
 import '../widgets/games/games_content.dart';
+import '../widgets/social/post_content.dart';
 import '../widgets/users/users.dart';
 import '../widgets/home_header.dart';
 
@@ -74,8 +75,9 @@ class _HomeScreenState extends State<HomeScreen> {
         key: const ValueKey('games'),
         searchQuery: _searchQuery,
       ),
-      const Center(
-        child: Text('Explore', style: TextStyle(fontSize: 24)),
+      PostContent(
+        key: const ValueKey('social'),
+        searchQuery: _searchQuery,
       ),
     ];
 

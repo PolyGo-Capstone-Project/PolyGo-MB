@@ -25,6 +25,7 @@ class EventDetail extends StatefulWidget {
 class _EventDetailState extends State<EventDetail> {
   double _balance = 0;
   String _userPlanType = "Free";
+  String _userId = '';
 
   @override
   void initState() {
@@ -43,6 +44,7 @@ class _EventDetailState extends State<EventDetail> {
       setState(() {
         _balance = user.balance;
         _userPlanType = user.planType;
+        _userId = user.id;
       });
     } catch (e) {
       //
@@ -188,13 +190,13 @@ class _EventDetailState extends State<EventDetail> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: () {
+                    onTap: _userId != event.host.id ? () {
                       Navigator.pushNamed(
                         context,
                         AppRoutes.userProfile,
                         arguments: {'id': event.host.id},
                       );
-                    },
+                    } : null,
                     child: Row(
                       children: [
                         CircleAvatar(

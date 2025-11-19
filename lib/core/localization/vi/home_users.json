@@ -13,5 +13,11 @@
   "gift_info": "Thông tin quà",
   "back": "Quay lại",
   "next": "Tiếp tục",
-  "users_matching_you": "Những người phù hợp với bạn"
+  "users_matching_you": "Những người phù hợp với bạn",
+
+  "friend_request_accept": "Đã chấp nhận yêu cầu",
+  "can_not_accept": "Không thể chấp nhận yêu cầu",
+  "reject_friend": "Đã từ chối",
+  "friend_reject_failed": "Không thể từ chối",
+  "not_have_friend_request": "Không có yêu cầu kết bạn nào"
 }

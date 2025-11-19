@@ -4,7 +4,6 @@ import 'package:polygo_mobile/features/users/widgets/tag_list.dart';
 import 'package:polygo_mobile/features/users/widgets/user_profile_header.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../data/repositories/user_repository.dart';
-import '../../../core/utils/responsive.dart';
 import '../../../data/services/apis/user_service.dart';
 import '../../../../data/models/user/user_by_id_response.dart';
 import '../../../../core/api/api_client.dart';
@@ -36,7 +35,6 @@ class _UserProfileState extends State<UserProfile> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     final locale = AppLocalizations.of(context).locale;
     if (_currentLocale == null ||
         _currentLocale!.languageCode != locale.languageCode) {
@@ -58,8 +56,11 @@ class _UserProfileState extends State<UserProfile> {
         return;
       }
 
-      final result =
-      await _userRepo.getUserById(token, widget.userId!, lang: lang ?? 'en');
+      final result = await _userRepo.getUserById(
+        token,
+        widget.userId!,
+        lang: lang ?? 'en',
+      );
 
       if (mounted) {
         setState(() {
@@ -85,23 +86,8 @@ class _UserProfileState extends State<UserProfile> {
     final t = theme.textTheme;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    final containerWidth = screenWidth < 500
-        ? screenWidth * 0.9
-        : screenWidth < 900
-        ? screenWidth * 0.75
-        : screenWidth < 1400
-        ? screenWidth * 0.6
-        : 900.0;
-
     if (_loading) {
-      return Align(
-        alignment: Alignment.topCenter,
-        child: Container(
-          width: containerWidth,
-          padding: const EdgeInsets.all(24),
-          child: const Center(child: CircularProgressIndicator()),
-        ),
-      );
+      return Center(child: CircularProgressIndicator());
     }
 
     if (_hasError || user == null) {
@@ -122,287 +108,424 @@ class _UserProfileState extends State<UserProfile> {
                 _loadUser(lang: _currentLocale?.languageCode);
               },
               child: Text(loc.translate("retry")),
-            )
+            ),
           ],
         ),
       );
     }
 
-    final avatarUrl = user!.avatarUrl;
-    final friendStatus = user!.friendStatus;
-    final name = user!.name ?? "Unnamed";
-    final meritLevel = user!.merit;
-    final experiencePoints = user!.experiencePoints;
-    final introduction = user!.introduction;
+    // ---------------- Data Processing ----------------
     final nativeLangs = (user!.speakingLanguages ?? [])
-        .map((e) => e is Map<String, dynamic> ? e['name']?.toString() ?? '' : e.toString())
+        .map(
+          (e) => e is Map<String, dynamic>
+              ? e['name']?.toString() ?? ''
+              : e.toString(),
+        )
         .where((name) => name.isNotEmpty)
         .toList();
-    final nativeIcons = (user!.learningLanguages ?? [])
-        .map((e) => e is Map<String, dynamic> ? e['iconUrl']?.toString() ?? '' : e.toString())
-        .where((iconUrl) => iconUrl.isNotEmpty)
+    final nativeIcons = (user!.speakingLanguages ?? [])
+        .map(
+          (e) => e is Map<String, dynamic>
+              ? e['iconUrl']?.toString() ?? ''
+              : e.toString(),
+        )
+        .where((icon) => icon.isNotEmpty)
         .toList();
-
     final learningLangs = (user!.learningLanguages ?? [])
-        .map((e) => e is Map<String, dynamic> ? e['name']?.toString() ?? '' : e.toString())
+        .map(
+          (e) => e is Map<String, dynamic>
+              ? e['name']?.toString() ?? ''
+              : e.toString(),
+        )
         .where((name) => name.isNotEmpty)
         .toList();
     final learningIcons = (user!.learningLanguages ?? [])
-        .map((e) => e is Map<String, dynamic> ? e['iconUrl']?.toString() ?? '' : e.toString())
-        .where((iconUrl) => iconUrl.isNotEmpty)
+        .map(
+          (e) => e is Map<String, dynamic>
+              ? e['iconUrl']?.toString() ?? ''
+              : e.toString(),
+        )
+        .where((icon) => icon.isNotEmpty)
         .toList();
-
     final interests = (user!.interests ?? [])
-        .map((e) => e is Map<String, dynamic> ? e['name']?.toString() ?? '' : e.toString())
+        .map(
+          (e) => e is Map<String, dynamic>
+              ? e['name']?.toString() ?? ''
+              : e.toString(),
+        )
         .where((name) => name.isNotEmpty)
         .toList();
     final interestsIcons = (user!.interests ?? [])
-        .map((e) => e is Map<String, dynamic> ? e['iconUrl']?.toString() ?? '' : e.toString())
-        .where((iconUrl) => iconUrl.isNotEmpty)
+        .map(
+          (e) => e is Map<String, dynamic>
+              ? e['iconUrl']?.toString() ?? ''
+              : e.toString(),
+        )
+        .where((icon) => icon.isNotEmpty)
         .toList();
+    final hasNoData =
+        nativeLangs.isEmpty && learningLangs.isEmpty && interests.isEmpty;
 
-    final bool hasNoData =
-        nativeLangs.isEmpty && learningLangs.isEmpty && interests.isEmpty && (introduction == null || introduction.isEmpty);
+    final isWide = screenWidth >= 1024;
 
     return Align(
       alignment: Alignment.topCenter,
-      child: Column(
-        children: [
-          // ---------------- Header ----------------
-          Align(
-            alignment: Alignment.topCenter,
-            child: Container(
-              width: containerWidth,
-              child: UserProfileHeader(user: user!, loc: loc),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // ---------------- Info Section ----------------
-          Container(
-            width: containerWidth,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Languages + Interests
-                if (hasNoData)
-                  Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: sh(context, 16),
-                        horizontal: sw(context, 12),
-                      ),
-                      child: Text(
-                        loc.translate("no_info_yet"),
-                        textAlign: TextAlign.left,
-                        style: t.bodyMedium?.copyWith(
-                          fontSize: st(context, 15),
-                          color: theme.colorScheme.outline,
-                          fontStyle: FontStyle.italic,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ---------------- Header + Info ----------------
+            isWide
+                ? IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: UserProfileHeader(user: user!, loc: loc),
                         ),
-                      ),
-                    )
-                else
-                  ...[
-                    if (nativeLangs.isNotEmpty) ...[
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            "${loc.translate("native_language")} ",
-                            style: t.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: st(context, 15),
-                            ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildInfoSection(
+                            context,
+                            isDark,
+                            t,
+                            loc,
+                            nativeLangs,
+                            nativeIcons,
+                            learningLangs,
+                            learningIcons,
+                            interests,
+                            interestsIcons,
                           ),
-                          SizedBox(width: sh(context, 4)),
-                          Expanded(
-                            child: TagList(
-                                items: nativeLangs,
-                                iconUrls: nativeIcons,
-                                color: Colors.green[100] ?? Colors.green
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: sh(context, 12)),
-                    ],
-                    if (learningLangs.isNotEmpty) ...[
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            "${loc.translate("learning")} ",
-                            style: t.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: st(context, 16),
-                            ),
-                          ),
-                          SizedBox(width: sh(context, 4)),
-                          Expanded(
-                            child: TagList(
-                              items: learningLangs,
-                              iconUrls: learningIcons,
-                              color: Colors.blue[100] ?? Colors.blue,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: sh(context, 12)),
-                    ],
-
-                    if (interests.isNotEmpty) ...[
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            "${loc.translate("interests")} ",
-                            style: t.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: st(context, 16),
-                            ),
-                          ),
-                          SizedBox(width: sh(context, 4)),
-                          Expanded(
-                              child: TagList(
-                                items: interests,
-                                iconUrls: interestsIcons,
-                                color: Colors.grey[100] ?? Colors.grey,
-                              )
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-              ],
-            ),
-          ).animate().fadeIn(duration: 400.ms),
-
-          // ---------------- Badges & Gifts Section ----------------
-          // ---------------- Badges Container ----------------
-          if (user!.badges?.isNotEmpty ?? false)
-            Container(
-              width: containerWidth,
-              margin: EdgeInsets.only(top: sh(context, 14)),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    loc.translate("my_badges"),
-                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 60, // chiều cao badges row
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: user!.badges!.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        final badge = user!.badges![index];
-                        final imageUrl = (badge is Map<String, dynamic>)
-                            ? (badge['iconUrl'] ?? '')
-                            : badge.toString();
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: AspectRatio(
-                            aspectRatio: 1,
-                            child: imageUrl.isNotEmpty
-                                ? Image.network(imageUrl, fit: BoxFit.cover)
-                                : Container(
-                              color: Colors.grey[300],
-                              child: const Icon(Icons.emoji_events, color: Colors.grey),
-                            ),
-                          ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
+                  )
+                : Column(
+                    children: [
+                      UserProfileHeader(user: user!, loc: loc),
+                      const SizedBox(height: 16),
+                      _buildInfoSection(
+                        context,
+                        isDark,
+                        t,
+                        loc,
+                        nativeLangs,
+                        nativeIcons,
+                        learningLangs,
+                        learningIcons,
+                        interests,
+                        interestsIcons,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ).animate().fadeIn(duration: 400.ms),
 
-// ---------------- Gifts Container ----------------
-          if (user!.gifts?.isNotEmpty ?? false)
-            Container(
-              width: containerWidth,
-              margin: EdgeInsets.only(top: sh(context, 14)),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    loc.translate("my_gifts"),
-                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 60,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: user!.gifts!.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        final gift = user!.gifts![index];
-                        final imageUrl = (gift is Map<String, dynamic>)
-                            ? (gift['iconUrl'] ?? '')
-                            : gift.toString();
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: AspectRatio(
-                            aspectRatio: 1,
-                            child: imageUrl.isNotEmpty
-                                ? Image.network(imageUrl, fit: BoxFit.cover)
-                                : Container(
-                              color: Colors.grey[300],
-                              child: const Icon(Icons.card_giftcard, color: Colors.grey),
-                            ),
+            const SizedBox(height: 16),
+
+            // ---------------- Badges + Gifts ----------------
+            isWide
+                ? IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _buildBadgesSection(
+                            context,
+                            user!,
+                            isDark,
+                            t,
+                            loc,
                           ),
-                        );
-                      },
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildGiftsSection(
+                            context,
+                            user!,
+                            isDark,
+                            t,
+                            loc,
+                          ),
+                        ),
+                      ],
                     ),
+                  )
+                : Column(
+                    children: [
+                      _buildBadgesSection(context, user!, isDark, t, loc),
+                      const SizedBox(height: 16),
+                      _buildGiftsSection(context, user!, isDark, t, loc),
+                    ],
                   ),
-                ],
-              ),
-            ).animate().fadeIn(duration: 400.ms),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoSection(
+    BuildContext context,
+    bool isDark,
+    TextTheme t,
+    AppLocalizations loc,
+    List<String> nativeLangs,
+    List<String> nativeIcons,
+    List<String> learningLangs,
+    List<String> learningIcons,
+    List<String> interests,
+    List<String> interestsIcons,
+  ) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF1E1E1E), const Color(0xFF2C2C2C)]
+              : [Colors.white, Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTagRowWithFallback(
+            title: loc.translate("native_language"),
+            items: nativeLangs,
+            icons: nativeIcons,
+            color: Colors.green[100]!,
+            loc: loc,
+          ),
+          _buildTagRowWithFallback(
+            title: loc.translate("learning"),
+            items: learningLangs,
+            icons: learningIcons,
+            color: Colors.blue[100]!,
+            loc: loc,
+          ),
+          _buildTagRowWithFallback(
+            title: loc.translate("interests"),
+            items: interests,
+            icons: interestsIcons,
+            color: Colors.grey[100]!,
+            loc: loc,
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms);
+  }
+
+  Widget _buildTagRowWithFallback({
+    required String title,
+    required List<String> items,
+    required List<String> icons,
+    required Color color,
+    required AppLocalizations loc,
+  }) {
+    if (items.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Text(
+          "${loc.translate("no_user_info_yet")} $title",
+          style: const TextStyle(
+            fontStyle: FontStyle.italic,
+            color: Colors.grey,
+          ),
+        ),
+      );
+    }
+
+    return _buildTagRow(title, items, icons, color);
+  }
+
+  Widget _buildTagRow(
+    String title,
+    List<String> items,
+    List<String> icons,
+    Color color,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TagList(items: items, iconUrls: icons, color: color),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildBadgesSection(
+    BuildContext context,
+    UserByIdResponse user,
+    bool isDark,
+    TextTheme t,
+    AppLocalizations loc,
+  ) {
+    final hasBadges = !(user.badges?.isEmpty ?? true);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF1E1E1E), const Color(0xFF2C2C2C)]
+              : [Colors.white, Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            loc.translate("my_badges"),
+            style: t.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          if (hasBadges)
+            SizedBox(
+              height: 60,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: user.badges!.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final badge = user.badges![index];
+                  final imageUrl = (badge is Map<String, dynamic>)
+                      ? (badge['iconUrl'] ?? '')
+                      : badge.toString();
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: imageUrl.isNotEmpty
+                          ? Image.network(imageUrl, fit: BoxFit.cover)
+                          : Container(
+                              color: Colors.grey[300],
+                              child: const Icon(
+                                Icons.emoji_events,
+                                color: Colors.grey,
+                              ),
+                            ),
+                    ),
+                  );
+                },
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                loc.translate("no_badges"),
+                style: const TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms);
+  }
+
+  Widget _buildGiftsSection(
+    BuildContext context,
+    UserByIdResponse user,
+    bool isDark,
+    TextTheme t,
+    AppLocalizations loc,
+  ) {
+    final hasGifts = !(user.gifts?.isEmpty ?? true);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF1E1E1E), const Color(0xFF2C2C2C)]
+              : [Colors.white, Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            loc.translate("my_gifts"),
+            style: t.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          if (hasGifts)
+            SizedBox(
+              height: 60,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: user.gifts!.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final gift = user.gifts![index];
+                  final imageUrl = (gift is Map<String, dynamic>)
+                      ? (gift['iconUrl'] ?? '')
+                      : gift.toString();
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: imageUrl.isNotEmpty
+                          ? Image.network(imageUrl, fit: BoxFit.cover)
+                          : Container(
+                              color: Colors.grey[300],
+                              child: const Icon(
+                                Icons.card_giftcard,
+                                color: Colors.grey,
+                              ),
+                            ),
+                    ),
+                  );
+                },
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                loc.translate("no_gifts"),
+                style: const TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms);
   }
 }

@@ -39,15 +39,36 @@ class _MyEventsState extends State<MyEvents> {
   List<Map<String, String>> _filterLanguages = [];
   List<Map<String, String>> _filterInterests = [];
 
+  final ScrollController _scrollController = ScrollController();
+  bool _showSearchAndFilter = true;
+  double _lastOffset = 0;
+
   @override
   void initState() {
     super.initState();
     _repository = EventRepository(EventService(ApiClient()));
     _loadHostedEvents();
+
     _searchFocusNode.addListener(() {
       setState(() {
         _isSearching = _searchFocusNode.hasFocus;
       });
+    });
+
+    _scrollController.addListener(() {
+      final offset = _scrollController.offset;
+
+      if (offset > _lastOffset && _showSearchAndFilter && !_isSearching) {
+        setState(() {
+          _showSearchAndFilter = false;
+        });
+      } else if (offset < _lastOffset && !_showSearchAndFilter) {
+        setState(() {
+          _showSearchAndFilter = true;
+        });
+      }
+
+      _lastOffset = offset;
     });
   }
 
@@ -55,6 +76,7 @@ class _MyEventsState extends State<MyEvents> {
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -142,7 +164,6 @@ class _MyEventsState extends State<MyEvents> {
     final loc = AppLocalizations.of(context);
 
     if (_loading) return const Center(child: CircularProgressIndicator());
-
     if (_hasError) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 32.0),
@@ -156,10 +177,10 @@ class _MyEventsState extends State<MyEvents> {
 
     return Padding(
       padding: const EdgeInsets.all(16),
-      child:
-      Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Status buttons luôn hiển thị
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -176,147 +197,177 @@ class _MyEventsState extends State<MyEvents> {
               ],
             ),
           ),
-
           const SizedBox(height: 12),
-          AnimatedContainer(
+
+          // Animated search + filter
+          AnimatedSize(
             duration: const Duration(milliseconds: 300),
-            height: 42,
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2C2C2C) : const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: _isSearching ? Theme.of(context).colorScheme.primary : Colors.transparent,
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              children: [
-                const SizedBox(width: 10),
-                Icon(Icons.search_rounded, color: _isSearching ? Theme.of(context).colorScheme.primary : Colors.grey),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87),
-                    decoration: InputDecoration(
-                      hintText: loc.translate("search_placeholder"),
-                      hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey : Colors.grey[600]),
-                      border: InputBorder.none,
-                      isCollapsed: true,
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                  ),
-                ),
-                if (_isSearching)
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    color: Colors.grey,
-                    onPressed: () {
-                      _searchController.clear();
-                      _searchFocusNode.unfocus();
-                      setState(() {
-                        _isSearching = false;
-                        _searchQuery = '';
-                      });
-                    },
-                  ),
-              ],
+            curve: Curves.easeInOut,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) =>
+                  SlideTransition(position: Tween<Offset>(begin: const Offset(0, -0.2), end: Offset.zero).animate(animation), child: FadeTransition(opacity: animation, child: child)),
+              child: _showSearchAndFilter
+                  ? Column(
+                key: const ValueKey('search-filter'),
+                children: [
+                  // Search
+                  _buildSearchBar(theme, loc),
+                  const SizedBox(height: 12),
+
+                  // Filter
+                  if (_selectedStatus != EventStatus.canceled) _buildFilterRow(theme, loc),
+                  const SizedBox(height: 16),
+                ],
+              )
+                  : const SizedBox.shrink(),
             ),
           ),
-          const SizedBox(height: 12),
-          if (_selectedStatus != EventStatus.canceled)
-          Row(
-            children: [
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const HostedFilter()),
-                  );
 
-                  if (result != null && result is Map<String, dynamic>) {
-                    setState(() {
-                      _filterLanguages = List<Map<String, String>>.from(result['languages'] ?? []);
-                      _filterInterests = List<Map<String, String>>.from(result['interests'] ?? []);
-                    });
-                    _loadHostedEvents(lang: _currentLocale?.languageCode);
-                  }
-                },
-                icon: const Icon(Icons.filter_alt_outlined),
-                label: Text(loc.translate("filter")),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primaryContainer,
-                  foregroundColor: theme.colorScheme.onPrimaryContainer,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  elevation: 1,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SizedBox(
-                  height: 38,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _selectedFilters.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final tag = _selectedFilters[index];
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: theme.colorScheme.primary.withOpacity(0.5)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(tag, style: TextStyle(color: theme.colorScheme.primary, fontSize: 13, fontWeight: FontWeight.w500)),
-                            const SizedBox(width: 4),
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _filterLanguages.removeWhere((f) => f['name'] == tag);
-                                  _filterInterests.removeWhere((f) => f['name'] == tag);
-                                });
-                                _loadHostedEvents(lang: _currentLocale?.languageCode);
-                              },
-                              child: const Icon(Icons.close_rounded, size: 16, color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
+          // List events
           Expanded(
             child: eventsToShow.isEmpty
                 ? Center(child: Text("Không có event nào phù hợp với filter hiện tại"))
                 : MasonryGridView.count(
+              controller: _scrollController,
               crossAxisCount: crossAxisCount,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
+              padding: const EdgeInsets.only(bottom: 16),
               itemCount: eventsToShow.length,
               itemBuilder: (context, index) => _buildEventCard(context, eventsToShow[index]),
             ),
           ),
         ],
       ),
-
     );
   }
 
+  Widget _buildSearchBar(ThemeData theme, AppLocalizations loc) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      height: 42,
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark ? const Color(0xFF2C2C2C) : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: _isSearching ? theme.colorScheme.primary : Colors.transparent,
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 10),
+          Icon(Icons.search_rounded, color: _isSearching ? theme.colorScheme.primary : Colors.grey),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.white : Colors.black87),
+              decoration: InputDecoration(
+                hintText: loc.translate("search_placeholder"),
+                hintStyle: TextStyle(color: theme.brightness == Brightness.dark ? Colors.grey : Colors.grey[600]),
+                border: InputBorder.none,
+                isCollapsed: true,
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+            ),
+          ),
+          if (_isSearching)
+            IconButton(
+              icon: const Icon(Icons.close_rounded),
+              color: Colors.grey,
+              onPressed: () {
+                _searchController.clear();
+                _searchFocusNode.unfocus();
+                setState(() {
+                  _isSearching = false;
+                  _searchQuery = '';
+                });
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterRow(ThemeData theme, AppLocalizations loc) {
+    return Row(
+      children: [
+        ElevatedButton.icon(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HostedFilter()),
+            );
+
+            if (result != null && result is Map<String, dynamic>) {
+              setState(() {
+                _filterLanguages = List<Map<String, String>>.from(result['languages'] ?? []);
+                _filterInterests = List<Map<String, String>>.from(result['interests'] ?? []);
+              });
+              _loadHostedEvents(lang: _currentLocale?.languageCode);
+            }
+          },
+          icon: const Icon(Icons.filter_alt_outlined),
+          label: Text(loc.translate("filter")),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.colorScheme.primaryContainer,
+            foregroundColor: theme.colorScheme.onPrimaryContainer,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            elevation: 1,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: SizedBox(
+            height: 38,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _selectedFilters.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final tag = _selectedFilters[index];
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: theme.colorScheme.primary.withOpacity(0.5)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(tag, style: TextStyle(color: theme.colorScheme.primary, fontSize: 13, fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 4),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _filterLanguages.removeWhere((f) => f['name'] == tag);
+                            _filterInterests.removeWhere((f) => f['name'] == tag);
+                          });
+                          _loadHostedEvents(lang: _currentLocale?.languageCode);
+                        },
+                        child: const Icon(Icons.close_rounded, size: 16, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Khi chuyển tab status → reset search/filter hiển thị
   Widget _buildStatusButton(EventStatus status, String label) {
     final theme = Theme.of(context);
     final isSelected = _selectedStatus == status;
@@ -325,6 +376,8 @@ class _MyEventsState extends State<MyEvents> {
       onPressed: () {
         setState(() {
           _selectedStatus = isSelected ? null : status;
+          // Khi đổi tab → show search & filter
+          _showSearchAndFilter = true;
         });
       },
       style: ElevatedButton.styleFrom(
@@ -337,6 +390,7 @@ class _MyEventsState extends State<MyEvents> {
       child: Text(label, style: const TextStyle(fontSize: 14)),
     );
   }
+
 
   Widget _buildEventCard(BuildContext context, HostedEventModel event) {
     final theme = Theme.of(context);

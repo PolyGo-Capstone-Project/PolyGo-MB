@@ -32,4 +32,8 @@ class CallSoundManager {
     await _player.play(AssetSource('end-call.mp3'), volume: 1.0);
   }
 
+  Future<void> playReactPost() async {
+    await _player.play(AssetSource('pop.mp3'), volume: 1.0);
+  }
+
 }

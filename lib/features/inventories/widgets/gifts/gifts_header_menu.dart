@@ -1,27 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../../core/localization/app_localizations.dart';
+import '../../../../../core/localization/app_localizations.dart';
 
-class FriendsMenuBar extends StatefulWidget {
+class GiftsHeaderMenu extends StatefulWidget {
   final int currentIndex;
   final Function(int) onItemSelected;
 
-  const FriendsMenuBar({
+  const GiftsHeaderMenu({
     super.key,
     this.currentIndex = 0,
     required this.onItemSelected,
   });
 
   @override
-  State<FriendsMenuBar> createState() => _FriendsMenuBarState();
+  State<GiftsHeaderMenu> createState() => _GiftsHeaderMenuState();
 }
 
-class _FriendsMenuBarState extends State<FriendsMenuBar> {
+class _GiftsHeaderMenuState extends State<GiftsHeaderMenu> {
   late int _selectedIndex;
 
   final _items = const [
-    {'icon': Icons.people_alt_rounded},
-    {'icon': Icons.mail_outline_rounded},
+    {'icon': Icons.send_rounded},
+    {'icon': Icons.done_all_rounded},
+    {'icon': Icons.card_giftcard_rounded},
   ];
 
   @override

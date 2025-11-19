@@ -106,17 +106,6 @@ class _AppBottomBarState extends State<AppBottomBar> {
               child: Row(
                 children: [
                   Icon(item['icon'] as IconData, color: iconColor, size: iconSize),
-                  // if (selected) ...[
-                  //   SizedBox(width: 6 * scale),
-                  //   Text(
-                  //     loc.translate(item['labelKey'] as String),
-                  //     style: TextStyle(
-                  //       color: colorActive,
-                  //       fontWeight: FontWeight.w600,
-                  //       fontSize: fontSize,
-                  //     ),
-                  //   ).animate().fadeIn(duration: 250.ms),
-                  // ],
                 ],
               ),
             ),

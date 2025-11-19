@@ -148,37 +148,58 @@ class _JoinedEventDetailsState extends State<JoinedEventDetails> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  CircleAvatar(
-                    radius: sw(context, 28),
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage: (widget.event.host.avatarUrl != null &&
-                        widget.event.host.avatarUrl!.isNotEmpty)
-                        ? NetworkImage(widget.event.host.avatarUrl!)
-                        : null,
-                    child: (widget.event.host.avatarUrl == null ||
-                        widget.event.host.avatarUrl!.isEmpty)
-                        ? const Icon(Icons.person, size: 36, color: Colors.white70)
-                        : null,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.userProfile,
+                        arguments: {'id': widget.event.host.id},
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: sw(context, 28),
+                      backgroundColor: Colors.grey[300],
+                      backgroundImage: (widget.event.host.avatarUrl != null &&
+                          widget.event.host.avatarUrl!.isNotEmpty)
+                          ? NetworkImage(widget.event.host.avatarUrl!)
+                          : null,
+                      child: (widget.event.host.avatarUrl == null ||
+                          widget.event.host.avatarUrl!.isEmpty)
+                          ? const Icon(Icons.person, size: 36, color: Colors.white70)
+                          : null,
+                    ),
                   ),
+
                   SizedBox(width: sw(context, 12)),
+
+                  // --- Name + "host" clickable ---
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.event.host.name,
-                          style: t.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: st(context, 15),
-                            color: textColor,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.userProfile,
+                          arguments: {'id': widget.event.host.id},
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.event.host.name,
+                            style: t.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: st(context, 15),
+                              color: textColor,
+                            ),
                           ),
-                        ),
-                        Text(
-                          loc.translate('host'),
-                          style: t.bodySmall?.copyWith(
-                              color: secondaryText, fontSize: st(context, 13)),
-                        ),
-                      ],
+                          Text(
+                            loc.translate('host'),
+                            style: t.bodySmall?.copyWith(
+                                color: secondaryText, fontSize: st(context, 13)),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 

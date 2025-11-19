@@ -308,6 +308,7 @@ class _EventsContentState extends State<EventsContent> {
               crossAxisCount: crossAxisCount,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
+              padding: const EdgeInsets.only(bottom: 16),
               itemCount: eventsToShow.length,
               itemBuilder: (context, index) => EventCard(event: eventsToShow[index]),
             ),

@@ -95,7 +95,7 @@ class _AchievementsAndGiftsSectionState extends State<AchievementsAndGiftsSectio
         : screenWidth < 900
         ? screenWidth * 0.75
         : screenWidth < 1400
-        ? screenWidth * 0.6
+        ? screenWidth * 0.7
         : 900.0;
 
     final sectionDecoration = BoxDecoration(

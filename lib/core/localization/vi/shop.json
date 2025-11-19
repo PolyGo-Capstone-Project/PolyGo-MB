@@ -96,7 +96,8 @@
   "add_account_failed": "Thêm tài khoản thất bại",
 
   "request_support": "Yêu cầu hỗ trợ",
-  "support_request_sent": "Yêu cầu hỗ trợ của bạn đã được ghi nhận, chúng tôi sẽ phản hồi sớm nhất có thể",
+  "your_request": "Yêu cầu của bạn",
+  "support_request_sent": "Yêu cầu hỗ trợ của bạn sẽ được ghi nhận và phản hồi sớm nhất có thể qua mail",
   "your_support_request": "Cho chúng tôi biết yêu cầu của bạn",
   "your_problem": "Yêu cầu",
   "support_request_success": "Yêu cầu hỗ trợ thành công",

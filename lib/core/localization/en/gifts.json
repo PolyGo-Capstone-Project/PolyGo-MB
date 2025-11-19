@@ -17,5 +17,8 @@
   "gifted": "gifted:",
   "has_received": "received:",
   "accept": "Accept",
-  "reject": "Reject"
+  "reject": "Reject",
+
+  "no_sent_gifts": "You has not sent any gifts",
+  "has_received_from": "You has sent"
 }

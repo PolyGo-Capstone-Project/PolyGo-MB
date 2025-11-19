@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/api/api_client.dart';
-import '../../../data/models/friends/friend_model.dart';
-import '../../../data/repositories/friend_repository.dart';
-import '../../../data/services/apis/friend_service.dart';
-import '../../../routes/app_routes.dart';
-import '../../shared/app_error_state.dart';
+import '../../../../core/api/api_client.dart';
+import '../../../../data/models/friends/friend_model.dart';
+import '../../../../data/repositories/friend_repository.dart';
+import '../../../../data/services/apis/friend_service.dart';
+import '../../../../routes/app_routes.dart';
+import '../../../shared/app_error_state.dart';
 
 class Friends extends StatefulWidget {
   const Friends({super.key});

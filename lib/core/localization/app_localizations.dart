@@ -26,7 +26,8 @@ class AppLocalizations {
       'gifts.json',
       'events.json',
       'games.json',
-      'call.json'
+      'call.json',
+      'post.json'
     ];
 
     _localizedStrings = {};

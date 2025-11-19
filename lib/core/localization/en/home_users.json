@@ -13,5 +13,11 @@
   "gift_info": "Gift info",
   "back": "Back",
   "next": "Next",
-  "users_matching_you": "Users matching you"
+  "users_matching_you": "Users matching you",
+
+  "friend_request_accept": "Request accepted",
+  "can_not_accept": "Can not accepted",
+  "reject_friend": "Request Rejected",
+  "friend_reject_failed": "Can not rejected",
+  "not_have_friend_request": "No friend requests yet"
 }

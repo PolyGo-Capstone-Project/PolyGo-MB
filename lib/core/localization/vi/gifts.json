@@ -17,5 +17,10 @@
   "gifted": "tặng vào:",
   "has_received": "đã nhận:",
   "accept": "Nhận",
-  "reject": "Từ chối"
+  "reject": "Từ chối",
+
+  "no_sent_gifts": "Chưa gửi món quà nào",
+  "has_received_from": "Bạn đã gửi"
+
+
 }

@@ -5,6 +5,7 @@ import '../../../core/api/api_client.dart';
 import '../../../core/config/api_constants.dart';
 import '../../models/api_response.dart';
 import '../../models/media/upload_file_response.dart';
+import '../../models/media/upload_files_response.dart';
 
 class MediaService {
   final ApiClient apiClient;
@@ -87,6 +88,44 @@ class MediaService {
       );
     } on DioError catch (e) {
       //
+      rethrow;
+    }
+  }
+
+  Future<ApiResponse<UploadFilesResponse>> uploadImages({
+    required String token,
+    required List<File> files,
+    bool addUniqueName = true,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'files': await Future.wait(
+          files.map((file) => MultipartFile.fromFile(file.path)).toList(),
+        ),
+      });
+
+      final response = await apiClient.post(
+        "${ApiConstants.uploadFiles}?addUniqueName=$addUniqueName",
+        data: formData,
+        headers: {
+          ApiConstants.headerAuthorization: 'Bearer $token',
+          ApiConstants.headerContentType: 'multipart/form-data',
+        },
+      );
+
+      dynamic jsonData = response.data;
+      if (jsonData is String) {
+        jsonData = jsonDecode(jsonData);
+      }
+
+      final uploadInfo = UploadFilesResponse.fromJson(jsonData);
+
+      return ApiResponse(
+        data: uploadInfo,
+        message: jsonData['message'] ?? 'Upload success',
+        statusCode: response.statusCode,
+      );
+    } on DioError catch (e) {
       rethrow;
     }
   }

@@ -16,16 +16,43 @@ class TransactionRepository {
     return res.data;
   }
 
+  // Future<WalletTransactionListResponse?> getWalletTransactions({
+  //   required String token,
+  //   int pageNumber = 1,
+  //   int pageSize = 10,
+  // }) async {
+  //   try {
+  //     final res = await _service.getWalletTransactions(
+  //       token: token,
+  //       pageNumber: pageNumber,
+  //       pageSize: pageSize,
+  //     );
+  //     return res.data;
+  //   } catch (e) {
+  //     rethrow;
+  //   }
+  // }
+
   Future<WalletTransactionListResponse?> getWalletTransactions({
     required String token,
     int pageNumber = 1,
     int pageSize = 10,
+    String? description,
+    String? transactionType,
+    String? transactionMethod,
+    String? transactionStatus,
+    bool? isInquiry,
   }) async {
     try {
       final res = await _service.getWalletTransactions(
         token: token,
         pageNumber: pageNumber,
         pageSize: pageSize,
+        description: description,
+        transactionType: transactionType,
+        transactionMethod: transactionMethod,
+        transactionStatus: transactionStatus,
+        isInquiry: isInquiry,
       );
       return res.data;
     } catch (e) {
@@ -94,4 +121,16 @@ class TransactionRepository {
 
     return res.message == "Success.SendTransactionInquiry";
   }
+
+  Future<WalletTransaction?> getTransactionDetail({
+    required String token,
+    required String transactionId,
+  }) async {
+    final res = await _service.getTransactionById(
+      token: token,
+      transactionId: transactionId,
+    );
+    return res.data;
+  }
+
 }

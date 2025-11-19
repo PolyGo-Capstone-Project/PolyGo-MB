@@ -57,10 +57,11 @@
   "no_badges_available": "You don't have any badge",
   "my_badges": "Badges",
   "my_gifts": "Gifts",
-
+  "no_badges": "This user don't have any badges",
+  "no_gifts": "This user don't have gifts",
   "friends": "Friends",
   "posts": "Posts",
-
+  "no_user_info_yet": "No information about",
   "plus_member": "Plus Member",
   "days": "days",
 

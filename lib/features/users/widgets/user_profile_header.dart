@@ -156,7 +156,7 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
     final theme = Theme.of(context);
     final t = theme.textTheme;
     final isDark = theme.brightness == Brightness.dark;
-
+    final loc = AppLocalizations.of(context);
     final avatarUrl = widget.user.avatarUrl;
     final name = widget.user.name ?? "Unnamed";
     final experiencePoints = widget.user.experiencePoints;
@@ -191,19 +191,49 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  CircleAvatar(
-                    radius: 36,
-                    backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
-                        ? NetworkImage(avatarUrl)
-                        : null,
-                    backgroundColor: Colors.grey[300],
-                    child: (avatarUrl == null || avatarUrl.isEmpty)
-                        ? const Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 36,
-                          )
-                        : null,
+                  GestureDetector(
+                    onTap: () {
+                      if (avatarUrl != null && avatarUrl.isNotEmpty) {
+                        showDialog(
+                          context: context,
+                          builder: (_) => Dialog(
+                            backgroundColor: Colors.transparent,
+                            insetPadding: EdgeInsets.zero,
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                height: MediaQuery.of(context).size.height,
+                                child: InteractiveViewer(
+                                  maxScale: 5.0,
+                                  minScale: 1.0,
+                                  child: Image.network(
+                                    avatarUrl,
+                                    fit: BoxFit.contain,
+                                    width: MediaQuery.of(context).size.width,
+                                    height: MediaQuery.of(context).size.height,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: CircleAvatar(
+                      radius: 36,
+                      backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
+                          ? NetworkImage(avatarUrl)
+                          : null,
+                      backgroundColor: Colors.grey[300],
+                      child: (avatarUrl == null || avatarUrl.isEmpty)
+                          ? const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 36,
+                      )
+                          : null,
+                    ),
                   ),
 
                   // ===== LV badge =====

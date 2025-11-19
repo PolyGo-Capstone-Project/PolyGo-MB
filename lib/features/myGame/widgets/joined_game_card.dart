@@ -18,10 +18,10 @@ class JoinedGameCard extends StatelessWidget {
     final loc = AppLocalizations.of(context);
     final cardBackground = isDark
         ? const LinearGradient(
-      colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    )
+            colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
         : const LinearGradient(colors: [Colors.white, Colors.white]);
 
     final textColor = isDark ? Colors.white70 : Colors.black87;
@@ -37,7 +37,7 @@ class JoinedGameCard extends StatelessWidget {
             color: isDark ? Colors.black.withOpacity(0.3) : Colors.black12,
             blurRadius: 8,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: ClipRRect(
@@ -62,7 +62,11 @@ class JoinedGameCard extends StatelessWidget {
                         style: TextStyle(color: secondaryText, fontSize: 12),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.access_time_filled, color: Colors.blue, size: 14),
+                      const Icon(
+                        Icons.access_time_filled,
+                        color: Colors.blue,
+                        size: 14,
+                      ),
                     ],
                   ),
                 ],
@@ -75,7 +79,10 @@ class JoinedGameCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
               ),
 
               // --- Description ---
@@ -88,38 +95,54 @@ class JoinedGameCard extends StatelessWidget {
               const SizedBox(height: 16),
 
               // --- Avatar + Name + Creator ---
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundImage: wordSet.creator.avatarUrl != null &&
-                        wordSet.creator.avatarUrl!.isNotEmpty
-                        ? NetworkImage(wordSet.creator.avatarUrl!)
-                        : null,
-                    backgroundColor: Colors.grey[300],
-                    child: (wordSet.creator.avatarUrl == null ||
-                        wordSet.creator.avatarUrl!.isEmpty)
-                        ? const Icon(Icons.person, size: 18, color: Colors.white70)
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        wordSet.creator.name,
-                        style: TextStyle(
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.userProfile,
+                    arguments: {'id': wordSet.creator.id},
+                  );
+                },
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundImage:
+                          wordSet.creator.avatarUrl != null &&
+                              wordSet.creator.avatarUrl!.isNotEmpty
+                          ? NetworkImage(wordSet.creator.avatarUrl!)
+                          : null,
+                      backgroundColor: Colors.grey[300],
+                      child:
+                          (wordSet.creator.avatarUrl == null ||
+                              wordSet.creator.avatarUrl!.isEmpty)
+                          ? const Icon(
+                              Icons.person,
+                              size: 18,
+                              color: Colors.white70,
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          wordSet.creator.name,
+                          style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
-                            color: textColor),
-                      ),
-                      Text(
-                        loc.translate("creator"),
-                        style: TextStyle(fontSize: 12, color: secondaryText),
-                      ),
-                    ],
-                  )
-                ],
+                            color: textColor,
+                          ),
+                        ),
+                        Text(
+                          loc.translate("creator"),
+                          style: TextStyle(fontSize: 12, color: secondaryText),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -159,10 +182,13 @@ class JoinedGameCard extends StatelessWidget {
                               : wordSet.language.name;
                           return Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary
-                                  .withOpacity(isDark ? 0.25 : 0.12),
+                              color: theme.colorScheme.primary.withOpacity(
+                                isDark ? 0.25 : 0.12,
+                              ),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
@@ -183,14 +209,15 @@ class JoinedGameCard extends StatelessWidget {
                       Navigator.pushNamed(
                         context,
                         AppRoutes.overview,
-                        arguments: {
-                          'id': wordSet.id,
-                        },
+                        arguments: {'id': wordSet.id},
                       );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -204,7 +231,7 @@ class JoinedGameCard extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ],

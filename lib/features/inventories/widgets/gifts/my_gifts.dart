@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/utils/responsive.dart';
-import '../../../core/api/api_client.dart';
-import '../../../data/models/gift/gift_me_response.dart';
-import '../../../data/repositories/gift_repository.dart';
-import '../../../data/services/apis/gift_service.dart';
-import '../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/responsive.dart';
+import '../../../../core/api/api_client.dart';
+import '../../../../data/models/gift/gift_me_response.dart';
+import '../../../../data/repositories/gift_repository.dart';
+import '../../../../data/services/apis/gift_service.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class MyGifts extends StatefulWidget {
   const MyGifts({super.key});

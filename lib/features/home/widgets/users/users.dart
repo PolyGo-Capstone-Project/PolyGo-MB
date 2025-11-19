@@ -394,6 +394,7 @@ class _UsersState extends State<Users> {
               crossAxisCount: crossAxisCount,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
+              padding: const EdgeInsets.only(bottom: 16),
               itemCount: usersToShow.length,
               itemBuilder: (context, index) {
                 final user = usersToShow[index];

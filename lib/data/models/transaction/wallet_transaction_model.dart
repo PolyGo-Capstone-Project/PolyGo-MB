@@ -3,7 +3,8 @@ class WalletTransaction {
   final double amount;
   final double remainingBalance;
   final String description;
-  final String userNotes;
+  final List<WalletNote> userNotes;
+
   bool isInquiry;
   final String transactionType;
   final String transactionMethod;
@@ -34,11 +35,12 @@ class WalletTransaction {
       id: json['id'] ?? '',
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
       remainingBalance: (json['remainingBalance'] as num?)?.toDouble() ?? 0,
-
       description: json['description'] ?? '',
-      userNotes: json['userNotes'] ?? '',
+      userNotes: (json['userNotes'] as List<dynamic>?)
+          ?.map((e) => WalletNote.fromJson(e))
+          .toList() ??
+          [],
       isInquiry: json['isInquiry'] ?? false,
-
       transactionType: json['transactionType'] ?? '',
       transactionMethod: json['transactionMethod'] ?? '',
       transactionStatus: json['transactionStatus'] ?? '',
@@ -46,7 +48,28 @@ class WalletTransaction {
       accountName: json['accountName'] ?? '',
 
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-      lastUpdatedAt: DateTime.tryParse(json['lastUpdatedAt'] ?? '') ?? DateTime.now(),
+      lastUpdatedAt:
+      DateTime.tryParse(json['lastUpdatedAt'] ?? '') ?? DateTime.now(),
+    );
+  }
+}
+
+class WalletNote {
+  final String id;
+  final String notes;
+  final DateTime createdAt;
+
+  WalletNote({
+    required this.id,
+    required this.notes,
+    required this.createdAt,
+  });
+
+  factory WalletNote.fromJson(Map<String, dynamic> json) {
+    return WalletNote(
+      id: json['id'] ?? '',
+      notes: json['notes'] ?? '',
+      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
     );
   }
 }
@@ -86,3 +109,4 @@ class WalletTransactionListResponse {
     );
   }
 }
+
