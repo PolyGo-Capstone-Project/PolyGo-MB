@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/api/api_client.dart';
-import '../../../data/models/friends/friend_model.dart';
-import '../../../data/repositories/friend_repository.dart';
-import '../../../data/services/apis/friend_service.dart';
-import '../../profile/widgets/shiny_avatar.dart';
-import '../../shared/app_error_state.dart';
+import '../../../../core/api/api_client.dart';
+import '../../../../core/localization/app_localizations.dart';
+import '../../../../data/models/friends/friend_model.dart';
+import '../../../../data/repositories/friend_repository.dart';
+import '../../../../data/services/apis/friend_service.dart';
+import '../../../../routes/app_routes.dart';
+import '../../../profile/widgets/shiny_avatar.dart';
+import '../../../shared/app_error_state.dart';
 
 class Requests extends StatefulWidget {
   final bool isRetrying;
@@ -83,6 +85,7 @@ class _RequestsState extends State<Requests> {
   Future<void> _acceptRequest(FriendModel user) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
+    final loc = AppLocalizations.of(context);
     if (token == null) return;
 
     try {
@@ -91,24 +94,24 @@ class _RequestsState extends State<Requests> {
         setState(() {
           _requests.removeWhere((u) => u.id == user.id);
         });
-
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã chấp nhận yêu cầu kết bạn'),
+          SnackBar(
+            content: Text(loc.translate("friend_request_accept")),
             duration: Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không thể chấp nhận yêu cầu')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(loc.translate("can_not_accept"))));
     }
   }
 
   Future<void> _rejectRequest(FriendModel user) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
+    final loc = AppLocalizations.of(context);
     if (token == null) return;
 
     try {
@@ -119,15 +122,15 @@ class _RequestsState extends State<Requests> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã từ chối yêu cầu kết bạn'),
+          SnackBar(
+            content: Text(loc.translate("reject_friend")),
             duration: Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không thể từ chối yêu cầu')),
+        SnackBar(content: Text(loc.translate("friend_reject_failed"))),
       );
     }
   }
@@ -136,7 +139,7 @@ class _RequestsState extends State<Requests> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
+    final loc = AppLocalizations.of(context);
     if (_loading) return const Center(child: CircularProgressIndicator());
 
     if (_hasError) {
@@ -149,7 +152,7 @@ class _RequestsState extends State<Requests> {
     if (_requests.isEmpty) {
       return Center(
         child: Text(
-          "Không có yêu cầu kết bạn",
+          loc.translate("not_have_friend_request"),
           style: theme.textTheme.titleMedium,
         ),
       );
@@ -163,19 +166,24 @@ class _RequestsState extends State<Requests> {
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final user = _requests[index];
-          final hasAvatar = user.avatarUrl != null && user.avatarUrl!.isNotEmpty;
+          final hasAvatar =
+              user.avatarUrl != null && user.avatarUrl!.isNotEmpty;
 
           Widget avatar = hasAvatar
               ? CircleAvatar(
-            radius: 25,
-            backgroundImage: NetworkImage(user.avatarUrl!),
-            backgroundColor: Colors.grey[300],
-          )
+                  radius: 25,
+                  backgroundImage: NetworkImage(user.avatarUrl!),
+                  backgroundColor: Colors.grey[300],
+                )
               : CircleAvatar(
-            radius: 25,
-            backgroundColor: Colors.grey[300],
-            child: const Icon(Icons.person, color: Colors.white, size: 25),
-          );
+                  radius: 25,
+                  backgroundColor: Colors.grey[300],
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 25,
+                  ),
+                );
 
           if (user.planType == "Plus") {
             avatar = ShinyAvatar(avatarUrl: user.avatarUrl);
@@ -194,45 +202,64 @@ class _RequestsState extends State<Requests> {
                 ),
               ],
             ),
-            child: Row(
-              children: [
-                avatar,
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    user.name ?? "Unknown",
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.userProfile,
+                  arguments: {'id': user.id},
+                );
+              },
+              child: Row(
+                children: [
+                  avatar,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      user.name ?? "Unknown",
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
                     ),
                   ),
-                ),
-                Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => _acceptRequest(user),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2563EB),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        minimumSize: const Size(40, 40),
-                        padding: EdgeInsets.zero,
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => _acceptRequest(user),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          minimumSize: const Size(40, 40),
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: const Icon(Icons.check, color: Colors.white),
                       ),
-                      child: const Icon(Icons.check, color: Colors.white),
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton(
-                      onPressed: () => _rejectRequest(user),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF2563EB), width: 2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        minimumSize: const Size(40, 40),
-                        padding: EdgeInsets.zero,
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: () => _rejectRequest(user),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(
+                            color: Color(0xFF2563EB),
+                            width: 2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          minimumSize: const Size(40, 40),
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          color: Color(0xFF2563EB),
+                        ),
                       ),
-                      child: const Icon(Icons.close, color: Color(0xFF2563EB)),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
         },

@@ -9,9 +9,9 @@ class AppDropdown extends StatelessWidget {
   final VoidCallback? onTap;
   final double borderRadius;
   final IconData? icon;
-  final bool showIcon;   // hiển thị icon button
-  final bool showValue;  // hiển thị text currentValue
-  final bool showArrow;  // hiển thị mũi tên
+  final bool showIcon;
+  final bool showValue;  
+  final bool showArrow;
 
   const AppDropdown({
     super.key,

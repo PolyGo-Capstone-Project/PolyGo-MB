@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../shared/app_bottom_bar.dart';
 import '../../shared/app_error_state.dart';
-import '../../../routes/app_routes.dart';
 import '../widgets/users_profile.dart';
+import '../widgets/user_post_content.dart'; // import widget bài viết
 
 class UserProfileScreen extends StatefulWidget {
   final String? userId;
@@ -41,8 +41,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
     final isDesktop = screenWidth >= 1024;
-    double maxFormWidth =
-    isDesktop ? 500 : isTablet ? 450 : screenWidth * 0.9;
 
     return Scaffold(
       body: SafeArea(
@@ -71,6 +69,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
               ),
               UserProfile(userId: widget.userId),
+              Divider(
+                color: Colors.grey.withOpacity(0.3),
+                thickness: 1,
+              ),
+              if (widget.userId != null)
+                UserPostContent(userId: widget.userId!),
             ],
           ),
         ),

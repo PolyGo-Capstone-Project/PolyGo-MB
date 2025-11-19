@@ -6,6 +6,7 @@ import '../../models/post/comment_model.dart';
 import '../../models/post/post_model.dart';
 import '../../models/post/react_model.dart';
 import '../../models/post/update_comment_model.dart';
+import '../../models/post/update_post_model.dart';
 
 class PostService {
   final ApiClient apiClient;
@@ -26,16 +27,14 @@ class PostService {
           'pageSize': pageSize,
           if (keyword != null) 'keyword': keyword,
         },
-        headers: {
-          ApiConstants.headerAuthorization: 'Bearer $token',
-        },
+        headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
       );
 
       final json = response.data as Map<String, dynamic>;
 
       return ApiResponse.fromJson(
         json,
-            (data) => PostPaginationResponse.fromJson(data),
+        (data) => PostPaginationResponse.fromJson(data),
       );
     } on DioError catch (e) {
       if (e.response != null && e.response?.data != null) {
@@ -76,9 +75,7 @@ class PostService {
 
     final response = await apiClient.delete(
       url,
-      headers: {
-        ApiConstants.headerAuthorization: 'Bearer $token',
-      },
+      headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
     );
 
     return PostReactionResponse.fromJson(response.data);
@@ -93,17 +90,12 @@ class PostService {
 
       final response = await apiClient.get(
         url,
-        headers: {
-          ApiConstants.headerAuthorization: "Bearer $token",
-        },
+        headers: {ApiConstants.headerAuthorization: "Bearer $token"},
       );
 
       final json = response.data as Map<String, dynamic>;
 
-      return ApiResponse.fromJson(
-        json,
-            (data) => PostModel.fromJson(data),
-      );
+      return ApiResponse.fromJson(json, (data) => PostModel.fromJson(data));
     } on DioError catch (e) {
       return ApiResponse<PostModel>(
         data: null,
@@ -119,10 +111,7 @@ class PostService {
     required List<String> imageUrls,
   }) async {
     try {
-      final body = {
-        'content': content,
-        'imageUrls': imageUrls,
-      };
+      final body = {'content': content, 'imageUrls': imageUrls};
 
       final response = await apiClient.post(
         ApiConstants.createPost,
@@ -159,9 +148,7 @@ class PostService {
 
       final response = await apiClient.delete(
         url,
-        headers: {
-          ApiConstants.headerAuthorization: 'Bearer $token',
-        },
+        headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
       );
 
       return ApiResponse<void>(
@@ -199,7 +186,7 @@ class PostService {
 
       return ApiResponse.fromJson(
         json,
-            (data) => CommentModel.fromJson(data as Map<String, dynamic>),
+        (data) => CommentModel.fromJson(data as Map<String, dynamic>),
       );
     } on DioError catch (e) {
       if (e.response != null && e.response?.data != null) {
@@ -218,13 +205,14 @@ class PostService {
     required String commentId,
   }) async {
     try {
-      final url = ApiConstants.deleteCommentPost.replaceFirst('{commentId}', commentId);
+      final url = ApiConstants.deleteCommentPost.replaceFirst(
+        '{commentId}',
+        commentId,
+      );
 
       final response = await apiClient.delete(
         url,
-        headers: {
-          ApiConstants.headerAuthorization: 'Bearer $token',
-        },
+        headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
       );
 
       return ApiResponse<void>(
@@ -248,14 +236,14 @@ class PostService {
   }) async {
     try {
       final url = ApiConstants.updateCommentPost.replaceFirst(
-          '{commentId}', commentId);
+        '{commentId}',
+        commentId,
+      );
 
       final response = await apiClient.put(
         url,
         data: request.toJson(),
-        headers: {
-          ApiConstants.headerAuthorization: 'Bearer $token',
-        },
+        headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
       );
 
       return ApiResponse<void>(
@@ -269,6 +257,100 @@ class PostService {
         message: e.response?.data['message'] ?? e.message,
         statusCode: e.response?.statusCode,
       );
+    }
+  }
+
+  Future<ApiResponse<void>> updatePost({
+    required String token,
+    required String postId,
+    required UpdatePostRequest request,
+  }) async {
+    try {
+      final url = ApiConstants.updatePost.replaceFirst('{postId}', postId);
+
+      final response = await apiClient.put(
+        url,
+        data: request.toJson(),
+        headers: {
+          ApiConstants.headerAuthorization: 'Bearer $token',
+          ApiConstants.headerContentType: ApiConstants.contentTypeJson,
+        },
+      );
+
+      return ApiResponse<void>(
+        data: null,
+        message: response.data['message'] ?? 'Success.Update',
+        statusCode: response.statusCode,
+      );
+    } on DioError catch (e) {
+      return ApiResponse<void>(
+        data: null,
+        message: e.response?.data['message'] ?? e.message,
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<PostPaginationResponse>> getMyPosts({
+    required String token,
+    int pageNumber = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      final response = await apiClient.get(
+        ApiConstants.myPost,
+        queryParameters: {'pageNumber': pageNumber, 'pageSize': pageSize},
+        headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
+      );
+
+      final json = response.data as Map<String, dynamic>;
+
+      return ApiResponse.fromJson(
+        json,
+        (data) => PostPaginationResponse.fromJson(data),
+      );
+    } on DioError catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return ApiResponse<PostPaginationResponse>(
+          data: null,
+          message: e.response?.data['message'] ?? e.message,
+          statusCode: e.response?.statusCode,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<ApiResponse<PostPaginationResponse>> getUserPosts({
+    required String token,
+    required String userId,
+    int pageNumber = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      final url = ApiConstants.userPosts.replaceFirst('{userId}', userId);
+
+      final response = await apiClient.get(
+        url,
+        queryParameters: {'pageNumber': pageNumber, 'pageSize': pageSize},
+        headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
+      );
+
+      final json = response.data as Map<String, dynamic>;
+
+      return ApiResponse.fromJson(
+        json,
+        (data) => PostPaginationResponse.fromJson(data),
+      );
+    } on DioError catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return ApiResponse<PostPaginationResponse>(
+          data: null,
+          message: e.response?.data['message'] ?? e.message,
+          statusCode: e.response?.statusCode,
+        );
+      }
+      rethrow;
     }
   }
 }

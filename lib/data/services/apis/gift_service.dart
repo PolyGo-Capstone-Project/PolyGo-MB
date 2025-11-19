@@ -11,6 +11,7 @@ import '../../models/gift/gift_present_response.dart';
 import '../../models/gift/gift_purchase_request.dart';
 import '../../models/gift/gift_purchase_response.dart';
 import '../../models/gift/gift_received_response.dart';
+import '../../models/gift/gift_sent_item.dart';
 
 class GiftService {
   final ApiClient apiClient;
@@ -217,5 +218,35 @@ class GiftService {
     }
   }
 
+  Future<ApiResponse<GiftSentResponse>> getSentGifts({
+    required String token,
+    int pageNumber = 1,
+    int pageSize = 10,
+    String? lang,
+  }) async {
+    try {
+      final query = {
+        'pageNumber': pageNumber.toString(),
+        'pageSize': pageSize.toString(),
+        if (lang != null) 'lang': lang,
+      };
+
+      final response = await apiClient.get(
+        ApiConstants.giftsSent,
+        queryParameters: query,
+        headers: {
+          ApiConstants.headerAuthorization: 'Bearer $token',
+        },
+      );
+
+      final json = response.data as Map<String, dynamic>;
+      return ApiResponse.fromJson(
+        json,
+            (data) => GiftSentResponse.fromJson(json),
+      );
+    } on DioError catch (e) {
+      rethrow;
+    }
+  }
 
 }

@@ -3,6 +3,7 @@ import '../models/post/comment_model.dart';
 import '../models/post/post_model.dart';
 import '../models/post/react_model.dart';
 import '../models/post/update_comment_model.dart';
+import '../models/post/update_post_model.dart';
 import '../services/apis/post_service.dart';
 
 class PostRepository {
@@ -130,6 +131,56 @@ class PostRepository {
         token: token,
         commentId: commentId,
         request: request,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<ApiResponse<void>> updatePost({
+    required String token,
+    required String postId,
+    required UpdatePostRequest request,
+  }) async {
+    try {
+      return await _service.updatePost(
+        token: token,
+        postId: postId,
+        request: request,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<ApiResponse<PostPaginationResponse>> getMyPosts({
+    required String token,
+    int pageNumber = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      return await _service.getMyPosts(
+        token: token,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<ApiResponse<PostPaginationResponse>> getUserPosts({
+    required String token,
+    required String userId,
+    int pageNumber = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      return await _service.getUserPosts(
+        token: token,
+        userId: userId,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
       );
     } catch (e) {
       rethrow;

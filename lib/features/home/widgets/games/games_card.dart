@@ -157,38 +157,47 @@ class WordSetCard extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // --- Avatar + Name + Creator ---
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundImage: wordSet.creator.avatarUrl != null &&
-                          wordSet.creator.avatarUrl!.isNotEmpty
-                          ? NetworkImage(wordSet.creator.avatarUrl!)
-                          : null,
-                      backgroundColor: Colors.grey[300],
-                      child: (wordSet.creator.avatarUrl == null ||
-                          wordSet.creator.avatarUrl!.isEmpty)
-                          ? const Icon(Icons.person, size: 18, color: Colors.white70)
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          wordSet.creator.name,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: textColor),
-                        ),
-                        Text(
-                          loc.translate("creator"),
-                          style: TextStyle(fontSize: 12, color: secondaryText),
-                        ),
-                      ],
-                    )
-                  ],
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.userProfile,
+                      arguments: {'id': wordSet.creator.id},
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundImage: wordSet.creator.avatarUrl != null &&
+                            wordSet.creator.avatarUrl!.isNotEmpty
+                            ? NetworkImage(wordSet.creator.avatarUrl!)
+                            : null,
+                        backgroundColor: Colors.grey[300],
+                        child: (wordSet.creator.avatarUrl == null ||
+                            wordSet.creator.avatarUrl!.isEmpty)
+                            ? const Icon(Icons.person, size: 18, color: Colors.white70)
+                            : null,
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            wordSet.creator.name,
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: textColor),
+                          ),
+                          Text(
+                            loc.translate("creator"),
+                            style: TextStyle(fontSize: 12, color: secondaryText),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
 

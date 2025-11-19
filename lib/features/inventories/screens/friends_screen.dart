@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../shared/app_bottom_bar.dart';
 import '../../shared/app_error_state.dart';
-import '../widgets/friends_menu_bar.dart';
-import '../widgets/friends.dart';
-import '../widgets/requests.dart';
+import '../widgets/friends/friends_menu_bar.dart';
+import '../widgets/friends/friends.dart';
+import '../widgets/friends/requests.dart';
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key});

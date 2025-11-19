@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../shared/app_bottom_bar.dart';
-import '../widgets/accepted_gifts.dart';
-import '../widgets/gifts_header_menu.dart';
-import '../widgets/my_gifts.dart';
-import '../widgets/unread_gifts.dart';
+import '../widgets/gifts/accepted_gifts.dart';
+import '../widgets/gifts/gifts_header_menu.dart';
+import '../widgets/gifts/my_gifts.dart';
+import '../widgets/gifts/sent_gifts.dart';
 
 class AllGiftsScreen extends StatefulWidget {
   const AllGiftsScreen({super.key});
@@ -28,7 +28,7 @@ class _AllGiftsScreenState extends State<AllGiftsScreen> {
     Widget buildTabContent() {
       switch (_selectedTab) {
         case 0:
-          return const UnreadGifts();
+          return const SentGifts();
         case 1:
           return const AcceptedGifts();
         case 2:

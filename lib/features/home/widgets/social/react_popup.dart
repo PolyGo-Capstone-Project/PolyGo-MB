@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/api/api_client.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../data/models/post/post_model.dart';
 import '../../../../data/repositories/post_repository.dart';
 import '../../../../data/services/apis/post_service.dart';
@@ -29,10 +30,7 @@ class _ReactPopupState extends State<ReactPopup> {
     if (token == null) throw Exception("Missing token");
 
     final repo = PostRepository(PostService(ApiClient()));
-    final res = await repo.getPostDetail(
-      token: token,
-      postId: widget.post.id,
-    );
+    final res = await repo.getPostDetail(token: token, postId: widget.post.id);
 
     if (res.data == null) {
       throw Exception(res.message ?? "Failed to load post");
@@ -56,81 +54,79 @@ class _ReactPopupState extends State<ReactPopup> {
     final isDark = theme.brightness == Brightness.dark;
     final textColor = isDark ? Colors.white70 : Colors.black87;
     final secondaryText = isDark ? Colors.white54 : Colors.grey[700]!;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Cảm xúc"),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
+    final loc = AppLocalizations.of(context);
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(loc.translate("react")),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
-      ),
-      body: FutureBuilder<PostModel>(
-        future: _fetchPostFuture,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        body: FutureBuilder<PostModel>(
+          future: _fetchPostFuture,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          final post = snapshot.data!;
-          final List<_UserReaction> allReactions = [];
+            final post = snapshot.data!;
+            final List<_UserReaction> allReactions = [];
 
-          for (var reaction in post.reactions) {
-            for (var user in reaction.users) {
-              allReactions.add(
-                _UserReaction(user: user, type: reaction.reactionType),
+            for (var reaction in post.reactions) {
+              for (var user in reaction.users) {
+                allReactions.add(
+                  _UserReaction(user: user, type: reaction.reactionType),
+                );
+              }
+            }
+
+            if (allReactions.isEmpty) {
+              return Center(
+                child: Text(
+                  loc.translate("no_react"),
+                  style: TextStyle(color: secondaryText),
+                ),
               );
             }
-          }
 
-          if (allReactions.isEmpty) {
-            return Center(
-              child: Text(
-                "Chưa có ai phản ứng",
-                style: TextStyle(color: secondaryText),
-              ),
-            );
-          }
+            return ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: allReactions.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 20),
+              itemBuilder: (context, index) {
+                final r = allReactions[index];
+                final asset = _reactionIcons[r.type] ?? 'like.png';
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: allReactions.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 20),
-            itemBuilder: (context, index) {
-              final r = allReactions[index];
-              final asset = _reactionIcons[r.type] ?? 'like.png';
-
-              return Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundImage: r.user.avatarUrl.isNotEmpty
-                        ? NetworkImage(r.user.avatarUrl)
-                        : null,
-                    child: r.user.avatarUrl.isEmpty
-                        ? const Icon(Icons.person)
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      r.user.name,
-                      style: TextStyle(
-                        color: textColor,
-                        fontWeight: FontWeight.w500,
+                return Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage: r.user.avatarUrl.isNotEmpty
+                          ? NetworkImage(r.user.avatarUrl)
+                          : null,
+                      child: r.user.avatarUrl.isEmpty
+                          ? const Icon(Icons.person)
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        r.user.name,
+                        style: TextStyle(
+                          color: textColor,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                  Image.asset(
-                    'assets/$asset',
-                    width: 28,
-                    height: 28,
-                  ),
-                ],
-              );
-            },
-          );
-        },
+                    Image.asset('assets/$asset', width: 28, height: 28),
+                  ],
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

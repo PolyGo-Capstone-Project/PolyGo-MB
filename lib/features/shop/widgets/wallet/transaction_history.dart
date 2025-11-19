@@ -24,7 +24,6 @@ class TransactionHistory extends StatefulWidget {
   final Function(String txId)? onInquirySuccess;
   final bool loading;
 
-  /// Callback khi filter thay đổi
   final Function({
   String? transactionType,
   String? transactionMethod,

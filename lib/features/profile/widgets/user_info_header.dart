@@ -31,9 +31,10 @@ class UserInfoHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final t = theme.textTheme;
     final loc = AppLocalizations.of(context);
-
+    final void Function(bool isDarkMode)? onThemeChanged;
     final avatarUrl = user.avatarUrl;
     final name = user.name ?? '';
+    final isDark = theme.brightness == Brightness.dark;
     final merit = user.merit;
     final experiencePoints = user.experiencePoints;
     final introduction = user.introduction;
@@ -117,43 +118,26 @@ class UserInfoHeader extends StatelessWidget {
                 ],
               ),
             ),
-            AppDropdown(
-              icon: Icons.settings,
-              currentValue: "",
-              items: [
-                loc.translate("personal_info"),
-                loc.translate("languages_interests"),
-                loc.translate("change_password"),
-                loc.translate("logout"),
-              ],
-              showIcon: true,
-              showValue: false,
-              showArrow: false,
-              onSelected: (value) {
-                if (value == loc.translate("personal_info")) {
-                  onShowUpdateInfoForm();
-                } else if (value == loc.translate("languages_interests")) {
-                  Navigator.pushNamed(context, AppRoutes.updateProfile).then((
-                    updated,
-                  ) {
-                    if (updated == true) {
-                      onReloadUser();
-                    }
-                  });
-                } else if (value == loc.translate("change_password")) {
-                  showDialog(
-                    context: context,
-                    barrierDismissible: true,
-                    barrierColor: Colors.black54,
-                    builder: (_) => Dialog(
-                      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-                      backgroundColor: Colors.transparent,
-                      child: const ChangePasswordForm(),
+            // Thay PopupMenuButton bằng IconButton để mở dialog
+            IconButton(
+              icon: Icon(
+                Icons.settings,
+                size: 20,
+                color: isDark ? Colors.white70 : Colors.grey.shade600,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SettingsFullScreenDialog(
+                      loc: loc,
+                      isDark: isDark,
+                      onShowUpdateInfoForm: onShowUpdateInfoForm,
+                      onReloadUser: onReloadUser,
+                      onLogout: onLogout,
                     ),
-                  );
-                } else if (value == loc.translate("logout")) {
-                  onLogout();
-                }
+                  ),
+                );
               },
             ),
           ],
@@ -392,6 +376,118 @@ class UserInfoHeader extends StatelessWidget {
         ],
 
       ],
+    );
+  }
+}
+class SettingsFullScreenDialog extends StatelessWidget {
+  final AppLocalizations loc;
+  final bool isDark;
+  final VoidCallback onShowUpdateInfoForm;
+  final Future<void> Function() onReloadUser;
+  final VoidCallback onLogout;
+
+  const SettingsFullScreenDialog({
+    super.key,
+    required this.loc,
+    required this.isDark,
+    required this.onShowUpdateInfoForm,
+    required this.onReloadUser,
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final background = isDark ? Colors.black : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
+    return Scaffold(
+      backgroundColor: background,
+      appBar: AppBar(
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: Text(
+          loc.translate("settings"),
+          style: TextStyle(color: textColor),
+        ),
+        iconTheme: IconThemeData(color: textColor),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              children: [
+                ListTile(
+                  leading: Icon(Icons.person, color: textColor),
+                  title: Text(
+                    loc.translate("personal_info"),
+                    style: TextStyle(color: textColor),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onShowUpdateInfoForm();
+                  },
+                ),
+                const SizedBox(height: 12), // khoảng cách giữa các mục
+                ListTile(
+                  leading: Icon(Icons.language, color: textColor),
+                  title: Text(
+                    loc.translate("languages_interests"),
+                    style: TextStyle(color: textColor),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, AppRoutes.updateProfile)
+                        .then((updated) {
+                      if (updated == true) onReloadUser();
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  leading: Icon(Icons.lock, color: textColor),
+                  title: Text(
+                    loc.translate("change_password"),
+                    style: TextStyle(color: textColor),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  onTap: () {
+                    Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      barrierColor: Colors.black54,
+                      builder: (_) => Dialog(
+                        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+                        backgroundColor: Colors.transparent,
+                        child: const ChangePasswordForm(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // Logout luôn ở dưới cùng
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ListTile(
+              leading: const Icon(Icons.logout, color: Colors.redAccent),
+              title: Text(
+                loc.translate("logout"),
+                style: const TextStyle(color: Colors.redAccent),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                onLogout();
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

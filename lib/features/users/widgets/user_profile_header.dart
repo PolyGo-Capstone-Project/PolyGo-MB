@@ -156,7 +156,7 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
     final theme = Theme.of(context);
     final t = theme.textTheme;
     final isDark = theme.brightness == Brightness.dark;
-
+    final loc = AppLocalizations.of(context);
     final avatarUrl = widget.user.avatarUrl;
     final name = widget.user.name ?? "Unnamed";
     final experiencePoints = widget.user.experiencePoints;
@@ -198,14 +198,14 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                           context: context,
                           builder: (_) => Dialog(
                             backgroundColor: Colors.transparent,
-                            insetPadding: EdgeInsets.zero, // bỏ khoảng cách mặc định của dialog
+                            insetPadding: EdgeInsets.zero,
                             child: GestureDetector(
                               onTap: () => Navigator.of(context).pop(),
                               child: SizedBox(
                                 width: MediaQuery.of(context).size.width,
                                 height: MediaQuery.of(context).size.height,
                                 child: InteractiveViewer(
-                                  maxScale: 5.0, // bạn có thể chỉnh mức phóng to tối đa
+                                  maxScale: 5.0,
                                   minScale: 1.0,
                                   child: Image.network(
                                     avatarUrl,

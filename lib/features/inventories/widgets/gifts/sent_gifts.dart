@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/api/api_client.dart';
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/utils/responsive.dart';
-import '../../../data/models/gift/gift_received_response.dart';
-import '../../../data/repositories/gift_repository.dart';
-import '../../../data/services/apis/gift_service.dart';
+import '../../../../../core/api/api_client.dart';
+import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/responsive.dart';
+import '../../../../data/models/gift/gift_sent_item.dart';
+import '../../../../data/repositories/gift_repository.dart';
+import '../../../../data/services/apis/gift_service.dart';
 
-class AcceptedGifts extends StatefulWidget {
-  const AcceptedGifts({super.key});
+class SentGifts extends StatefulWidget {
+  const SentGifts({super.key});
 
   @override
-  State<AcceptedGifts> createState() => _AcceptedGiftsState();
+  State<SentGifts> createState() => _SentGiftsState();
 }
 
-class _AcceptedGiftsState extends State<AcceptedGifts> {
+class _SentGiftsState extends State<SentGifts> {
   bool _loading = true;
-  List<GiftItem> _gifts = [];
+  List<GiftSentItem> _gifts = [];
   String? _error;
   Locale? _currentLocale;
   late final GiftRepository _repo;
@@ -50,18 +50,18 @@ class _AcceptedGiftsState extends State<AcceptedGifts> {
       final token = prefs.getString('token');
       if (token == null || token.isEmpty) return;
 
-      final res = await _repo.getReceivedGifts(
+      final res = await _repo.getSentGifts(
         token: token,
         pageNumber: 1,
         pageSize: 20,
         lang: lang ?? 'vi',
       );
 
-      final acceptedGifts = res?.items.where((g) => g.isRead).toList() ?? [];
+      final sentGifts = res?.items.toList() ?? [];
 
       if (!mounted) return;
       setState(() {
-        _gifts = acceptedGifts;
+        _gifts = sentGifts;
         _loading = false;
       });
     } catch (e) {
@@ -97,7 +97,7 @@ class _AcceptedGiftsState extends State<AcceptedGifts> {
     if (_gifts.isEmpty) {
       return Center(
         child: Text(
-          loc.translate("no_accepted_gifts"),
+          loc.translate("no_sent_gifts"),
           style: theme.textTheme.bodyMedium,
         ),
       );
@@ -139,7 +139,7 @@ class _AcceptedGiftsState extends State<AcceptedGifts> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(sw(context, 30)),
                     child: Image.network(
-                      gift.senderAvatarUrl ?? 'https://via.placeholder.com/150',
+                      gift.receiverAvatarUrl ?? 'https://via.placeholder.com/150',
                       width: sw(context, 50),
                       height: sw(context, 50),
                       fit: BoxFit.cover,
@@ -157,7 +157,7 @@ class _AcceptedGiftsState extends State<AcceptedGifts> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          gift.senderName,
+                          gift.receiverName,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: isDark ? Colors.white : Colors.black87,
@@ -165,7 +165,7 @@ class _AcceptedGiftsState extends State<AcceptedGifts> {
                         ),
                         SizedBox(height: sh(context, 4)),
                         Text(
-                          '${loc.translate("has_gifted")} ${gift.giftName} x${gift.quantity}',
+                          '${loc.translate("has_received_from")} ${gift.giftName} x${gift.quantity}',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                             color: isDark ? Colors.white70 : Colors.black54,
@@ -213,9 +213,9 @@ class _AcceptedGiftsState extends State<AcceptedGifts> {
                         color: isDark ? Colors.white54 : Colors.black45,
                       ),
                     ),
-                  if (gift.deliveredAt != null)
+                  if (gift.createdAt != null)
                     Text(
-                      '${loc.translate("has_received")} ${formatDateTime(gift.deliveredAt!)}',
+                      '${loc.translate("has_received")} ${formatDateTime(gift.createdAt!)}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: isDark ? Colors.white54 : Colors.black45,
                       ),
@@ -223,8 +223,7 @@ class _AcceptedGiftsState extends State<AcceptedGifts> {
                 ],
               ),
             ],
-          )
-
+          ),
         ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
       },
     );

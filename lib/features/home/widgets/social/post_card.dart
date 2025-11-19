@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:polygo_mobile/features/home/widgets/social/react_popup.dart';
+import 'package:polygo_mobile/features/home/widgets/social/update_post_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/api/api_client.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/audioplayers.dart';
 import '../../../../data/models/post/post_model.dart';
 import '../../../../data/repositories/post_repository.dart';
 import '../../../../data/services/apis/post_service.dart';
+import '../../../../routes/app_routes.dart';
 import 'comment_popup.dart';
 
 class PostCard extends StatefulWidget {
@@ -21,8 +24,8 @@ class PostCard extends StatefulWidget {
   final int reactCount;
   final int commentCount;
   final void Function(String postId)? onPostDeleted;
+  final void Function(PostModel updatedPost)? onPostUpdated;
 
-  /// Optional callback nếu bạn muốn thông báo cho parent khi user react/unreact
   final void Function(String postId, String? newMyReaction)? onMyReactionChanged;
 
   const PostCard({
@@ -37,6 +40,7 @@ class PostCard extends StatefulWidget {
     required this.commentCount,
     this.onMyReactionChanged,
     this.onPostDeleted,
+    this.onPostUpdated,
   });
 
   @override
@@ -75,20 +79,20 @@ class _PostCardState extends State<PostCard> {
     if (token == null) return;
 
     final postId = widget.post.id;
-
+    final loc = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Xác nhận'),
-        content: const Text('Bạn có chắc muốn xóa bài viết này?'),
+        title: Text(loc.translate("confirm")),
+        content: Text(loc.translate("confirm_delete_post")),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Hủy'),
+            child: Text(loc.translate('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+            child: Text(loc.translate("delete"), style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -101,18 +105,18 @@ class _PostCardState extends State<PostCard> {
 
       if (response.message?.contains("Success.Delete") == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Xóa bài viết thành công')),
+          SnackBar(content: Text(loc.translate("delete_post_success"))),
         );
 
         widget.onPostDeleted?.call(widget.post.id);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.message ?? 'Xóa bài viết thất bại')),
+          SnackBar(content: Text(response.message ?? loc.translate("delete_post_failed"))),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Xóa bài viết thất bại: $e')),
+        SnackBar(content: Text(loc.translate("delete_post_failed"))),
       );
     }
   }
@@ -175,14 +179,14 @@ class _PostCardState extends State<PostCard> {
 
   String _timeAgo(DateTime dateTime) {
     final diff = DateTime.now().difference(dateTime);
-
-    if (diff.inSeconds < 60) return 'Vừa xong';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
-    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
-    if (diff.inDays < 30) return '${(diff.inDays / 7).floor()} tuần trước';
-    if (diff.inDays < 365) return '${(diff.inDays / 30).floor()} tháng trước';
-    return '${(diff.inDays / 365).floor()} năm trước';
+    final loc = AppLocalizations.of(context);
+    if (diff.inSeconds < 60) return loc.translate("just_now");
+    if (diff.inMinutes < 60) return '${diff.inMinutes} ${loc.translate("minutes_ago")}';
+    if (diff.inHours < 24) return '${diff.inHours} ${loc.translate("hours_ago")}';
+    if (diff.inDays < 7) return '${diff.inDays} ${loc.translate("days_ago")}';
+    if (diff.inDays < 30) return '${(diff.inDays / 7).floor()} ${loc.translate("weeks_ago")}';
+    if (diff.inDays < 365) return '${(diff.inDays / 30).floor()} ${loc.translate("months_ago")}';
+    return '${(diff.inDays / 365).floor()} ${loc.translate("year_ago")}';
   }
 
   final List<Map<String, dynamic>> _reactions = [
@@ -210,7 +214,7 @@ class _PostCardState extends State<PostCard> {
     final double footerIconSize = screenWidth > 600 ? 23 : 18;
     final double footerTextSize = screenWidth > 380 ? 16 : 14;
     final double footerSpacing = screenWidth > 380 ? 25 : 20;
-
+    final loc = AppLocalizations.of(context);
     final Gradient cardBackground = isDark
         ? const LinearGradient(
       colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
@@ -241,73 +245,127 @@ class _PostCardState extends State<PostCard> {
             children: [
               // Header: avatar + name + time
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundImage:
-                    widget.avatarUrl.isNotEmpty ? NetworkImage(widget.avatarUrl) : null,
-                    backgroundColor: Colors.grey[700],
-                    child: widget.avatarUrl.isEmpty ? const Icon(Icons.person, color: Colors.white) : null,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.userProfile,
+                        arguments: {'id': widget.post.creator.id},
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundImage: widget.avatarUrl.isNotEmpty
+                          ? NetworkImage(widget.avatarUrl)
+                          : null,
+                      backgroundColor: Colors.grey[700],
+                      child: widget.avatarUrl.isEmpty
+                          ? const Icon(Icons.person, color: Colors.white)
+                          : null,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.userName,
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textColor),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
-                              _timeAgo(widget.post.createdAt),
-                              style: TextStyle(color: secondaryText, fontSize: 12),
+                              widget.userName,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: textColor,
+                              ),
                             ),
                             if (widget.post.imageUrls.isNotEmpty) ...[
-                              const SizedBox(width: 8),
+                              SizedBox(width: 4),
                               Text(
-                                '- đã đăng ${widget.post.imageUrls.length} ảnh',
-                                style: TextStyle(color: secondaryText, fontSize: 12),
+                                loc.translate("has_post_img"),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 13,
+                                  color: secondaryText,
+                                ),
+                              ),
+                              Text(
+                                '${widget.post.imageUrls.length} ${loc.translate("img")}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: secondaryText,
+                                ),
                               ),
                             ],
                           ],
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _timeAgo(widget.post.createdAt),
+                          style: TextStyle(color: secondaryText, fontSize: 12),
+                        ),
                       ],
                     ),
                   ),
-
                   widget.post.isMyPost
                       ? PopupMenuButton<String>(
-                    icon: Icon(Icons.settings, color: isDark ? Colors.white54 : Colors.grey),
+                    icon: Icon(Icons.settings,
+                        color: isDark ? Colors.white54 : Colors.grey),
                     onSelected: (value) {
                       if (value == 'edit') {
-                        print('Edit post'); // Bạn có thể implement chỉnh sửa sau
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => UpdatePostDialog(
+                              userAvatar: widget.avatarUrl,
+                              postId: widget.post.id,
+                              onUpdated: () async {
+                                final prefs = await SharedPreferences.getInstance();
+                                final token = prefs.getString('token');
+                                if (token == null) return;
+
+                                final repo = PostRepository(PostService(ApiClient()));
+                                final res = await repo.getPostDetail(
+                                    token: token, postId: widget.post.id);
+                                if (!mounted || res.data == null) return;
+                                widget.onPostUpdated?.call(res.data!);
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                      Text(loc.translate("edit_post_success"))),
+                                );
+                              },
+                            ),
+                          ),
+                        );
                       } else if (value == 'delete') {
                         _deletePost();
                       }
                     },
                     offset: const Offset(0, 40),
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'edit',
-                        child: Text('Sửa'),
+                        child: Text(loc.translate("edit")),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
-                        child: Text('Xóa'),
+                        child: Text(loc.translate("delete")),
                       ),
                     ],
                   )
                       : IconButton(
                     onPressed: () {},
-                    icon: Icon(Icons.flag_outlined, color: isDark ? Colors.white54 : Colors.grey),
+                    icon: Icon(Icons.flag_outlined,
+                        color: isDark ? Colors.white54 : Colors.grey),
                   ),
-
                 ],
               ),
+
               const SizedBox(height: 12),
 
               // Content text
@@ -319,49 +377,56 @@ class _PostCardState extends State<PostCard> {
 
               // Content image with tap & long press
               if (widget.post.imageUrls.isNotEmpty)
-                SizedBox(
-                  height: 250,
-                  child: PageView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: widget.post.imageUrls.length,
-                    itemBuilder: (context, index) {
-                      final imageUrl = widget.post.imageUrls[index];
-                      return GestureDetector(
-                        onTap: () => _showFullImage(context, imageUrl),
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          decoration: BoxDecoration(
-                            color: (_imageBgColors[index] ?? imageBgColor).withOpacity(0.3), // <--- Màu nền mờ
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              imageUrl,
-                              fit: BoxFit.contain,
-                              loadingBuilder: (context, child, progress) {
-                                if (progress == null) return child;
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    value: progress.expectedTotalBytes != null
-                                        ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
-                                        : null,
-                                    color: isDark ? Colors.white : Colors.blue,
-                                  ),
-                                );
-                              },
-                              errorBuilder: (context, error, stackTrace) {
-                                return Center(
-                                  child: Icon(Icons.broken_image, color: Colors.grey, size: 40),
-                                );
-                              },
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.maxWidth;
+                    final height = width * 0.6;
+                    return SizedBox(
+                      height: height,
+                      child: PageView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: widget.post.imageUrls.length,
+                        itemBuilder: (context, index) {
+                          final imageUrl = widget.post.imageUrls[index];
+                          return GestureDetector(
+                            onTap: () => _showFullImage(context, imageUrl),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                color: (_imageBgColors[index] ?? imageBgColor).withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  imageUrl,
+                                  width: width,
+                                  height: height,
+                                  fit: BoxFit.contain,
+                                  loadingBuilder: (context, child, progress) {
+                                    if (progress == null) return child;
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        value: progress.expectedTotalBytes != null
+                                            ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                                            : null,
+                                        color: isDark ? Colors.white : Colors.blue,
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Center(
+                                      child: Icon(Icons.broken_image, color: Colors.grey, size: 40),
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
-                          ),
-
+                          );
+                        },
                       ),
-                      );
-                    },
-                  ),
+                    );
+                  },
                 ),
 
               const SizedBox(height: 12),
