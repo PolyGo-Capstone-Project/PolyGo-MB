@@ -4,12 +4,14 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../core/utils/render_utils.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../data/models/events/event_details_model.dart';
 import '../../../data/models/events/hosted_event_model.dart';
 import '../../../data/repositories/event_repository.dart';
 import '../../../routes/app_routes.dart';
 import '../../rating/screens/rates_screen.dart';
+import '../../shared/share_event_dialog.dart';
 import 'hosted_user_list.dart';
 
 class HostedEventDetails extends StatefulWidget {
@@ -313,11 +315,12 @@ class _HostedEventDetailsState extends State<HostedEventDetails> {
                   ),
                   const SizedBox(height: 20),
 
-                  Text(
+                  RenderUtils.selectableMarkdownText(
+                    context,
                     widget.event.description.isNotEmpty
                         ? widget.event.description
                         : loc.translate('no_description'),
-                    style: t.bodyMedium?.copyWith(
+                    style: TextStyle(
                       fontSize: st(context, 14),
                       height: 1.4,
                       color: textColor,
@@ -423,10 +426,14 @@ class _HostedEventDetailsState extends State<HostedEventDetails> {
                           size: ButtonSize.md,
                           icon: const Icon(Icons.share_outlined, size: 18),
                           onPressed: () {
-                            // Chức năng share chưa cần
+                            showDialog(
+                              context: context,
+                              builder: (_) => ShareEventDialog(
+                                targetId: widget.event.id,
+                              ),
+                            );
                           },
                         ),
-
                         // View rating button (chỉ hiển thị khi Completed)
                         if (widget.event.status == 'Completed')
                           Padding(
