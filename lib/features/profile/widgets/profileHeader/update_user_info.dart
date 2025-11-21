@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:polygo_mobile/features/profile/widgets/user_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/localization/app_localizations.dart';
-import '../../../core/widgets/app_button.dart';
-import '../../../data/models/user/update_userinfo_request.dart';
-import '../../../data/repositories/user_repository.dart';
-import '../../../data/services/apis/user_service.dart';
-import '../../../core/api/api_client.dart';
-import '../../../../data/models/auth/me_response.dart';
+import '../../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../data/models/user/update_userinfo_request.dart';
+import '../../../../data/repositories/user_repository.dart';
+import '../../../../data/services/apis/user_service.dart';
+import '../../../../core/api/api_client.dart';
+import '../../../../../data/models/auth/me_response.dart';
 
 class UpdateUserInfoForm extends StatefulWidget {
   final MeResponse user;
@@ -99,6 +99,15 @@ class _UpdateUserInfoFormState extends State<UpdateUserInfoForm> {
     final loc = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
+    final isDark = theme.brightness == Brightness.dark;
+    final Gradient cardBackground = isDark
+        ? const LinearGradient(
+      colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    )
+        : const LinearGradient(colors: [Colors.white, Colors.white]);
+
     final containerWidth = screenWidth < 500
         ? screenWidth * 0.9
         : screenWidth < 800
@@ -118,7 +127,7 @@ class _UpdateUserInfoFormState extends State<UpdateUserInfoForm> {
           child: Container(
             padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: theme.cardColor,
+              gradient: cardBackground,
               borderRadius: BorderRadius.circular(16),
               boxShadow: const [
                 BoxShadow(

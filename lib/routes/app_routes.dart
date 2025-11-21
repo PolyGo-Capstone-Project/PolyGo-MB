@@ -8,7 +8,6 @@ import '../features/auth/screens/forget_password_screen.dart';
 import '../features/chat/screens/conversation_screen.dart';
 import '../features/game/screens/overview_screen.dart';
 import '../features/home/screens/notification_screen.dart';
-import '../features/inventories/screens/all_badges_screen.dart';
 import '../features/inventories/screens/all_gifts_screen.dart';
 import '../features/inventories/screens/friends_screen.dart';
 import '../features/myEvents/screens/my_events_screen.dart';
@@ -77,9 +76,6 @@ class AppRoutes {
 
       case updateProfile:
         return MaterialPageRoute(builder: (_) => const UpdateProfileScreen());
-
-      case allBadges:
-        return MaterialPageRoute(builder: (_) => const AllBadgesScreen());
 
       case myEvents:
         return MaterialPageRoute(builder: (_) => const MyEventsScreen());

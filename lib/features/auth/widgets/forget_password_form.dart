@@ -158,8 +158,17 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
     final theme = Theme.of(context);
     final t = theme.textTheme;
     final loc = AppLocalizations.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
 
+    final isDark = theme.brightness == Brightness.dark;
+    final Gradient cardBackground = isDark
+        ? const LinearGradient(
+      colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    )
+        : const LinearGradient(colors: [Colors.white, Colors.white]);
+
+    final screenWidth = MediaQuery.of(context).size.width;
     final containerWidth = screenWidth < 500
         ? screenWidth * 0.9
         : screenWidth < 800
@@ -171,6 +180,7 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
         width: containerWidth,
         padding: EdgeInsets.all(sw(context, 24)),
         decoration: BoxDecoration(
+          gradient: cardBackground,
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(sw(context, 16)),
           boxShadow: const [
@@ -187,20 +197,6 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Icon
-              Center(
-                child: Container(
-                  padding: EdgeInsets.all(sw(context, 12)),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
-                    borderRadius: BorderRadius.circular(sw(context, 12)),
-                  ),
-                  child: Icon(
-                    Icons.lock_reset_rounded,
-                    size: sw(context, 36),
-                    color: const Color(0xFF2563EB),
-                  ),
-                ),
-              ),
               SizedBox(height: sh(context, 20)),
 
               // Title
@@ -212,15 +208,7 @@ class _ForgetPasswordFormState extends State<ForgetPasswordForm> {
                   fontSize: st(context, 24),
                 ),
               ),
-              SizedBox(height: sh(context, 6)),
-              Text(
-                loc.translate("forget_password_subtitle"),
-                textAlign: TextAlign.center,
-                style: t.bodyMedium?.copyWith(
-                  color: theme.colorScheme.outline,
-                  fontSize: st(context, 14),
-                ),
-              ),
+
               SizedBox(height: sh(context, 32)),
 
               Text(

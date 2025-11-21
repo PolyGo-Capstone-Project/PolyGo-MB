@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:polygo_mobile/core/localization/app_localizations.dart';
 import 'package:polygo_mobile/features/profile/widgets/shiny_avatar.dart';
 import 'package:polygo_mobile/routes/app_routes.dart';
-import '../../../../core/utils/responsive.dart';
-import '../../../../data/models/auth/me_response.dart';
-import '../../../core/widgets/app_dropdown.dart';
-import '../../shared/about_merit.dart';
-import '../../shared/about_plus.dart';
-import '../../shared/about_streak.dart';
+import '../../../../../core/utils/responsive.dart';
+import '../../../../../data/models/auth/me_response.dart';
+import '../../../../core/widgets/app_dropdown.dart';
+import '../../../inventories/widgets/level/all_levels.dart';
+import '../../../shared/about_merit.dart';
+import '../../../shared/about_plus.dart';
+import '../../../shared/about_streak.dart';
 import 'change_password_form.dart';
 
 class UserInfoHeader extends StatelessWidget {
@@ -36,6 +37,8 @@ class UserInfoHeader extends StatelessWidget {
     final name = user.name ?? '';
     final isDark = theme.brightness == Brightness.dark;
     final merit = user.merit;
+    final streakDay = user.streakDays;
+    final longestStreak = user.longestStreakDays;
     final experiencePoints = user.experiencePoints;
     final introduction = user.introduction;
 
@@ -69,19 +72,19 @@ class UserInfoHeader extends StatelessWidget {
                     bottom: -4,
                     right: -4,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         gradient: const LinearGradient(
-                          colors: [
-                            Color(0xff4facfe),
-                            Color(0xff00f2fe),
-                          ],
+                          colors: [Color(0xff4facfe), Color(0xff00f2fe)],
                         ),
                       ),
-                      child: const Text(
-                        "LV 1",
-                        style: TextStyle(
+                      child: Text(
+                        "LV ${user.level}",
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -97,6 +100,7 @@ class UserInfoHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Tên người dùng
                   if (name.isNotEmpty)
                     Text(
                       name,
@@ -105,12 +109,12 @@ class UserInfoHeader extends StatelessWidget {
                         fontSize: st(context, 20),
                       ),
                     ),
-                    SizedBox(height: sh(context, 4)),
-                  if (user.gender != null && user.gender!.isNotEmpty)
+                  // Giới tính - experiencePoints
+                  if ((user.gender != null && user.gender!.isNotEmpty))
                     Wrap(
                       children: [
                         Text(
-                          user.gender!,
+                          "${user.gender} - ${user.experiencePoints} EXP",
                           style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
                         ),
                       ],
@@ -142,73 +146,126 @@ class UserInfoHeader extends StatelessWidget {
             ),
           ],
         ),
+        SizedBox(height: sh(context, 6)),
+        // ---------- Introduction Section ----------
+        if (introduction != null && introduction.isNotEmpty) ...[
+          SizedBox(height: sh(context, 8)),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: "Introduction: ",
+                  style: t.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: st(context, 14),
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                TextSpan(
+                  text: introduction,
+                  style: t.bodyMedium?.copyWith(
+                    fontSize: st(context, 14),
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
 
         SizedBox(height: sh(context, 16)),
         LayoutBuilder(
           builder: (context, constraints) {
-            final maxExp = 1000;
-            final currentExp = experiencePoints ?? 0;
-            final progress = (currentExp / maxExp).clamp(0.0, 1.0);
+            final currentExp = user.xpInCurrentLevel;
+            final nextExp = user.xpToNextLevel;
+            final totalExp = currentExp + nextExp;
+            final progress = (totalExp > 0) ? (currentExp / totalExp).clamp(0.0, 1.0) : 0.0;
 
-            final maxColorWidth = constraints.maxWidth * 0.5;
-
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                // Nền
-                Container(
-                  height: 14,
-                  width: constraints.maxWidth,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-
-                // Phần màu luôn bắt đầu từ bên trái
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    height: 14,
-                    width: maxColorWidth * progress,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: const LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Color(0xff4facfe),
-                          Color(0xff00f2fe),
-                        ],
+            return InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AllLevels()),
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Thanh EXP
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Nền
+                      Container(
+                        height: 14,
+                        width: constraints.maxWidth,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
 
-                // Text EXP
-                Text(
-                  "$currentExp / $maxExp EXP",
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                      // Phần màu EXP hiện tại
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          height: 14,
+                          width: constraints.maxWidth * progress,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: const LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [Color(0xff4facfe), Color(0xff00f2fe)],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Text EXP
+                      Text(
+                        "$currentExp / $totalExp",
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+
+                  SizedBox(height: sh(context, 4)),
+
+                  // Level info bên dưới thanh
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "LV ${user.level}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                      ),
+                      Text(
+                        "LV ${user.level + 1}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             );
+
           },
         ),
-
-        // ---------- Introduction Section ----------
-        if (introduction != null && introduction.isNotEmpty) ...[
-
-          SizedBox(height: sh(context, 8)),
-          Text(
-            introduction,
-            style: t.bodyMedium?.copyWith(fontSize: st(context, 14)),
-          ),
-          SizedBox(height: sh(context, 6)),
-        ],
+        SizedBox(height: sh(context, 6)),
 
         // ---------- Tags Row ----------
         if ((merit != null && experiencePoints != null) ||
@@ -219,14 +276,13 @@ class UserInfoHeader extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-
                 // Merit tag (NEW UI)
                 if (merit != null)
                   GestureDetector(
                     onTap: () {
                       showDialog(
                         context: context,
-                        builder: (_) => const AboutMeritDialog(),
+                        builder: (_) => AboutMeritDialog(merit: merit),
                       );
                     },
                     child: Container(
@@ -237,25 +293,25 @@ class UserInfoHeader extends StatelessWidget {
                       margin: EdgeInsets.only(right: sw(context, 8)),
                       decoration: BoxDecoration(
                         gradient: merit >= 70
-                        // GREEN 70–100
+                            // GREEN 70–100
                             ? const LinearGradient(
-                          colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
+                                colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
                             : merit >= 51
-                        // YELLOW 51–69
+                            // YELLOW 51–69
                             ? const LinearGradient(
-                          colors: [Color(0xFFFFC107), Color(0xFFFFE082)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                        // RED 0–50
+                                colors: [Color(0xFFFFC107), Color(0xFFFFE082)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            // RED 0–50
                             : const LinearGradient(
-                          colors: [Color(0xFFE53935), Color(0xFFEF9A9A)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                                colors: [Color(0xFFE53935), Color(0xFFEF9A9A)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
                         borderRadius: BorderRadius.circular(sw(context, 16)),
                       ),
 
@@ -299,10 +355,7 @@ class UserInfoHeader extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            Colors.orangeAccent,
-                            Colors.yellow,
-                          ],
+                          colors: [Colors.orangeAccent, Colors.yellow],
                         ),
                         borderRadius: BorderRadius.circular(sw(context, 16)),
                       ),
@@ -332,7 +385,10 @@ class UserInfoHeader extends StatelessWidget {
                     onTap: () {
                       showDialog(
                         context: context,
-                        builder: (_) => const AboutStreakDialog(),
+                        builder: (_) => AboutStreakDialog(
+                          streakDay: streakDay,
+                          longestStreak: longestStreak ?? 0,
+                        ),
                       );
                     },
                     child: Container(
@@ -344,10 +400,7 @@ class UserInfoHeader extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            Colors.red.shade700,
-                            Colors.orangeAccent,
-                          ],
+                          colors: [Colors.red.shade700, Colors.orangeAccent],
                         ),
                         borderRadius: BorderRadius.circular(sw(context, 16)),
                       ),
@@ -374,11 +427,11 @@ class UserInfoHeader extends StatelessWidget {
             ),
           ),
         ],
-
       ],
     );
   }
 }
+
 class SettingsFullScreenDialog extends StatelessWidget {
   final AppLocalizations loc;
   final bool isDark;
@@ -439,8 +492,9 @@ class SettingsFullScreenDialog extends StatelessWidget {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.updateProfile)
-                        .then((updated) {
+                    Navigator.pushNamed(context, AppRoutes.updateProfile).then((
+                      updated,
+                    ) {
                       if (updated == true) onReloadUser();
                     });
                   },
@@ -460,7 +514,9 @@ class SettingsFullScreenDialog extends StatelessWidget {
                       barrierDismissible: true,
                       barrierColor: Colors.black54,
                       builder: (_) => Dialog(
-                        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+                        insetPadding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                        ),
                         backgroundColor: Colors.transparent,
                         child: const ChangePasswordForm(),
                       ),

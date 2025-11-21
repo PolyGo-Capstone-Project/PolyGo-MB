@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../shared/app_bottom_bar.dart';
 import '../../shared/app_error_state.dart';
 import '../widgets/events/events_content.dart';
@@ -9,6 +10,7 @@ import '../widgets/home_header.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialIndex;
+
   const HomeScreen({super.key, this.initialIndex = 0});
 
   @override
@@ -60,10 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     final List<Widget> pages = [
-      EventsContent(
-        key: const ValueKey('events'),
-        searchQuery: _searchQuery,
-      ),
+      EventsContent(key: const ValueKey('events'), searchQuery: _searchQuery),
       Users(
         key: const ValueKey('users'),
         onLoaded: _onChildLoaded,
@@ -71,42 +70,44 @@ class _HomeScreenState extends State<HomeScreen> {
         isRetrying: _isRetrying,
         searchQuery: _searchQuery,
       ),
-      WordSetContent(
-        key: const ValueKey('games'),
-        searchQuery: _searchQuery,
-      ),
-      PostContent(
-        key: const ValueKey('social'),
-        searchQuery: _searchQuery,
-      ),
+      WordSetContent(key: const ValueKey('games'), searchQuery: _searchQuery),
+      PostContent(key: const ValueKey('social'), searchQuery: _searchQuery),
     ];
 
-    return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
-      body: SafeArea(
-        child: _hasError
-            ? AppErrorState(onRetry: _onRetry)
-            : Column(
-          children: [
-            HomeHeader(
-              currentIndex: _menuIndex,
-              onItemSelected: _onMenuSelected,
-              onSearchChanged: (query) {
-                setState(() => _searchQuery = query);
-              },
-            ),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: pages[_menuIndex],
-              ),
-            ),
-          ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? Colors.black : Colors.white,
+        body: SafeArea(
+          child: _hasError
+              ? AppErrorState(onRetry: _onRetry)
+              : Column(
+                  children: [
+                    HomeHeader(
+                      currentIndex: _menuIndex,
+                      onItemSelected: _onMenuSelected,
+                      onSearchChanged: (query) {
+                        setState(() => _searchQuery = query);
+                      },
+                    ),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: pages[_menuIndex],
+                      ),
+                    ),
+                  ],
+                ),
         ),
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: AppBottomBar(currentIndex: 0),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: AppBottomBar(currentIndex: 0),
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:polygo_mobile/features/home/widgets/social/postCard/share/shared
 import 'package:polygo_mobile/features/home/widgets/social/postCard/share/shared_post_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../../core/api/api_client.dart';
+import '../../../../../../core/utils/audioplayers.dart';
 import '../../../../../../data/models/post/post_model.dart';
 import '../../../../../../data/repositories/post_repository.dart';
 import '../../../../../../data/services/apis/post_service.dart';
@@ -87,6 +88,7 @@ class _PostCardState extends State<PostCard> {
 
     try {
       if (_selectedReaction == index) {
+        CallSoundManager().playReactPost();
         await _postRepository.unReact(token: token, postId: postId);
         setState(() {
           _selectedReaction = null;
@@ -94,6 +96,7 @@ class _PostCardState extends State<PostCard> {
         });
         widget.onMyReactionChanged?.call(postId, null);
       } else {
+        CallSoundManager().playReactPost();
         await _postRepository.react(token: token, postId: postId, reactionType: selected.name);
         setState(() {
           _reactCount += _selectedReaction == null ? 1 : 0;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../../../core/utils/audioplayers.dart';
+import '../../../../../../core/widgets/app_button.dart';
 import '../../../../../../data/models/post/post_model.dart';
 import '../../../../../../data/models/post/share_request_model.dart';
 import '../../../../../../data/repositories/post_repository.dart';
@@ -68,6 +70,7 @@ class _SharePostDialogState extends State<SharePostDialog> {
       );
 
       if (response.data != null) {
+        CallSoundManager().playReactPost();
         Navigator.of(context).pop(response.data);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -143,26 +146,16 @@ class _SharePostDialogState extends State<SharePostDialog> {
               ],
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
+            Align(
+              alignment: Alignment.centerRight,
+              child: AppButton(
+                text: "Chia sẻ",
                 onPressed: _loading ? null : _sharePost,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _loading
-                    ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
-                )
-                    : const Text("Chia sẻ", style: TextStyle(fontSize: 16)),
+                size: ButtonSize.lg,
+                variant: ButtonVariant.primary,
               ),
             ),
+
           ],
         ),
       ),

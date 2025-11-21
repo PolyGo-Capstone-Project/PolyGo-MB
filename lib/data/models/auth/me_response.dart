@@ -10,10 +10,14 @@ class MeResponse {
   final String role;
   final bool autoRenewSubscription;
   final int streakDays;
+  final int longestStreakDays;
   final int withdrawTimes;
   final bool isNew;
   final String planType;
   final double balance;
+  final int level;
+  final int xpInCurrentLevel;
+  final int xpToNextLevel;
   final DateTime? nextWithdrawResetAt;
   final DateTime? lastLoginAt;
 
@@ -29,10 +33,14 @@ class MeResponse {
     required this.role,
     required this.autoRenewSubscription,
     required this.streakDays,
+    required this.longestStreakDays,
     required this.withdrawTimes,
     required this.isNew,
     required this.planType,
     required this.balance,
+    required this.level,
+    required this.xpInCurrentLevel,
+    required this.xpToNextLevel,
     this.nextWithdrawResetAt,
     this.lastLoginAt,
   });
@@ -45,7 +53,7 @@ class MeResponse {
       avatarUrl: json['avatarUrl']?.toString(),
       merit: (json['merit'] is int)
           ? json['merit'] as int
-          : int.tryParse(json['experiencePoints']?.toString() ?? '0') ?? 0,
+          : int.tryParse(json['merit']?.toString() ?? '0') ?? 0,
       introduction: json['introduction']?.toString() ?? '',
       gender: json['gender']?.toString() ?? '',
       experiencePoints: (json['experiencePoints'] is int)
@@ -56,14 +64,26 @@ class MeResponse {
       streakDays: (json['streakDays'] is int)
           ? json['streakDays'] as int
           : int.tryParse(json['streakDays']?.toString() ?? '0') ?? 0,
+      longestStreakDays: (json['longestStreakDays'] is int)
+          ? json['longestStreakDays'] as int
+          : int.tryParse(json['longestStreakDays']?.toString() ?? '0') ?? 0,
       withdrawTimes: (json['withdrawTimes'] is int)
           ? json['withdrawTimes'] as int
-          : int.tryParse(json['streakDays']?.toString() ?? '0') ?? 0,
+          : int.tryParse(json['withdrawTimes']?.toString() ?? '0') ?? 0,
       isNew: json['isNew'] == true,
       planType: json['planType']?.toString() ?? '',
       balance: (json['balance'] is num)
           ? (json['balance'] as num).toDouble()
           : double.tryParse(json['balance']?.toString() ?? '0') ?? 0.0,
+      level: (json['level'] is int)
+          ? json['level'] as int
+          : int.tryParse(json['level']?.toString() ?? '0') ?? 0,
+      xpInCurrentLevel: (json['xpInCurrentLevel'] is int)
+          ? json['xpInCurrentLevel'] as int
+          : int.tryParse(json['xpInCurrentLevel']?.toString() ?? '0') ?? 0,
+      xpToNextLevel: (json['xpToNextLevel'] is int)
+          ? json['xpToNextLevel'] as int
+          : int.tryParse(json['xpToNextLevel']?.toString() ?? '0') ?? 0,
       lastLoginAt: json['lastLoginAt'] != null
           ? DateTime.tryParse(json['lastLoginAt'])
           : null,

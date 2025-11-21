@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/localization/app_localizations.dart';
-import '../../../core/widgets/app_button.dart';
-import '../../../data/models/auth/change_password_request.dart';
-import '../../../data/repositories/auth_repository.dart';
-import '../../../data/services/apis/auth_service.dart';
-import '../../../core/api/api_client.dart';
-import '../../../../core/utils/responsive.dart';
+import '../../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../data/models/auth/change_password_request.dart';
+import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/services/apis/auth_service.dart';
+import '../../../../core/api/api_client.dart';
+import '../../../../../core/utils/responsive.dart';
 
 class ChangePasswordForm extends StatefulWidget {
   const ChangePasswordForm({super.key});
@@ -102,6 +102,15 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
     final loc = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
+    final isDark = theme.brightness == Brightness.dark;
+    final Gradient cardBackground = isDark
+        ? const LinearGradient(
+      colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    )
+        : const LinearGradient(colors: [Colors.white, Colors.white]);
+
     final containerWidth = screenWidth < 500
         ? screenWidth * 0.9
         : screenWidth < 800
@@ -123,7 +132,7 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
           child: Container(
             padding: EdgeInsets.all(sw(context, 24)),
             decoration: BoxDecoration(
-              color: theme.cardColor,
+              gradient: cardBackground,
               borderRadius: BorderRadius.circular(sw(context, 16)),
               boxShadow: const [
                 BoxShadow(

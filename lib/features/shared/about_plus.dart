@@ -21,6 +21,13 @@ class AboutPlusDialog extends StatelessWidget {
         ? 450.0
         : 500.0;
 
+    // Gradient vàng
+    final LinearGradient bgGradient = const LinearGradient(
+      colors: [Color(0xFFFFC107), Color(0xFFFFE082)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
     return Center(
       child: SingleChildScrollView(
         padding: EdgeInsets.only(
@@ -34,7 +41,7 @@ class AboutPlusDialog extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.all(sw(context, 24)),
             decoration: BoxDecoration(
-              color: theme.cardColor,
+              gradient: bgGradient,
               borderRadius: BorderRadius.circular(sw(context, 16)),
               boxShadow: const [
                 BoxShadow(
@@ -46,53 +53,87 @@ class AboutPlusDialog extends StatelessWidget {
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ICON BOX
-                Container(
-                  padding: EdgeInsets.all(sw(context, 12)),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF4E5),
-                    borderRadius: BorderRadius.circular(sw(context, 12)),
-                  ),
-                  child: Icon(
-                    Icons.star_rounded,
-                    size: sw(context, 40),
-                    color: Colors.amber[700],
-                  ),
-                ),
-                SizedBox(height: sh(context, 20)),
+                // Row Icon + TITLE + DESCRIPTION
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Icon vuông bo góc, màu trắng
+                    Container(
+                      width: sw(context, 60),
+                      height: sw(context, 60),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(sw(context, 12)),
+                      ),
+                      child: Icon(
+                        Icons.star_rounded,
+                        size: sw(context, 36),
+                        color: Colors.white, // đổi màu icon
+                      ),
+                    ),
+                    SizedBox(width: sw(context, 16)),
 
-                // TITLE
-                Text(
-                  loc.translate("about_plus_title") ??
-                      "Thành viên Plus của PolyGo",
-                  textAlign: TextAlign.center,
-                  style: t.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: st(context, 24),
-                  ),
+                    // Column tiêu đề + mô tả
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loc.translate("about_plus_title") ??
+                                "Thành viên Plus của PolyGo",
+                            style: t.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: st(context, 20),
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: sh(context, 4)),
+                          Text(
+                            loc.translate("about_plus_description") ??
+                                "Nhãn dành riêng cho thành viên Plus!",
+                            style: t.bodyLarge?.copyWith(
+                              fontSize: st(context, 16),
+                              height: 1.5,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: sh(context, 16)),
 
-                // DESCRIPTION
-                Text(
-                  loc.translate("about_plus_description") ??
-                      "Nhãn dành riêng cho thành viên Plus!",
-                  textAlign: TextAlign.center,
-                  style: t.bodyLarge?.copyWith(height: 1.5),
-                ),
                 SizedBox(height: sh(context, 32)),
 
-                // BUTTON
-                AppButton(
-                  text: loc.translate("register_now") ?? "Đăng ký ngay",
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.shop);
-                  },
-                  size: ButtonSize.lg,
-                  variant: ButtonVariant.primary,
+                // BUTTON custom
+                Align(
+                  alignment: Alignment.centerLeft, // căn trái
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, AppRoutes.shop);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFB8C00), // màu nền cam đậm
+                      foregroundColor: Colors.white, // màu chữ
+                      padding: EdgeInsets.symmetric(
+                        vertical: sh(context, 14),
+                        horizontal: sw(context, 24), // thêm padding ngang cho nút
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(sw(context, 12)), // bo góc
+                      ),
+                      textStyle: TextStyle(
+                        fontSize: st(context, 16),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    child: Text(loc.translate("register_now") ?? "Đăng ký ngay"),
+                  ),
                 ),
+
               ],
             ),
           ).animate().fadeIn(duration: 400.ms),

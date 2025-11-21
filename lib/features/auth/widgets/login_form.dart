@@ -76,9 +76,9 @@ class _LoginFormState extends State<LoginForm> {
       );
 
       if (isNew) {
-        Navigator.pushReplacementNamed(context, AppRoutes.profileSetup);
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.profileSetup, (route) => false);
       } else {
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
       }
     } catch (e) {
       final msg = e.toString();
@@ -104,6 +104,15 @@ class _LoginFormState extends State<LoginForm> {
     final loc = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
+    final isDark = theme.brightness == Brightness.dark;
+    final Gradient cardBackground = isDark
+        ? const LinearGradient(
+      colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    )
+        : const LinearGradient(colors: [Colors.white, Colors.white]);
+
     final containerWidth = screenWidth < 500
         ? screenWidth * 0.9
         : screenWidth < 800
@@ -115,6 +124,7 @@ class _LoginFormState extends State<LoginForm> {
         width: containerWidth,
         padding: EdgeInsets.all(sw(context, 24)),
         decoration: BoxDecoration(
+          gradient: cardBackground,
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(sw(context, 16)),
           boxShadow: const [
