@@ -151,7 +151,7 @@ class _SharePostDialogState extends State<SharePostDialog> {
               child: AppButton(
                 text: "Chia sẻ",
                 onPressed: _loading ? null : _sharePost,
-                size: ButtonSize.lg,
+                size: ButtonSize.sm,
                 variant: ButtonVariant.primary,
               ),
             ),
