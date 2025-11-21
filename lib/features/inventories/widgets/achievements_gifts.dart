@@ -11,6 +11,8 @@ import '../../../data/repositories/gift_repository.dart';
 import '../../../data/services/apis/badge_service.dart';
 import '../../../data/services/apis/gift_service.dart';
 import '../../../routes/app_routes.dart';
+import 'badges/all_badges.dart';
+import 'badges/badge_detail.dart';
 
 class AchievementsAndGiftsSection extends StatefulWidget {
   const AchievementsAndGiftsSection({super.key});
@@ -236,24 +238,34 @@ class _AchievementsAndGiftsSectionState extends State<AchievementsAndGiftsSectio
                   ? badge.iconUrl
                   : 'https://img.icons8.com/fluency/96/medal.png';
 
-              return ClipRRect(
+              return InkWell(
                 borderRadius: BorderRadius.circular(sw(context, 12)),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: Image.network(
-                    imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: Colors.grey[300],
-                      child: Icon(
-                        Icons.emoji_events,
-                        size: sw(context, 40) * 0.6,
-                        color: Colors.grey[600],
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => BadgeDetailDialog(badgeId: badge.id),
+                  );
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(sw(context, 12)),
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: Colors.grey[300],
+                        child: Icon(
+                          Icons.emoji_events,
+                          size: sw(context, 40) * 0.6,
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ).animate().fadeIn(duration: 300.ms);
+
             },
           ),
         ),
@@ -272,18 +284,41 @@ class _AchievementsAndGiftsSectionState extends State<AchievementsAndGiftsSectio
             Container(
               decoration: sectionDecoration,
               margin: EdgeInsets.only(bottom: sh(context, 12)),
-              padding: EdgeInsets.symmetric(vertical: sh(context, 5), horizontal: sh(context, 10)),
+              padding: EdgeInsets.symmetric(
+                vertical: sh(context, 5),
+                horizontal: sh(context, 10),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   buildHeader(
                     loc.translate("my_badges"),
-                        () => Navigator.pushNamed(context, AppRoutes.allBadges),
+                        () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AllBadges(
+                          onBadgeClaimed: (updatedBadge) {
+                            // Cập nhật UI ngay lập tức
+                            setState(() {
+                              // Nếu đã có trong _myBadges thì update
+                              final index = _myBadges.indexWhere((b) => b.id == updatedBadge.id);
+                              if (index != -1) {
+                                _myBadges[index] = updatedBadge;
+                              } else {
+                                // Nếu chưa có, thêm vào danh sách
+                                _myBadges.add(updatedBadge);
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                    ),
                   ),
                   buildBadgeRow(),
                 ],
               ),
             ),
+
             // My Gifts section
             Container(
               decoration: sectionDecoration,

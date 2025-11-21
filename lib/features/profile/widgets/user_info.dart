@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:polygo_mobile/features/profile/widgets/tag_list.dart';
-import 'package:polygo_mobile/features/profile/widgets/update_user_info.dart';
-import 'package:polygo_mobile/features/profile/widgets/user_info_header.dart';
+import 'package:polygo_mobile/features/profile/widgets/profileHeader/update_user_info.dart';
+import 'package:polygo_mobile/features/profile/widgets/profileHeader/user_info_header.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/responsive.dart';
@@ -565,23 +565,30 @@ class _UserInfoState extends State<UserInfo> {
 
 extension MeResponseCopy on MeResponse {
   MeResponse copyWith({
-    String? avatarUrl,
+    String? id,
     String? name,
+    String? mail,
+    String? avatarUrl,
+    int? merit,
     String? introduction,
     String? gender,
     int? experiencePoints,
     String? role,
-    String? mail,
-    int? merit,
-    double? balance,
-    int? streakDays,
-    int? withdrawTimes,
     bool? autoRenewSubscription,
+    int? streakDays,
+    int? longestStreakDays,
+    int? withdrawTimes,
     bool? isNew,
+    String? planType,
+    double? balance,
+    int? level,
+    int? xpInCurrentLevel,
+    int? xpToNextLevel,
+    DateTime? nextWithdrawResetAt,
     DateTime? lastLoginAt,
   }) {
     return MeResponse(
-      id: id,
+      id: id ?? this.id,
       name: name ?? this.name,
       mail: mail ?? this.mail,
       avatarUrl: avatarUrl ?? this.avatarUrl,
@@ -590,12 +597,17 @@ extension MeResponseCopy on MeResponse {
       gender: gender ?? this.gender,
       experiencePoints: experiencePoints ?? this.experiencePoints,
       role: role ?? this.role,
-      balance: balance ?? this.balance,
-      streakDays: streakDays ?? this.streakDays,
-      withdrawTimes: withdrawTimes ?? this.withdrawTimes,
       autoRenewSubscription: autoRenewSubscription ?? this.autoRenewSubscription,
+      streakDays: streakDays ?? this.streakDays,
+      longestStreakDays: longestStreakDays ?? this.longestStreakDays,
+      withdrawTimes: withdrawTimes ?? this.withdrawTimes,
       isNew: isNew ?? this.isNew,
       planType: planType ?? this.planType,
+      balance: balance ?? this.balance,
+      level: level ?? this.level,
+      xpInCurrentLevel: xpInCurrentLevel ?? this.xpInCurrentLevel,
+      xpToNextLevel: xpToNextLevel ?? this.xpToNextLevel,
+      nextWithdrawResetAt: nextWithdrawResetAt ?? this.nextWithdrawResetAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
     );
   }

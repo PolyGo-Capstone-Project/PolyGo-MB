@@ -4,6 +4,8 @@ import '../../../../../data/models/post/share_request_model.dart';
 import '../../../../../data/repositories/post_repository.dart';
 import '../../../../../data/services/apis/post_service.dart';
 import '../../../../../core/api/api_client.dart';
+import '../../core/utils/audioplayers.dart';
+import '../../core/widgets/app_button.dart';
 
 class ShareEventDialog extends StatefulWidget {
   final String targetId;
@@ -55,7 +57,8 @@ class _ShareEventDialogState extends State<ShareEventDialog> {
       );
 
       if (response.data != null) {
-        Navigator.of(context).pop(response.data); // trả về post vừa share
+        CallSoundManager().playReactPost();
+        Navigator.of(context).pop(response.data);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response.message ?? "Share failed")),
@@ -119,23 +122,16 @@ class _ShareEventDialogState extends State<ShareEventDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
+            Align(
+              alignment: Alignment.centerRight,
+              child: AppButton(
+                text: "Chia sẻ",
                 onPressed: _loading ? null : _shareEvent,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: _loading
-                    ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                )
-                    : const Text("Chia sẻ", style: TextStyle(fontSize: 16)),
+                size: ButtonSize.lg,
+                variant: ButtonVariant.primary,
               ),
             ),
+
           ],
         ),
       ),

@@ -8,8 +8,14 @@ class UserByIdResponse {
   final String? gender;
   final String friendStatus;
   final int? experiencePoints;
-  // final int? streakDays;
   final String? planType;
+
+  // ==== các trường mới thêm ====
+  final int? level;
+  final int? xpInCurrentLevel;
+  final int? xpToNextLevel;
+  final bool? isOnline;
+
   final List<dynamic>? speakingLanguages;
   final List<dynamic>? learningLanguages;
   final List<dynamic>? interests;
@@ -27,13 +33,20 @@ class UserByIdResponse {
     required this.friendStatus,
     this.experiencePoints,
     this.planType,
-    // required this.streakDays,
+
+    // new fields
+    this.level,
+    this.xpInCurrentLevel,
+    this.xpToNextLevel,
+    this.isOnline,
+
     this.speakingLanguages,
     this.learningLanguages,
     this.interests,
     this.badges,
     this.gifts,
   });
+
   factory UserByIdResponse.fromJson(Map<String, dynamic> json) {
     return UserByIdResponse(
       id: json['id'] ?? '',
@@ -45,8 +58,14 @@ class UserByIdResponse {
       gender: json['gender'],
       friendStatus: json['friendStatus'] ?? '',
       experiencePoints: json['experiencePoints'],
-      // streakDays: json['streakDays'] ?? '',
       planType: json['planType'],
+
+      // new
+      level: json['level'],
+      xpInCurrentLevel: json['xpInCurrentLevel'],
+      xpToNextLevel: json['xpToNextLevel'],
+      isOnline: json['isOnline'],
+
       speakingLanguages: List<dynamic>.from(json['speakingLanguages'] ?? []),
       learningLanguages: List<dynamic>.from(json['learningLanguages'] ?? []),
       interests: List<dynamic>.from(json['interests'] ?? []),
@@ -65,8 +84,13 @@ class UserByIdResponse {
     'gender': gender,
     'friendStatus': friendStatus,
     'experiencePoints': experiencePoints,
-    // 'streakDays': streakDays,
     'planType': planType,
+
+    'level': level,
+    'xpInCurrentLevel': xpInCurrentLevel,
+    'xpToNextLevel': xpToNextLevel,
+    'isOnline': isOnline,
+
     'speakingLanguages': speakingLanguages,
     'learningLanguages': learningLanguages,
     'interests': interests,

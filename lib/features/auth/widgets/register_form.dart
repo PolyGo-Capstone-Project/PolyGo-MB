@@ -170,6 +170,15 @@ class _RegisterFormState extends State<RegisterForm> {
     final loc = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
+    final isDark = theme.brightness == Brightness.dark;
+    final Gradient cardBackground = isDark
+        ? const LinearGradient(
+      colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    )
+        : const LinearGradient(colors: [Colors.white, Colors.white]);
+
     final containerWidth = screenWidth < 500
         ? screenWidth * 0.9
         : screenWidth < 800
@@ -181,6 +190,7 @@ class _RegisterFormState extends State<RegisterForm> {
         width: containerWidth,
         padding: EdgeInsets.all(sw(context, 24)),
         decoration: BoxDecoration(
+          gradient: cardBackground,
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(sw(context, 16)),
           boxShadow: const [
@@ -196,20 +206,7 @@ class _RegisterFormState extends State<RegisterForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  padding: EdgeInsets.all(sw(context, 12)),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
-                    borderRadius: BorderRadius.circular(sw(context, 12)),
-                  ),
-                  child: Icon(
-                    Icons.person_add_alt_1_rounded,
-                    size: sw(context, 36),
-                    color: const Color(0xFF2563EB),
-                  ),
-                ),
-              ),
+
               SizedBox(height: sh(context, 20)),
 
               Text(
@@ -218,14 +215,7 @@ class _RegisterFormState extends State<RegisterForm> {
                 style: t.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold, fontSize: st(context, 24)),
               ),
-              SizedBox(height: sh(context, 6)),
-              Text(
-                loc.translate("signup_subtitle"),
-                textAlign: TextAlign.center,
-                style: t.bodyMedium?.copyWith(
-                    color: theme.colorScheme.outline,
-                    fontSize: st(context, 14)),
-              ),
+
               SizedBox(height: sh(context, 32)),
 
               Text(loc.translate("full_name"),

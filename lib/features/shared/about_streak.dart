@@ -4,7 +4,14 @@ import '../../../../core/utils/responsive.dart';
 import '../../../../core/localization/app_localizations.dart';
 
 class AboutStreakDialog extends StatelessWidget {
-  const AboutStreakDialog({super.key});
+  final int streakDay;
+  final int longestStreak;
+
+  const AboutStreakDialog({
+    super.key,
+    required this.streakDay,
+    required this.longestStreak,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +26,39 @@ class AboutStreakDialog extends StatelessWidget {
         ? 450.0
         : 500.0;
 
+    // Gradient + label
+    LinearGradient bgGradient;
+    String streakLabel;
+    String noteLabel;
+
+    if (streakDay >= 10) {
+      bgGradient = const LinearGradient(
+        colors: [Color(0xFFFF7043), Color(0xFFFFAB91)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+      streakLabel = loc.translate("Good streak") ?? "Good streak";
+      noteLabel = loc.translate("Keep going every day!") ?? "Keep going every day!";
+    } else if (streakDay >= 3) {
+      bgGradient = const LinearGradient(
+        colors: [Color(0xFFFFC107), Color(0xFFFFE082)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+      streakLabel =
+          loc.translate("Normal streak") ?? "Normal streak";
+      noteLabel = loc.translate("You can reach a higher streak soon!") ??
+          "You can reach a higher streak soon!";
+    } else {
+      bgGradient = const LinearGradient(
+        colors: [Color(0xFFE53935), Color(0xFFEF9A9A)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+      streakLabel = loc.translate("Low streak") ?? "Low streak";
+      noteLabel = loc.translate("Try to be active daily!") ?? "Try to be active daily!";
+    }
+
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 30),
@@ -27,51 +67,86 @@ class AboutStreakDialog extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.all(sw(context, 24)),
             decoration: BoxDecoration(
-              color: theme.cardColor,
+              gradient: bgGradient,
               borderRadius: BorderRadius.circular(sw(context, 16)),
               boxShadow: const [
                 BoxShadow(
-                    color: Color(0x11000000),
-                    blurRadius: 20,
-                    offset: Offset(0, 8)),
+                  color: Color(0x11000000),
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
               ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ICON FIRE
-                Container(
-                  padding: EdgeInsets.all(sw(context, 12)),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFEBEE),
-                    borderRadius: BorderRadius.circular(sw(context, 12)),
-                  ),
-                  child: Icon(
-                    Icons.local_fire_department_rounded,
-                    size: sw(context, 40),
-                    color: Colors.redAccent,
-                  ),
+                // ==== ROW ICON + TITLE ====
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: sw(context, 60),
+                      height: sw(context, 60),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(sw(context, 12)),
+                      ),
+                      child: Icon(
+                        Icons.local_fire_department_rounded,
+                        size: sw(context, 36),
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: sw(context, 16)),
+
+                    // ==== STREAK TITLE (THÊM SỐ) ====
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "$streakDay-DAY STREAK",
+                          style: t.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: st(context, 20),
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: sh(context, 4)),
+                        Text(
+                          streakLabel,
+                          style: t.bodyLarge?.copyWith(
+                            fontSize: st(context, 16),
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
+
                 SizedBox(height: sh(context, 20)),
 
-                // TITLE
+                // ==== LONGEST STREAK TEXT ====
                 Text(
-                  loc.translate("about_streak_title") ??
-                      "Chuỗi đăng nhập vào PolyGo!",
-                  textAlign: TextAlign.center,
+                  "Your longest streak day: $longestStreak",
                   style: t.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontSize: st(context, 24),
+                    fontSize: st(context, 20),
+                    color: Colors.white,
                   ),
                 ),
+
                 SizedBox(height: sh(context, 16)),
 
-                // DESCRIPTION
+                // ==== DESCRIPTION ====
                 Text(
-                  loc.translate("about_streak_description") ??
-                      "Hãy ghé thăm PolyGo mỗi ngày để duy trì chuỗi của bạn và đạt được danh hiệu riêng!",
-                  textAlign: TextAlign.center,
-                  style: t.bodyLarge?.copyWith(height: 1.5),
+                  noteLabel,
+                  textAlign: TextAlign.left,
+                  style: t.bodyMedium?.copyWith(
+                    fontSize: st(context, 14),
+                    color: Colors.white70,
+                  ),
                 ),
               ],
             ),

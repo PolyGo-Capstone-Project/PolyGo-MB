@@ -10,9 +10,7 @@ import '../../../data/services/apis/conversation_service.dart';
 import '../../../data/services/apis/friend_service.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../routes/app_routes.dart';
-import '../../shared/about_merit.dart';
 import '../../shared/about_plus.dart';
-import '../../shared/about_streak.dart';
 import 'friend_button.dart';
 
 class UserProfileHeader extends StatefulWidget {
@@ -222,16 +220,17 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                     },
                     child: CircleAvatar(
                       radius: 36,
-                      backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
+                      backgroundImage:
+                          (avatarUrl != null && avatarUrl.isNotEmpty)
                           ? NetworkImage(avatarUrl)
                           : null,
                       backgroundColor: Colors.grey[300],
                       child: (avatarUrl == null || avatarUrl.isEmpty)
                           ? const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 36,
-                      )
+                              Icons.person,
+                              color: Colors.white,
+                              size: 36,
+                            )
                           : null,
                     ),
                   ),
@@ -249,14 +248,11 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           gradient: const LinearGradient(
-                            colors: [
-                              Color(0xff4facfe),
-                              Color(0xff00f2fe),
-                            ],
+                            colors: [Color(0xff4facfe), Color(0xff00f2fe)],
                           ),
                         ),
                         child: Text(
-                          "LV ${experiencePoints! ~/ 100}",
+                          "LV ${widget.user.level}",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
@@ -282,11 +278,11 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                       ),
                     ),
 
-                    if (widget.user.gender != null && widget.user.gender!.isNotEmpty)
+                    if ((widget.user.gender != null && widget.user.gender!.isNotEmpty))
                       Wrap(
                         children: [
                           Text(
-                            widget.user.gender!,
+                            "${widget.user.gender} - ${widget.user.experiencePoints} EXP",
                             style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
                           ),
                         ],
@@ -294,17 +290,37 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                   ],
                 ),
               ),
-            ]
+            ],
           ),
 
-          const SizedBox(height: 16),
+          SizedBox(height: sh(context, 6)),
 
           // ---------------- Introduction ----------------
-          if (introduction.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(introduction, style: t.bodyMedium?.copyWith(height: 1.4)),
-            const SizedBox(height: 6),
+          if (introduction != null && introduction.isNotEmpty) ...[
+            SizedBox(height: sh(context, 8)),
+            RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: "Introduction: ",
+                    style: t.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: st(context, 14),
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  TextSpan(
+                    text: introduction,
+                    style: t.bodyMedium?.copyWith(
+                      fontSize: st(context, 14),
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
+
 
           // ---------- Tags Row ----------
           if ((widget.user != null && experiencePoints != null) ||
@@ -358,69 +374,52 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
 
                   // Merit tag
                   if (merit != null)
-                    GestureDetector(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => const AboutMeritDialog(),
-                        );
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: sw(context, 12),
-                          vertical: sh(context, 6),
-                        ),
-                        margin: EdgeInsets.only(right: sw(context, 8)),
-                        decoration: BoxDecoration(
-                          gradient: merit >= 80
-                              ? const LinearGradient(
-                                  colors: [
-                                    Color(0xFF4CAF50),
-                                    Color(0xFF81C784),
-                                  ],
-                                  // xanh lá đậm -> xanh lá nhạt
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                )
-                              : merit >= 40
-                              ? const LinearGradient(
-                                  colors: [
-                                    Color(0xFFFFC107),
-                                    Color(0xFFFFEB3B),
-                                  ],
-                                  // vàng đậm -> vàng nhạt
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                )
-                              : const LinearGradient(
-                                  colors: [
-                                    Color(0xFFF44336),
-                                    Color(0xFFE57373),
-                                  ],
-                                  // đỏ đậm -> đỏ nhạt
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                          borderRadius: BorderRadius.circular(sw(context, 16)),
-                        ),
-
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.verified_user,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: sw(context, 4)),
-                            Text(
-                              "$merit",
-                              style: t.bodyMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: sw(context, 12),
+                        vertical: sh(context, 6),
+                      ),
+                      margin: EdgeInsets.only(right: sw(context, 8)),
+                      decoration: BoxDecoration(
+                        gradient: merit >= 80
+                            ? const LinearGradient(
+                                colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                                // xanh lá đậm -> xanh lá nhạt
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : merit >= 40
+                            ? const LinearGradient(
+                                colors: [Color(0xFFFFC107), Color(0xFFFFEB3B)],
+                                // vàng đậm -> vàng nhạt
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : const LinearGradient(
+                                colors: [Color(0xFFF44336), Color(0xFFE57373)],
+                                // đỏ đậm -> đỏ nhạt
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
+                        borderRadius: BorderRadius.circular(sw(context, 16)),
+                      ),
+
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.verified_user,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: sw(context, 4)),
+                          Text(
+                            "$merit",
+                            style: t.bodyMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                 ],

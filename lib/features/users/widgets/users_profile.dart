@@ -8,6 +8,7 @@ import '../../../data/services/apis/user_service.dart';
 import '../../../../data/models/user/user_by_id_response.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../inventories/widgets/badges/badge_detail.dart';
 
 class UserProfile extends StatefulWidget {
   final String? userId;
@@ -415,21 +416,32 @@ class _UserProfileState extends State<UserProfile> {
                   final imageUrl = (badge is Map<String, dynamic>)
                       ? (badge['iconUrl'] ?? '')
                       : badge.toString();
-                  return ClipRRect(
+                  return InkWell(
                     borderRadius: BorderRadius.circular(12),
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: imageUrl.isNotEmpty
-                          ? Image.network(imageUrl, fit: BoxFit.cover)
-                          : Container(
-                              color: Colors.grey[300],
-                              child: const Icon(
-                                Icons.emoji_events,
-                                color: Colors.grey,
-                              ),
-                            ),
+                    onTap: () {
+                      if (badge is Map<String, dynamic> && badge['id'] != null) {
+                        showDialog(
+                          context: context,
+                          builder: (_) => BadgeDetailDialog(badgeId: badge['id']),
+                        );
+                      }
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: imageUrl.isNotEmpty
+                            ? Image.network(imageUrl, fit: BoxFit.cover)
+                            : Container(
+                          color: Colors.grey[300],
+                          child: const Icon(
+                            Icons.emoji_events,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
                     ),
-                  );
+                  ).animate().fadeIn(duration: 400.ms);
                 },
               ),
             )
