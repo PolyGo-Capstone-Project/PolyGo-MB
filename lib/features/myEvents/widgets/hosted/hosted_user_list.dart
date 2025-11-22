@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import '../../../data/models/events/event_details_model.dart';
-import '../../../data/repositories/event_repository.dart';
-import '../../../routes/app_routes.dart';
+import '../../../../data/models/events/event_details_model.dart';
+import '../../../../data/repositories/event_repository.dart';
+import '../../../../routes/app_routes.dart';
 
 class HostedUserList extends StatefulWidget {
   final List<ParticipantModel> participants;

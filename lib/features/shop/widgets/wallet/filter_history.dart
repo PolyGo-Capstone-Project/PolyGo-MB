@@ -128,6 +128,11 @@ class TransactionFilter extends StatelessWidget {
     required String allLabel,
   }) {
     final dropdownItems = [allLabel, ...items];
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Nền menu dropdown
+    final dropdownBackground = isDark ? Colors.grey[800] : Colors.grey[300];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,12 +171,15 @@ class TransactionFilter extends StatelessWidget {
             maxHeight: 250,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color: Theme.of(context).cardColor,
+              color: dropdownBackground, // đổi màu menu
+              border: Border.all(color: Colors.white), // nếu muốn viền trắng
             ),
             elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: 4),
           ),
         ),
       ],
     );
   }
+
 }

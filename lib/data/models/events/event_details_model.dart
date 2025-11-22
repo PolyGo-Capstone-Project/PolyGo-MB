@@ -21,6 +21,14 @@ class EventDetailsModel {
   final List<CategoryModel> categories;
   final List<ParticipantModel> participants;
 
+  // Fields mới nullable / default
+  final DateTime? endAt;
+  final double revenue;
+  final double averageRating;
+  final int totalReviews;
+  final bool hostPayoutClaimed;
+  final double hostPayoutAmount;
+
   EventDetailsModel({
     required this.id,
     required this.title,
@@ -43,6 +51,12 @@ class EventDetailsModel {
     required this.language,
     required this.categories,
     required this.participants,
+    this.endAt,
+    this.revenue = 0,
+    this.averageRating = 0.0,
+    this.totalReviews = 0,
+    this.hostPayoutClaimed = false,
+    this.hostPayoutAmount = 0.0,
   });
 
   factory EventDetailsModel.fromJson(Map<String, dynamic> json) {
@@ -72,9 +86,16 @@ class EventDetailsModel {
       participants: (json['participants'] as List)
           .map((e) => ParticipantModel.fromJson(e))
           .toList(),
+      endAt: json['endAt'] != null ? DateTime.parse(json['endAt']) : null,
+      revenue: (json['revenue'] ?? 0).toDouble(),
+      averageRating: (json['averageRating'] ?? 0).toDouble(),
+      totalReviews: json['totalReviews'] ?? 0,
+      hostPayoutClaimed: json['hostPayoutClaimed'] ?? false,
+      hostPayoutAmount: (json['hostPayoutAmount'] ?? 0).toDouble(),
     );
   }
 }
+
 
 class HostModel {
   final String id;
@@ -200,3 +221,64 @@ extension ParticipantModelCopy on ParticipantModel {
   }
 }
 
+extension EventDetailsModelCopy on EventDetailsModel {
+  EventDetailsModel copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? status,
+    DateTime? startAt,
+    int? expectedDurationInMinutes,
+    DateTime? registerDeadline,
+    bool? allowLateRegister,
+    int? capacity,
+    int? fee,
+    String? bannerUrl,
+    bool? isPublic,
+    String? password,
+    int? numberOfParticipants,
+    String? planType,
+    DateTime? createdAt,
+    DateTime? lastUpdatedAt,
+    HostModel? host,
+    LanguageModel? language,
+    List<CategoryModel>? categories,
+    List<ParticipantModel>? participants,
+    DateTime? endAt,
+    double? revenue,
+    double? averageRating,
+    int? totalReviews,
+    bool? hostPayoutClaimed,
+    double? hostPayoutAmount,
+  }) {
+    return EventDetailsModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      status: status ?? this.status,
+      startAt: startAt ?? this.startAt,
+      expectedDurationInMinutes: expectedDurationInMinutes ?? this.expectedDurationInMinutes,
+      registerDeadline: registerDeadline ?? this.registerDeadline,
+      allowLateRegister: allowLateRegister ?? this.allowLateRegister,
+      capacity: capacity ?? this.capacity,
+      fee: fee ?? this.fee,
+      bannerUrl: bannerUrl ?? this.bannerUrl,
+      isPublic: isPublic ?? this.isPublic,
+      password: password ?? this.password,
+      numberOfParticipants: numberOfParticipants ?? this.numberOfParticipants,
+      planType: planType ?? this.planType,
+      createdAt: createdAt ?? this.createdAt,
+      lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
+      host: host ?? this.host,
+      language: language ?? this.language,
+      categories: categories ?? this.categories,
+      participants: participants ?? this.participants,
+      endAt: endAt ?? this.endAt,
+      revenue: revenue ?? this.revenue,
+      averageRating: averageRating ?? this.averageRating,
+      totalReviews: totalReviews ?? this.totalReviews,
+      hostPayoutClaimed: hostPayoutClaimed ?? this.hostPayoutClaimed,
+      hostPayoutAmount: hostPayoutAmount ?? this.hostPayoutAmount,
+    );
+  }
+}

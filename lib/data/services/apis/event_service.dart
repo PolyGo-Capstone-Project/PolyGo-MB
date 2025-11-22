@@ -1,9 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/config/api_constants.dart';
 import '../../models/api_response.dart';
-import '../../models/events/coming_event_list_response.dart';
 import '../../models/events/event_cancel_request.dart';
 import '../../models/events/event_cancel_response.dart';
 import '../../models/events/event_details_response.dart';
@@ -18,6 +16,7 @@ import '../../models/events/event_register_request.dart';
 import '../../models/events/event_update_rating_request.dart';
 import '../../models/events/hosted_event_model.dart';
 import '../../models/events/joined_event_list_response.dart';
+import '../../models/events/payout_response.dart';
 import '../../models/events/update_event_status_request.dart';
 import '../../models/events/update_event_status_response.dart';
 
@@ -106,6 +105,28 @@ class EventService {
       return ApiResponse.fromJson(
         json,
             (data) => EventRegisterResponse.fromJson(data),
+      );
+    } on DioError catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<ApiResponse<HostPayoutResponse>> claimHostPayout({
+    required String token,
+    required String eventId,
+  }) async {
+    try {
+      final url = ApiConstants.hostPayout.replaceAll("{eventId}", eventId);
+
+      final response = await apiClient.post(
+        url,
+        headers: {ApiConstants.headerAuthorization: 'Bearer $token'},
+      );
+
+      final json = response.data as Map<String, dynamic>;
+      return ApiResponse.fromJson(
+        json,
+            (data) => HostPayoutResponse.fromJson(data),
       );
     } on DioError catch (e) {
       rethrow;

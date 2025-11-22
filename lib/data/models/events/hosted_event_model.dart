@@ -13,6 +13,7 @@ class HostedEventModel {
   final bool isPublic;
   final int numberOfParticipants;
   final String planType;
+  final bool hostPayoutClaimed;
   final HostedEventHost host;
   final HostedEventLanguage language;
   final List<HostedEventCategory> categories;
@@ -33,6 +34,7 @@ class HostedEventModel {
     required this.numberOfParticipants,
     required this.planType,
     required this.host,
+    required this.hostPayoutClaimed,
     required this.language,
     required this.categories,
   });
@@ -51,6 +53,7 @@ class HostedEventModel {
       fee: json['fee'] ?? 0,
       bannerUrl: json['bannerUrl'] ?? '',
       isPublic: json['isPublic'] ?? true,
+      hostPayoutClaimed: json['hostPayoutClaimed'] ?? false,
       numberOfParticipants: json['numberOfParticipants'] ?? 0,
       planType: json['planType'] ?? 'Free',
       host: HostedEventHost.fromJson(json['host']),

@@ -2,17 +2,17 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/utils/responsive.dart';
-import '../../../core/utils/render_utils.dart';
-import '../../../core/widgets/app_button.dart';
-import '../../../data/models/events/joined_event_model.dart';
-import '../../../data/repositories/event_repository.dart';
-import '../../../routes/app_routes.dart';
-import '../../rating/screens/rates_screen.dart';
-import '../../rating/screens/rating_screen.dart';
-import '../../shared/share_event_dialog.dart';
-import 'hosted_user_list.dart';
+import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/responsive.dart';
+import '../../../../core/utils/render_utils.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../data/models/events/joined_event_model.dart';
+import '../../../../data/repositories/event_repository.dart';
+import '../../../../routes/app_routes.dart';
+import '../../../rating/screens/rates_screen.dart';
+import '../../../rating/screens/rating_screen.dart';
+import '../../../shared/share_event_dialog.dart';
+import '../hosted/hosted_user_list.dart';
 
 class JoinedEventDetails extends StatefulWidget {
   final JoinedEventModel event;
@@ -239,139 +239,189 @@ class _JoinedEventDetailsState extends State<JoinedEventDetails> {
                             if (value == 'cancel') {
                               final reasonController = TextEditingController();
                               String? errorText;
+                              String? generalError; // lỗi chung, ví dụ "cancel too late"
 
                               await showDialog(
                                 context: context,
                                 barrierDismissible: false,
                                 builder: (dialogContext) {
-                                  return StatefulBuilder(
-                                    builder: (context, setState) {
-                                      return AlertDialog(
-                                        title: Text(
-                                          loc.translate('confirm_cancel'),
-                                        ),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              loc.translate(
-                                                'enter_cancel_reason',
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            TextField(
-                                              controller: reasonController,
-                                              maxLines: 3,
-                                              decoration: InputDecoration(
-                                                hintText: loc.translate(
-                                                  'cancel_reason_placeholder',
-                                                ),
-                                                border:
-                                                    const OutlineInputBorder(),
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 8,
-                                                    ),
-                                                errorText: errorText,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(dialogContext),
-                                            child: Text(loc.translate('no')),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () async {
-                                              final reason = reasonController
-                                                  .text
-                                                  .trim();
-                                              if (reason.isEmpty) {
-                                                setState(() {
-                                                  errorText = loc.translate(
-                                                    'enter_reason_first',
-                                                  );
-                                                });
-                                                return;
-                                              }
+                                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                                  final textColor = isDark ? Colors.white : Colors.black;
+                                  final Gradient cardBackground = isDark
+                                      ? const LinearGradient(
+                                    colors: [
+                                      Color(0xFF1E1E1E),
+                                      Color(0xFF2C2C2C),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                      : const LinearGradient(
+                                    colors: [Colors.white, Colors.white],
+                                  );
 
-                                              try {
-                                                final isHost =
-                                                    widget.currentUserId ==
-                                                    widget.event.host.id;
-
-                                                final res = isHost
-                                                    ? await widget
-                                                          .eventRepository
-                                                          .cancelEvent(
-                                                            token: widget.token,
-                                                            eventId:
-                                                                widget.event.id,
-                                                            reason: reason,
-                                                          )
-                                                    : await widget
-                                                          .eventRepository
-                                                          .unregisterEvent(
-                                                            token: widget.token,
-                                                            eventId:
-                                                                widget.event.id,
-                                                            reason: reason,
-                                                          );
-
-                                                if (!mounted) return;
-
-                                                Navigator.of(
-                                                  context,
-                                                  rootNavigator: true,
-                                                ).pop();
-                                                Navigator.pop(context);
-
-                                                widget.onCancel?.call();
-                                                widget.onEventCanceled?.call();
-
-                                                ScaffoldMessenger.of(
-                                                  widget.parentContext,
-                                                ).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      res?.message ??
-                                                          (isHost
-                                                              ? loc.translate(
-                                                                  'cancel_success',
-                                                                )
-                                                              : loc.translate(
-                                                                  'unregister_success',
-                                                                )),
+                                  return Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        gradient: cardBackground,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(height: 12),
+                                          StatefulBuilder(
+                                            builder: (context, setStateDialog) {
+                                              return Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    loc.translate('confirm_cancel'),
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .titleMedium
+                                                        ?.copyWith(
+                                                      fontWeight: FontWeight.bold,
+                                                      color: textColor,
                                                     ),
                                                   ),
-                                                );
-                                              } catch (_) {
-                                                if (mounted)
-                                                  Navigator.of(
-                                                    context,
-                                                    rootNavigator: true,
-                                                  ).pop();
-                                                ScaffoldMessenger.of(
-                                                  widget.parentContext,
-                                                ).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      loc.translate(
-                                                        'cancel_too_late',
+                                                  const SizedBox(height: 12),
+                                                  TextField(
+                                                    controller: reasonController,
+                                                    maxLines: 3,
+                                                    style: TextStyle(color: textColor),
+                                                    decoration: InputDecoration(
+                                                      hintText: loc.translate(
+                                                        'cancel_reason_placeholder',
+                                                      ),
+                                                      hintStyle: TextStyle(
+                                                        color: isDark ? Colors.grey[500] : Colors.grey[400],
+                                                      ),
+                                                      errorText: errorText,
+                                                      border: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(6),
+                                                      ),
+                                                      contentPadding: const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 8,
+                                                      ),
+                                                      enabledBorder: OutlineInputBorder(
+                                                        borderSide: BorderSide(
+                                                          color: isDark ? Colors.grey[700]! : Colors.grey[400]!,
+                                                        ),
+                                                        borderRadius: BorderRadius.circular(6),
                                                       ),
                                                     ),
                                                   ),
-                                                );
-                                              }
+                                                  if (generalError != null)
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(top: 8),
+                                                      child: Text(
+                                                        generalError!,
+                                                        style: TextStyle(
+                                                          color: Colors.redAccent,
+                                                          fontSize: 13,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  const SizedBox(height: 16),
+                                                  Align(
+                                                    alignment: Alignment.centerRight,
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(dialogContext),
+                                                          child: Text(loc.translate('no')),
+                                                        ),
+                                                        const SizedBox(width: 8),
+                                                        ElevatedButton(
+                                                          onPressed: () async {
+                                                            final reason = reasonController.text.trim();
+                                                            if (reason.isEmpty) {
+                                                              setStateDialog(() {
+                                                                errorText = loc.translate(
+                                                                  'enter_reason_first',
+                                                                );
+                                                                generalError = null;
+                                                              });
+                                                              return;
+                                                            }
+
+                                                            try {
+                                                              final isHost =
+                                                                  widget.currentUserId ==
+                                                                      widget.event.host.id;
+
+                                                              final res = isHost
+                                                                  ? await widget.eventRepository.cancelEvent(
+                                                                token: widget.token,
+                                                                eventId: widget.event.id,
+                                                                reason: reason,
+                                                              )
+                                                                  : await widget.eventRepository.unregisterEvent(
+                                                                token: widget.token,
+                                                                eventId: widget.event.id,
+                                                                reason: reason,
+                                                              );
+
+                                                              if (!mounted) return;
+
+                                                              Navigator.of(context, rootNavigator: true)
+                                                                  .pop();
+                                                              Navigator.pop(context);
+
+                                                              widget.onCancel?.call();
+                                                              widget.onEventCanceled?.call();
+
+                                                              ScaffoldMessenger.of(widget.parentContext)
+                                                                  .showSnackBar(
+                                                                SnackBar(
+                                                                  content: Text(
+                                                                    res?.message ??
+                                                                        (isHost
+                                                                            ? loc.translate('cancel_success')
+                                                                            : loc.translate('unregister_success')),
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            } catch (_) {
+                                                              // hiển thị lỗi ngay trong dialog
+                                                              setStateDialog(() {
+                                                                generalError = loc.translate('cancel_too_late');
+                                                              });
+                                                            }
+                                                          },
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor: Colors.redAccent,
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(6),
+                                                            ),
+                                                            padding: const EdgeInsets.symmetric(
+                                                              horizontal: 20,
+                                                              vertical: 12,
+                                                            ),
+                                                          ),
+                                                          child: Text(
+                                                            loc.translate('yes'),
+                                                            style: const TextStyle(color: Colors.white),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
                                             },
-                                            child: Text(loc.translate('yes')),
                                           ),
                                         ],
-                                      );
-                                    },
+                                      ),
+                                    ),
                                   );
                                 },
                               );
@@ -400,6 +450,7 @@ class _JoinedEventDetailsState extends State<JoinedEventDetails> {
                             ),
                           ],
                         ),
+
                     ],
                   ),
                   const SizedBox(height: 20),

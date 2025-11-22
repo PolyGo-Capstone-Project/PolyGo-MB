@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../core/api/api_client.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../data/models/transaction/wallet_info_response.dart';
 import '../../../../data/models/transaction/withdraw_confirm_request.dart';
 import '../../../../data/models/transaction/withdraw_request_model.dart';
@@ -147,75 +148,132 @@ class _WithdrawRequestState extends State<WithdrawRequest> {
   void _showOtpDialog(String token) {
     final otpController = TextEditingController();
     final loc = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Gradient cho background dialog
+    final Gradient cardBackground = isDark
+        ? const LinearGradient(
+      colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    )
+        : const LinearGradient(colors: [Colors.white, Colors.white]);
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: Text(loc.translate("otp_confirm")),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              loc.translate("otp_warning"),
-              style: TextStyle(fontSize: 14),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: Colors.transparent, // để hiển thị gradient
+          contentPadding: EdgeInsets.zero,
+          content: Container(
+            decoration: BoxDecoration(
+              gradient: cardBackground,
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: otpController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: loc.translate("otp"),
-                border: OutlineInputBorder(),
-              ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Tiêu đề
+                Text(
+                  loc.translate("otp_confirm"),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Nội dung cảnh báo
+                Text(
+                  loc.translate("otp_warning"),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Input OTP
+                TextField(
+                  controller: otpController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: loc.translate("otp"),
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Nút
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        foregroundColor: isDark ? Colors.white : Colors.black,
+                      ),
+                      child: Text(loc.translate("cancel")),
+                    ),
+                    const SizedBox(width: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: AppButton(
+                        text: loc.translate("confirm"),
+                        onPressed: () async {
+                          final otp = otpController.text.trim();
+                          if (otp.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(loc.translate("otp_required"))),
+                            );
+                            return;
+                          }
+
+                          // Hiển thị loading
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) =>
+                            const Center(child: CircularProgressIndicator()),
+                          );
+
+                          final confirmSuccess = await _transactionRepo.confirmWithdrawal(
+                            token: token,
+                            request: WithdrawConfirmRequest(otp: otp),
+                          );
+
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+
+                          if (confirmSuccess) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(loc.translate("success_withdraw_request"))),
+                            );
+                            setState(() {
+                              selectedAmount = null;
+                              _customAmountController.clear();
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(loc.translate("otp_failed"))),
+                            );
+                          }
+                        },
+                        size: ButtonSize.sm,
+                        variant: ButtonVariant.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(loc.translate("cancel")),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final otp = otpController.text.trim();
-              if (otp.isEmpty) return;
-
-              // Hiển thị loading
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => const Center(child: CircularProgressIndicator()),
-              );
-
-              final confirmSuccess = await _transactionRepo.confirmWithdrawal(
-                token: token,
-                request: WithdrawConfirmRequest(otp: otp),
-              );
-
-              Navigator.pop(context);
-              Navigator.pop(context);
-
-              if (confirmSuccess) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(loc.translate("success_withdraw_request"))),
-                );
-                setState(() {
-                  selectedAmount = null;
-                  _customAmountController.clear();
-                });
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(loc.translate("otp_failed"))),
-                );
-              }
-            },
-            child: Text(loc.translate("confirm")),
-          ),
-        ],
       ),
     );
   }
-
 
   Future<void> _reloadAccounts() async {
     final prefs = await SharedPreferences.getInstance();

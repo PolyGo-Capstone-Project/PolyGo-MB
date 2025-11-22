@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../data/models/events/event_model.dart';
 import '../../../data/repositories/event_repository.dart';
 import '../../../data/services/apis/event_service.dart';
@@ -129,190 +130,215 @@ class _RatingWidgetState extends State<RatingWidget> {
                       ),
                     SizedBox(height: sh(context, 16)),
 
-                    // --- Host info + Gift button ---
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Avatar
-                        CircleAvatar(
-                          radius: sw(context, 28),
-                          backgroundImage: (_eventDetail!.host.avatarUrl != null &&
-                              _eventDetail!.host.avatarUrl!.isNotEmpty)
-                              ? NetworkImage(_eventDetail!.host.avatarUrl!)
-                              : null,
-                          backgroundColor: Colors.grey[300],
-                          child: (_eventDetail!.host.avatarUrl == null ||
-                              _eventDetail!.host.avatarUrl!.isEmpty)
-                              ? Icon(Icons.person, size: 36, color: Colors.white70)
-                              : null,
+                    // --- Host info + Gift button + Rating/Comment ---
+                    Container(
+                      padding: EdgeInsets.all(sw(context, 16)),
+                      decoration: BoxDecoration(
+                        gradient: isDark
+                            ? const LinearGradient(
+                          colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                            : const LinearGradient(
+                          colors: [Colors.white, Colors.white],
                         ),
-
-                        SizedBox(width: sw(context, 12)),
-
-                        // Host name + role
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        borderRadius: BorderRadius.circular(sw(context, 12)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // --- Host info ---
+                          Row(
                             children: [
-                              Text(
-                                _eventDetail!.host.name,
-                                style: t.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: st(context, 16),
-                                  color: textColor,
+                              CircleAvatar(
+                                radius: sw(context, 28),
+                                backgroundImage: (_eventDetail!.host.avatarUrl != null &&
+                                    _eventDetail!.host.avatarUrl!.isNotEmpty)
+                                    ? NetworkImage(_eventDetail!.host.avatarUrl!)
+                                    : null,
+                                backgroundColor: Colors.grey[300],
+                                child: (_eventDetail!.host.avatarUrl == null ||
+                                    _eventDetail!.host.avatarUrl!.isEmpty)
+                                    ? Icon(Icons.person, size: 36, color: Colors.white70)
+                                    : null,
+                              ),
+                              SizedBox(width: sw(context, 12)),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _eventDetail!.host.name,
+                                      style: t.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: st(context, 16),
+                                        color: textColor,
+                                      ),
+                                    ),
+                                    Text(
+                                      "Host",
+                                      style: t.bodySmall?.copyWith(
+                                        fontSize: st(context, 14),
+                                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              Text(
-                                "Host",
-                                style: t.bodySmall?.copyWith(
-                                  fontSize: st(context, 14),
-                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              // Gift button
+                              OutlinedButton(
+                                onPressed: () async {
+                                  final result = await showDialog(
+                                    context: context,
+                                    builder: (context) => const InvenGifts(),
+                                  );
+
+                                  if (result != null && mounted) {
+                                    setState(() {
+                                      _selectedGift = result['giftId'];
+                                      _selectedGiftName = result['giftName'] ?? '';
+                                      _giftQuantity = result['quantity'] ?? 1;
+                                    });
+                                  }
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(color: colorPrimary, width: 2),
+                                  foregroundColor: colorPrimary,
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: sh(context, 8),
+                                    horizontal: sw(context, 12),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(sw(context, 10)),
+                                  ),
+                                ),
+                                child: Text(
+                                  _selectedGift.isEmpty
+                                      ? loc.translate("choose_gift")
+                                      : "$_selectedGiftName x$_giftQuantity",
+                                  style: const TextStyle(fontWeight: FontWeight.w600),
                                 ),
                               ),
                             ],
                           ),
-                        ),
 
-                        // --- Gift button ---
-                        OutlinedButton(
-                          onPressed: () async {
-                            final result = await showDialog(
-                              context: context,
-                              builder: (context) => const InvenGifts(),
-                            );
+                          SizedBox(height: sh(context, 16)),
 
-                            if (result != null && mounted) {
-                              setState(() {
-                                _selectedGift = result['giftId'];
-                                _selectedGiftName = result['giftName'] ?? '';
-                                _giftQuantity = result['quantity'] ?? 1;
-                              });
-                            }
-                          },
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: colorPrimary, width: 2),
-                            foregroundColor: colorPrimary,
-                            padding: EdgeInsets.symmetric(
-                              vertical: sh(context, 8),
-                              horizontal: sw(context, 12),
-                            ),
-                            shape: RoundedRectangleBorder(
+                          // --- Rating stars ---
+                          _buildRatingStars(colorPrimary),
+                          SizedBox(height: sh(context, 16)),
+
+                          // --- Comment input ---
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: isDark
+                                  ? const LinearGradient(
+                                colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                                  : const LinearGradient(
+                                colors: [Colors.white, Colors.white],
+                              ),
                               borderRadius: BorderRadius.circular(sw(context, 10)),
+                              border: Border.all(
+                                color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+                              ),
+                            ),
+                            child: TextField(
+                              controller: _commentController,
+                              maxLines: 4,
+                              style: TextStyle(color: textColor),
+                              decoration: InputDecoration(
+                                hintText: loc.translate("your_event_rating"),
+                                hintStyle: TextStyle(
+                                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(sw(context, 10)),
+                                  borderSide: BorderSide.none,
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: sh(context, 12),
+                                  horizontal: sw(context, 12),
+                                ),
+                              ),
                             ),
                           ),
-                          child: Text(
-                            _selectedGift.isEmpty
-                                ? loc.translate("choose_gift")
-                                : "$_selectedGiftName x$_giftQuantity",
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          SizedBox(height: sh(context, 16)),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: AppButton(
+                              text: loc.translate("send_rating"),
+                              onPressed: _loading ? null : () async {
+                                if (_rating < 1) {
+                                  setState(() => _ratingError = true);
+                                  return;
+                                }
+                                setState(() => _ratingError = false);
+
+                                final prefs = await SharedPreferences.getInstance();
+                                final token = prefs.getString('token') ?? '';
+
+                                if (token.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Bạn chưa đăng nhập")),
+                                  );
+                                  return;
+                                }
+
+                                final comment = _commentController.text;
+                                final giftId = _selectedGift.isEmpty ? '' : _selectedGift;
+                                final giftQuantity = _selectedGift.isEmpty ? 0 : _giftQuantity;
+
+                                try {
+                                  final res = await _eventRepository.rateEvent(
+                                    token: token,
+                                    eventId: widget.eventId,
+                                    rating: _rating,
+                                    comment: comment,
+                                    giftId: giftId,
+                                    giftQuantity: giftQuantity,
+                                  );
+
+                                  final msg = (res.message ?? '').trim().toLowerCase();
+
+                                  if (msg == 'success.create') {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(loc.translate("rating_success"))),
+                                    );
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (_) => const MyEventsScreen(initialTab: 2),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          "Không gửi được đánh giá${res.message != null ? ': ${res.message}' : ''}",
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(loc.translate("error"))),
+                                  );
+                                }
+                              },
+                              size: ButtonSize.sm,
+                              variant: ButtonVariant.primary,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: sh(context, 16)),
-
-                    // --- Rating stars ---
-                    _buildRatingStars(colorPrimary),
-                    SizedBox(height: sh(context, 16)),
-
-                    // --- Comment ---
-                    TextField(
-                      controller: _commentController,
-                      maxLines: 4,
-                      style: TextStyle(color: textColor),
-                      decoration: InputDecoration(
-                        labelText: loc.translate("your_event_rating"),
-                        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700]),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(sw(context, 10))),
-                        contentPadding: EdgeInsets.symmetric(
-                            vertical: sh(context, 12), horizontal: sw(context, 12)),
+                        ],
                       ),
                     ),
-                    SizedBox(height: sh(context, 16)),
-
                   ],
-                ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.2, end: 0),
-              ),
-            ),
-
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(sw(context, 20)),
-              color: backgroundColor,
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (_rating < 1) {
-                    setState(() => _ratingError = true);
-                    return;
-                  }
-                  setState(() => _ratingError = false);
-
-                  final prefs = await SharedPreferences.getInstance();
-                  final token = prefs.getString('token') ?? '';
-
-                  if (token.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Bạn chưa đăng nhập")),
-                    );
-                    return;
-                  }
-
-                  final comment = _commentController.text;
-                  final giftId = _selectedGift.isEmpty ? '' : _selectedGift;
-                  final giftQuantity = _selectedGift.isEmpty ? 0 : _giftQuantity;
-
-                  try {
-                    final res = await _eventRepository.rateEvent(
-                      token: token,
-                      eventId: widget.eventId,
-                      rating: _rating,
-                      comment: comment,
-                      giftId: giftId,
-                      giftQuantity: giftQuantity,
-                    );
-
-                    final msg = (res.message ?? '').trim().toLowerCase();
-
-                    if (msg == 'success.create') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(loc.translate("rating_success"))),
-                      );
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (_) => const MyEventsScreen(initialTab: 2),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            "Không gửi được đánh giá${res.message != null ? ': ${res.message}' : ''}",
-                          ),
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(loc.translate("error"))),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorPrimary,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: sh(context, 14)),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(sw(context, 10))),
-                ),
-                child: Text(
-                  loc.translate("send_rating"),
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
               ),
-
             ),
-
           ],
         ),
       ),

@@ -3,8 +3,8 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../shared/app_bottom_bar.dart';
 import '../widgets/calendar.dart';
 import '../widgets/my_events_menu.dart';
-import '../widgets/my_events.dart';
-import '../widgets/joined_events.dart';
+import '../widgets/hosted/my_events.dart';
+import '../widgets/joined/joined_events.dart';
 import '../../shared/app_error_state.dart';
 
 class MyEventsScreen extends StatefulWidget {

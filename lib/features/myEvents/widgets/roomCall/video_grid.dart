@@ -26,7 +26,7 @@ class VideoGrid extends StatelessWidget {
         final localParticipant = Participant(
           id: 'local',
           name: widgetIsHost ? 'You (Host)' : 'You',
-          role: 'host',
+          role: widgetIsHost ? 'host' : 'attendee',
           stream: controller.localStream,
           audioEnabled: controller.localAudioEnabled,
           videoEnabled: controller.localVideoEnabled,
@@ -86,8 +86,8 @@ class VideoGrid extends StatelessWidget {
                 child: ParticipantCard(
                   participant: hostParticipant,
                   isLarge: true,
-                  isHost: true,
-                  onSwitchCamera: () => controller.switchCamera(),
+                  isHost: hostParticipant.id == controller.hostId,
+                  onSwitchCamera: hostParticipant.id == 'local' ? () => controller.switchCamera() : null,
                 ),
               ),
             ),
@@ -110,6 +110,7 @@ class VideoGrid extends StatelessWidget {
                           participant: p,
                           isLarge: false,
                           isHost: p.id == controller.hostId,
+                          onSwitchCamera: p.id == 'local' ? () => controller.switchCamera() : null,
                         ),
                       );
                     },
@@ -285,7 +286,6 @@ class _ParticipantCardState extends State<ParticipantCard> {
               ),
             ),
           ),
-          // if ((p.id == 'local' || widget.isHost) && p.videoEnabled)
           if (p.id == 'local' && p.videoEnabled)
             Positioned(
               top: 8,

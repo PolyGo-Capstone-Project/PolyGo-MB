@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../data/models/events/event_model.dart';
 import '../../../data/models/events/event_my_rating_response.dart';
 import '../../../data/models/events/event_rating_item.dart';
@@ -157,7 +158,13 @@ class _RatesState extends State<Rates> {
     final colorPrimary = theme.colorScheme.primary;
     final backgroundColor = theme.colorScheme.background;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final cardColor = isDark ? Color(0xFF1E1E1E) : Colors.white;
+    final Gradient cardBackground = isDark
+        ? const LinearGradient(
+      colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    )
+        : const LinearGradient(colors: [Colors.white, Colors.white]);
 
     if (_loading) {
       return Scaffold(
@@ -237,9 +244,9 @@ class _RatesState extends State<Rates> {
                       ),
                     ),
                     SizedBox(height: sh(context, 8)),
-                    Card(
-                      color: cardColor,
-                      shape: RoundedRectangleBorder(
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: cardBackground,
                         borderRadius: BorderRadius.circular(sw(context, 10)),
                       ),
                       child: Padding(
@@ -276,110 +283,100 @@ class _RatesState extends State<Rates> {
 
                                   showDialog(
                                     context: context,
-                                    builder: (context) => AlertDialog(
-                                      backgroundColor: backgroundColor,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      title: Text(
-                                        loc.translate("fix_rating"),
-                                        style: theme.textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: textColor,
-                                        ),
-                                      ),
-                                      content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          // --- Stars picker ---
-                                          StatefulBuilder(
-                                            builder: (context, setStateDialog) {
-                                              return Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: List.generate(5, (index) {
-                                                  return IconButton(
-                                                    icon: Icon(
-                                                      index < tempRating
-                                                          ? Icons.star
-                                                          : Icons.star_border,
-                                                      color: colorPrimary,
-                                                    ),
-                                                    onPressed: () {
-                                                      setStateDialog(() {
-                                                        tempRating = index + 1;
-                                                      });
-                                                    },
+                                    builder: (context) {
+                                      return Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            gradient: cardBackground,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          padding: const EdgeInsets.all(16),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                loc.translate("fix_rating"),
+                                                style: theme.textTheme.titleMedium?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: textColor,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              StatefulBuilder(
+                                                builder: (context, setStateDialog) {
+                                                  return Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      // --- Stars picker ---
+                                                      Row(
+                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                                        children: List.generate(5, (index) {
+                                                          return IconButton(
+                                                            icon: Icon(
+                                                              index < tempRating
+                                                                  ? Icons.star
+                                                                  : Icons.star_border,
+                                                              color: colorPrimary,
+                                                            ),
+                                                            onPressed: () {
+                                                              setStateDialog(() {
+                                                                tempRating = index + 1;
+                                                              });
+                                                            },
+                                                          );
+                                                        }),
+                                                      ),
+                                                      const SizedBox(height: 12),
+                                                      // --- Comment field ---
+                                                      TextField(
+                                                        controller: ratingController,
+                                                        maxLines: 3,
+                                                        style: TextStyle(color: textColor),
+                                                        decoration: InputDecoration(
+                                                          labelText: loc.translate("your_event_rating"),
+                                                          labelStyle: TextStyle(
+                                                            color: isDark ? Colors.grey[400] : Colors.grey[700],
+                                                          ),
+                                                          enabledBorder: OutlineInputBorder(
+                                                            borderSide: BorderSide(
+                                                              color: isDark ? Colors.grey[700]! : Colors.grey[400]!,
+                                                            ),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                          focusedBorder: OutlineInputBorder(
+                                                            borderSide: BorderSide(
+                                                              color: colorPrimary,
+                                                              width: 2,
+                                                            ),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
                                                   );
-                                                }),
-                                              );
-                                            },
-                                          ),
-                                          SizedBox(height: sh(context, 10)),
-                                          TextField(
-                                            controller: ratingController,
-                                            maxLines: 3,
-                                            style: TextStyle(color: textColor),
-                                            decoration: InputDecoration(
-                                              labelText: loc.translate("your_event_rating"),
-                                              labelStyle: TextStyle(
-                                                color: isDark ? Colors.grey[400] : Colors.grey[700],
+                                                },
                                               ),
-
-                                              enabledBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: isDark
-                                                      ? Colors.grey[700]!
-                                                      : Colors.grey[400]!,
+                                              const SizedBox(height: 16),
+                                              Align(
+                                                alignment: Alignment.centerRight,
+                                                child: AppButton(
+                                                  text: loc.translate("confirm"),
+                                                  onPressed: () async {
+                                                    Navigator.pop(context);
+                                                    await _updateMyRating(tempRating, ratingController.text);
+                                                  },
+                                                  size: ButtonSize.sm,
+                                                  variant: ButtonVariant.primary,
                                                 ),
-                                                borderRadius: BorderRadius.circular(8),
                                               ),
-                                              focusedBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: colorPrimary,
-                                                  width: 2,
-                                                ),
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      actionsPadding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 8),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context),
-                                          child: Text(
-                                            loc.translate("cancel"),
-                                            style: TextStyle(
-                                              color: isDark ? Colors.grey[400] : Colors.grey[700],
-                                              fontWeight: FontWeight.w500,
-                                            ),
+                                            ],
                                           ),
                                         ),
-                                        ElevatedButton(
-                                          onPressed: () async {
-                                            Navigator.pop(context);
-                                            await _updateMyRating(tempRating, ratingController.text);
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: colorPrimary,
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 20, vertical: 12),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
-                                            elevation: 0,
-                                          ),
-                                          child: Text(
-                                            loc.translate("confirm"),
-                                            style: TextStyle(fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                      );
+                                    },
                                   );
+
                                 },
                                 child: Text(
                                   loc.translate("fix_rating"),
@@ -407,9 +404,9 @@ class _RatesState extends State<Rates> {
                     ),
                   ),
                   SizedBox(height: sh(context, 8)),
-                  ..._ratings.map((rate) => Card(
-                    color: cardColor,
-                    shape: RoundedRectangleBorder(
+                  ..._ratings.map((rate) => Container(
+                    decoration: BoxDecoration(
+                      gradient: cardBackground,
                       borderRadius: BorderRadius.circular(sw(context, 10)),
                     ),
                     margin: EdgeInsets.only(bottom: sh(context, 12)),

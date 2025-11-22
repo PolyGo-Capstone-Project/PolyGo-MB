@@ -1,4 +1,5 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:polygo_mobile/features/shop/widgets/wallet/support_request_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -155,16 +156,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
             ...widget.transactions.asMap().entries.map((entry) {
               final tx = entry.value;
               final color = tx.amount < 0 ? Colors.red : colorPrimary;
-              final formattedAmount = tx.amount
-                  .abs()
-                  .toString()
-                  .replaceAllMapped(
-                RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                    (m) => "${m[1]}.",
-              );
-              final amountText =
-                  "${tx.amount < 0 ? '-' : '+'}$formattedAmount đ";
-
+              final amountText = "${tx.amount < 0 ? '-' : '+'}${formatCurrency(tx.amount.abs())} đ";
               final dt = tx.createdAt.toLocal();
               final datePart =
                   "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}";
@@ -193,6 +185,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
                       context,
                       tx.id,
                       userNotes,
+                      transaction: tx,
                     );
 
                     if (success == true) {
@@ -269,8 +262,8 @@ class _TransactionHistoryState extends State<TransactionHistory> {
                                 ),
                                 SizedBox(height: sh(context, 4)),
                                 Text(
-                                  "${loc.translate("remaining_balance")}: ${widget.balanceHidden ? "****" : tx.remainingBalance.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => "${m[1]}.")} đ",
-                                  style: t.bodySmall?.copyWith(
+                                    "${loc.translate("remaining_balance")}: ${widget.balanceHidden ? "****" : formatCurrency(tx.remainingBalance)} đ",
+                                    style: t.bodySmall?.copyWith(
                                     fontSize: st(context, 12),
                                     color: isDark ? Colors.grey[400] : Colors.grey[600],
                                   ),
@@ -320,5 +313,23 @@ class _TransactionHistoryState extends State<TransactionHistory> {
         ],
       ),
     );
+  }
+
+  String formatCurrency(double number) {
+    if (number % 1 == 0) {
+      final formatter = NumberFormat.currency(
+        locale: "de_DE",
+        symbol: "",
+        decimalDigits: 0,
+      );
+      return formatter.format(number).trim();
+    } else {
+      final formatter = NumberFormat.currency(
+        locale: "de_DE",
+        symbol: "",
+        decimalDigits: 2,
+      );
+      return formatter.format(number).trim();
+    }
   }
 }

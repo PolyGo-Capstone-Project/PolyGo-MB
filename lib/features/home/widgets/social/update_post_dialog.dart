@@ -190,9 +190,6 @@ class _UpdatePostDialogState extends State<UpdatePostDialog> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              /// ---------------------------
-              /// Avatar + nút Đăng
-              /// ---------------------------
               Row(
                 children: [
                   CircleAvatar(
@@ -235,9 +232,6 @@ class _UpdatePostDialogState extends State<UpdatePostDialog> {
 
               const SizedBox(height: 12),
 
-              /// ---------------------------
-              /// TextField nội dung (same UI)
-              /// ---------------------------
               Container(
                 padding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -266,9 +260,6 @@ class _UpdatePostDialogState extends State<UpdatePostDialog> {
 
               const SizedBox(height: 12),
 
-              /// ---------------------------
-              /// Icon chọn ảnh (same UI)
-              /// ---------------------------
               Align(
                 alignment: Alignment.centerLeft,
                 child: InkWell(
@@ -292,13 +283,9 @@ class _UpdatePostDialogState extends State<UpdatePostDialog> {
 
               const SizedBox(height: 12),
 
-              /// ---------------------------
-              /// Danh sách ảnh cũ + mới
-              /// ---------------------------
               Expanded(
                 child: ListView(
                   children: [
-                    /// Ảnh cũ
                     ..._existingImages.asMap().entries.map((entry) {
                       final idx = entry.key;
                       final url = entry.value;
@@ -332,7 +319,6 @@ class _UpdatePostDialogState extends State<UpdatePostDialog> {
                       );
                     }),
 
-                    /// Ảnh mới
                     ..._newImages.asMap().entries.map((entry) {
                       final idx = entry.key;
                       final img = entry.value;

@@ -24,7 +24,11 @@ class Wallet extends StatefulWidget {
 class _WalletState extends State<Wallet> {
   bool _balanceHidden = true;
   double _balance = 0;
+  double _totalSpent= 0;
+  double _totalEarned= 0;
+  double _totalWithdrawn= 0;
   double _pendingBalance = 0;
+  double _totalDeposited =0;
   List<WalletTransaction> _transactions = [];
   bool _loading = true;
   bool _loadingTransactions = true;
@@ -58,8 +62,8 @@ class _WalletState extends State<Wallet> {
     });
 
     try {
-      await _loadBalance(); // load balance trước
-      await _loadTransactions(); // load transactions sau
+      await _loadBalance();
+      await _loadTransactions();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -86,6 +90,10 @@ class _WalletState extends State<Wallet> {
       _balance = wallet!.balance;
       _pendingBalance = wallet.pendingBalance;
       _walletAccounts = wallet.accounts;
+      _totalDeposited = wallet.totalDeposited;
+      _totalSpent = wallet.totalSpent;
+      _totalEarned = wallet.totalEarned;
+      _totalWithdrawn = wallet.totalWithdrawn;
     });
   }
 
@@ -149,6 +157,10 @@ class _WalletState extends State<Wallet> {
       pendingBalance: _pendingBalance,
       balanceHidden: _balanceHidden,
       accounts: _walletAccounts,
+      totalDeposited: _totalDeposited,
+      totalSpent:_totalSpent,
+      totalEarned: _totalEarned,
+      totalWithdrawn: _totalWithdrawn,
       toggleBalance: () => setState(() => _balanceHidden = !_balanceHidden),
       onDeposit: () {
         showDialog(context: context, builder: (_) => DepositDialog(onDepositSuccess: _loadData));

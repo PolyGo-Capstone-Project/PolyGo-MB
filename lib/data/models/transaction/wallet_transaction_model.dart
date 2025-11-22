@@ -3,6 +3,7 @@ class WalletTransaction {
   final double amount;
   final double remainingBalance;
   final String description;
+  final String bankName;
   final List<WalletNote> userNotes;
 
   bool isInquiry;
@@ -24,6 +25,7 @@ class WalletTransaction {
     required this.transactionType,
     required this.transactionMethod,
     required this.transactionStatus,
+    required this.bankName,
     required this.bankNumber,
     required this.accountName,
     required this.createdAt,
@@ -33,6 +35,7 @@ class WalletTransaction {
   factory WalletTransaction.fromJson(Map<String, dynamic> json) {
     return WalletTransaction(
       id: json['id'] ?? '',
+      bankName: json['bankName'] ?? '',
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
       remainingBalance: (json['remainingBalance'] as num?)?.toDouble() ?? 0,
       description: json['description'] ?? '',
