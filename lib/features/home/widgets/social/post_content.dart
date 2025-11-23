@@ -12,7 +12,6 @@ import '../../../../data/services/apis/auth_service.dart';
 import '../../../../data/services/apis/post_service.dart';
 import '../../../shared/app_error_state.dart';
 import 'create_post_dialog.dart';
-import 'post_card_old.dart';
 
 class PostContent extends StatefulWidget {
   final String searchQuery;
@@ -23,6 +22,7 @@ class PostContent extends StatefulWidget {
 }
 
 class _PostContentState extends State<PostContent> {
+  bool _showScrollButton = false;
   String? selectedImage;
   String? _userAvatar;
   bool _loading = true;
@@ -50,7 +50,12 @@ class _PostContentState extends State<PostContent> {
           _hasNextPage) {
         _loadMorePosts();
       }
+
+      setState(() {
+        _showScrollButton = _scrollController.offset > 300;
+      });
     });
+
   }
 
   @override
@@ -205,41 +210,60 @@ class _PostContentState extends State<PostContent> {
       );
     }
 
-    final postsToShow = _displayedPosts;
 
-    return RefreshIndicator(
-      onRefresh: () => _loadPosts(reset: true),
-      child: ListView(
-        controller: _scrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
-        children: [
-          _buildCreatePostBox(context),
-          const SizedBox(height: 16),
-          Divider(
-            color: Colors.grey.withOpacity(0.3),
-            thickness: 1,
-          ),
-          const SizedBox(height: 16),
-          ..._displayedPosts.map((post) => PostCard(
-            post: post,
-            avatarUrl: post.creator.avatarUrl,
-            userName: post.creator.name,
-            timeAgo: "${DateTime.now().difference(post.createdAt).inHours} giờ trước",
-            contentText: post.content,
-            contentImage: post.imageUrls.isNotEmpty ? post.imageUrls.first : null,
-            reactCount: post.reactionsCount,
-            commentCount: post.commentsCount,
-            onPostDeleted: (postId) async => await _loadPosts(),
-            onPostUpdated: (updatedPost) async => await _loadPosts(),
-          )),
-          if (_isLoadingMore)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      body: RefreshIndicator(
+        onRefresh: () => _loadPosts(reset: true),
+        child: ListView(
+          controller: _scrollController,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+          children: [
+            _buildCreatePostBox(context),
+            const SizedBox(height: 16),
+            Divider(
+              color: Colors.grey.withOpacity(0.3),
+              thickness: 1,
             ),
-        ],
+            const SizedBox(height: 16),
+            ..._displayedPosts.map((post) => PostCard(
+              post: post,
+              avatarUrl: post.creator.avatarUrl,
+              userName: post.creator.name,
+              timeAgo: "${DateTime.now().difference(post.createdAt).inHours} giờ trước",
+              contentText: post.content,
+              contentImage: post.imageUrls.isNotEmpty ? post.imageUrls.first : null,
+              reactCount: post.reactionsCount,
+              commentCount: post.commentsCount,
+              onPostDeleted: (postId) async => await _loadPosts(),
+              onPostUpdated: (updatedPost) async => await _loadPosts(),
+            )),
+            if (_isLoadingMore)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+          ],
+        ),
       ),
+      floatingActionButton: _showScrollButton
+          ? FloatingActionButton.small(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        onPressed: () {
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+          );
+        },
+        child: Icon(
+          Icons.arrow_upward,
+          color: Colors.white
+        ),
+      )
+          : null,
+
     );
+
   }
 
   Widget _buildCreatePostBox(BuildContext context) {

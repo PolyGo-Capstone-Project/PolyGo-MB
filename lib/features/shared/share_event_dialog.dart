@@ -127,7 +127,7 @@ class _ShareEventDialogState extends State<ShareEventDialog> {
               child: AppButton(
                 text: "Chia sẻ",
                 onPressed: _loading ? null : _shareEvent,
-                size: ButtonSize.lg,
+                size: ButtonSize.sm,
                 variant: ButtonVariant.primary,
               ),
             ),

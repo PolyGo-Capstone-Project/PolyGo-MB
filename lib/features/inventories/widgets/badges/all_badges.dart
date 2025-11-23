@@ -80,6 +80,9 @@ class _AllBadgesState extends State<AllBadges> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          elevation: 1,
           title: Text(loc.translate("my_badges")),
           centerTitle: true,
         ),

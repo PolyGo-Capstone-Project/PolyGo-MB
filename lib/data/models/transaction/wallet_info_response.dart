@@ -3,6 +3,7 @@ class WalletInfoResponse {
   final double balance;
   final double pendingBalance;
   final double totalSpent;
+  final double totalDeposited;
   final double totalEarned;
   final double totalWithdrawn;
   final List<WalletAccount> accounts;
@@ -11,6 +12,7 @@ class WalletInfoResponse {
   WalletInfoResponse({
     required this.id,
     required this.balance,
+    required this.totalDeposited,
     required this.pendingBalance,
     required this.totalSpent,
     required this.totalEarned,
@@ -26,6 +28,7 @@ class WalletInfoResponse {
       balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
       pendingBalance: (json['pendingBalance'] as num?)?.toDouble() ?? 0.0,
       totalSpent: (json['totalSpent'] as num?)?.toDouble() ?? 0.0,
+      totalDeposited: (json['totalDeposited'] as num?)?.toDouble() ?? 0.0,
       totalEarned: (json['totalEarned'] as num?)?.toDouble() ?? 0.0,
       totalWithdrawn: (json['totalWithdrawn'] as num?)?.toDouble() ?? 0.0,
       accounts: accountsJson.map((e) {

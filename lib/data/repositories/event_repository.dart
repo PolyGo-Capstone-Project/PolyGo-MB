@@ -17,6 +17,7 @@ import '../models/events/event_register_request.dart';
 import '../models/events/event_update_rating_request.dart';
 import '../models/events/hosted_event_model.dart';
 import '../models/events/joined_event_model.dart';
+import '../models/events/payout_response.dart';
 import '../models/events/update_event_status_request.dart';
 import '../models/events/update_event_status_response.dart';
 import '../services/apis/event_service.dart';
@@ -131,6 +132,14 @@ class EventRepository {
   }) async {
     final request = EventRegisterRequest(eventId: eventId, password: password);
     final res = await _service.registerEvent(token: token, request: request);
+    return res.data;
+  }
+
+  Future<HostPayoutResponse?> claimHostPayout({
+    required String token,
+    required String eventId,
+  }) async {
+    final res = await _service.claimHostPayout(token: token, eventId: eventId);
     return res.data;
   }
 

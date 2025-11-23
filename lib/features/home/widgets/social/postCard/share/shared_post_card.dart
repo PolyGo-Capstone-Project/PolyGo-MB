@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:polygo_mobile/features/home/widgets/social/postCard/post/post_card_id.dart';
 import 'package:polygo_mobile/features/home/widgets/social/postCard/post/post_images.dart';
 import 'package:polygo_mobile/features/home/widgets/social/postCard/share/shared_container.dart';
@@ -91,7 +93,10 @@ class SharedPostCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             if (post.content.isNotEmpty)
-              RenderUtils.selectableMarkdownText(context, post.content),
+              LimitedMarkdown(
+                data: post.content,
+                maxLines: 10,
+              ),
             if (post.imageUrls.isNotEmpty) ...[
               const SizedBox(height: 8),
               PostImages(
@@ -105,6 +110,82 @@ class SharedPostCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class LimitedMarkdown extends StatefulWidget {
+  final String data;
+  final int maxLines;
+
+  const LimitedMarkdown({super.key, required this.data, this.maxLines = 10});
+
+  @override
+  State<LimitedMarkdown> createState() => _LimitedMarkdownState();
+}
+
+class _LimitedMarkdownState extends State<LimitedMarkdown> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final decoded = RenderUtils.decodeHtml(widget.data);
+    final style = DefaultTextStyle.of(context).style;
+
+    final textColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white60
+        : Colors.black87;
+
+    final markdownStyle = MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+      p: TextStyle(color: textColor),
+      strong: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+      a: const TextStyle(color: Colors.blue),
+    );
+
+    if (_expanded) {
+      return MarkdownBody(
+        data: decoded,
+        selectable: true,
+        styleSheet: markdownStyle,
+      );
+    }
+
+    final tp = TextPainter(
+      text: TextSpan(text: decoded, style: style.copyWith(color: textColor)),
+      maxLines: widget.maxLines,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: MediaQuery.of(context).size.width - 32);
+
+    if (!tp.didExceedMaxLines) {
+      return MarkdownBody(
+        data: decoded,
+        selectable: true,
+        styleSheet: markdownStyle,
+      );
+    }
+
+    final endIndex = tp.getPositionForOffset(Offset(tp.width, tp.height)).offset;
+    final visibleText = decoded.substring(0, endIndex).trim();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        MarkdownBody(
+          data: visibleText + "...",
+          selectable: true,
+          styleSheet: markdownStyle,
+        ),
+        GestureDetector(
+          onTap: () => setState(() => _expanded = true),
+          child: const Text(
+            "xem thêm",
+            style: TextStyle(
+              color: Color(0xFF2563EB),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

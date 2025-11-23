@@ -4,37 +4,39 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:polygo_mobile/core/utils/string_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/api/api_client.dart';
-import '../../../core/localization/app_localizations.dart';
-import '../../../data/models/events/hosted_event_model.dart';
-import '../../../data/repositories/event_repository.dart';
-import '../../../data/services/apis/event_service.dart';
-import '../../shared/app_error_state.dart';
-import 'hosted_event_details.dart';
-import 'hosted_filter.dart';
+import '../../../../core/api/api_client.dart';
+import '../../../../core/localization/app_localizations.dart';
+import '../../../../data/models/events/joined_event_model.dart';
+import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/repositories/event_repository.dart';
+import '../../../../data/services/apis/auth_service.dart';
+import '../../../../data/services/apis/event_service.dart';
+import '../../../shared/app_error_state.dart';
+import '../hosted/hosted_filter.dart';
+import 'joined_event_details.dart';
 
-enum EventStatus { upcoming, live, canceled, pending, completed }
+enum EventStatus { upcoming, live, past, canceled }
 
-class MyEvents extends StatefulWidget {
-  const MyEvents({super.key});
+class JoinedEvents extends StatefulWidget {
+  const JoinedEvents({super.key});
 
   @override
-  State<MyEvents> createState() => _MyEventsState();
+  State<JoinedEvents> createState() => _JoinedEventsState();
 }
 
-class _MyEventsState extends State<MyEvents> {
-  String _token = '';
+class _JoinedEventsState extends State<JoinedEvents> {
   late final EventRepository _repository;
+  String? _id;
   bool _loading = true;
   bool _hasError = false;
-  List<HostedEventModel> _hostedEvents = [];
+  List<JoinedEventModel> _joinedEvents = [];
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = '';
   bool _isSearching = false;
 
-  EventStatus? _selectedStatus = EventStatus.upcoming;
   Locale? _currentLocale;
+  EventStatus? _selectedStatus = EventStatus.upcoming;
 
   List<Map<String, String>> _filterLanguages = [];
   List<Map<String, String>> _filterInterests = [];
@@ -47,7 +49,7 @@ class _MyEventsState extends State<MyEvents> {
   void initState() {
     super.initState();
     _repository = EventRepository(EventService(ApiClient()));
-    _loadHostedEvents();
+    _initializeData();
 
     _searchFocusNode.addListener(() {
       setState(() {
@@ -57,7 +59,6 @@ class _MyEventsState extends State<MyEvents> {
 
     _scrollController.addListener(() {
       final offset = _scrollController.offset;
-
       if (offset > _lastOffset && _showSearchAndFilter && !_isSearching) {
         setState(() {
           _showSearchAndFilter = false;
@@ -67,9 +68,15 @@ class _MyEventsState extends State<MyEvents> {
           _showSearchAndFilter = true;
         });
       }
-
       _lastOffset = offset;
     });
+  }
+
+  Future<void> _initializeData() async {
+    await _loadUser();
+    if (_id != null) {
+      await _loadJoinedEvents();
+    }
   }
 
   @override
@@ -84,13 +91,27 @@ class _MyEventsState extends State<MyEvents> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final locale = Localizations.localeOf(context);
-    if (_currentLocale == null || _currentLocale!.languageCode != locale.languageCode) {
+    if ((_currentLocale == null || _currentLocale!.languageCode != locale.languageCode) && _id != null) {
       _currentLocale = locale;
-      _loadHostedEvents(lang: locale.languageCode);
+      _loadJoinedEvents(lang: locale.languageCode);
     }
   }
 
-  Future<void> _loadHostedEvents({String? lang}) async {
+  Future<void> _loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token == null) return;
+
+    try {
+      final user = await AuthRepository(AuthService(ApiClient())).me(token);
+      if (!mounted) return;
+      setState(() {
+        _id = user.id;
+      });
+    } catch (e) {}
+  }
+
+  Future<void> _loadJoinedEvents({String? lang}) async {
     setState(() {
       _loading = true;
       _hasError = false;
@@ -101,7 +122,7 @@ class _MyEventsState extends State<MyEvents> {
       final token = prefs.getString('token') ?? '';
       if (token.isEmpty) throw Exception("Missing token");
 
-      final events = await _repository.getHostedEvents(
+      final events = await _repository.getJoinedEvents(
         lang: lang ?? 'vi',
         pageNumber: 1,
         pageSize: 50,
@@ -110,9 +131,11 @@ class _MyEventsState extends State<MyEvents> {
         token: token,
       );
 
+      final filteredEvents = events.where((e) => e.host.id != _id).toList();
+
       if (!mounted) return;
       setState(() {
-        _hostedEvents = events;
+        _joinedEvents = filteredEvents;
         _loading = false;
         _hasError = false;
       });
@@ -125,29 +148,28 @@ class _MyEventsState extends State<MyEvents> {
     }
   }
 
-  List<HostedEventModel> get _filteredEvents {
+  List<JoinedEventModel> get _filteredEvents {
     final query = _searchQuery.trim().toLowerCase();
+    final filteredByUserStatus = _joinedEvents.where((e) => e.userEvent.status != 2).toList();
+
     final source = (_selectedStatus == null)
-        ? _hostedEvents
-        : _hostedEvents.where((e) {
+        ? filteredByUserStatus
+        : filteredByUserStatus.where((e) {
       switch (_selectedStatus) {
         case EventStatus.upcoming:
           return e.status == "Approved";
         case EventStatus.live:
           return e.status == "Live";
-        case EventStatus.canceled:
-          return e.status == "Cancelled" || e.status == "Rejected";
-        case EventStatus.pending:
-          return e.status == "Pending";
-        case EventStatus.completed:
+        case EventStatus.past:
           return e.status == "Completed";
+        case EventStatus.canceled:
+          return e.status == "Cancelled";
         default:
           return false;
       }
     }).toList();
 
     if (query.isEmpty) return source;
-
     return source.where((e) => e.title.fuzzyContains(query)).toList();
   }
 
@@ -164,11 +186,12 @@ class _MyEventsState extends State<MyEvents> {
     final loc = AppLocalizations.of(context);
 
     if (_loading) return const Center(child: CircularProgressIndicator());
+
     if (_hasError) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 32.0),
         child: AppErrorState(
-          onRetry: () => _loadHostedEvents(lang: _currentLocale?.languageCode),
+          onRetry: () => _loadJoinedEvents(lang: _currentLocale?.languageCode),
         ),
       );
     }
@@ -180,7 +203,7 @@ class _MyEventsState extends State<MyEvents> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status buttons luôn hiển thị
+          // Status buttons
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -189,34 +212,32 @@ class _MyEventsState extends State<MyEvents> {
                 const SizedBox(width: 8),
                 _buildStatusButton(EventStatus.live, loc.translate("now_live")),
                 const SizedBox(width: 8),
-                _buildStatusButton(EventStatus.pending, loc.translate("pending")),
-                const SizedBox(width: 8),
                 _buildStatusButton(EventStatus.canceled, loc.translate("cancelled")),
                 const SizedBox(width: 8),
-                _buildStatusButton(EventStatus.completed, loc.translate("ended")),
+                _buildStatusButton(EventStatus.past, loc.translate("ended")),
               ],
             ),
           ),
           const SizedBox(height: 12),
 
-          // Animated search + filter
+          // Search + Filter with animation
           AnimatedSize(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               transitionBuilder: (child, animation) =>
-                  SlideTransition(position: Tween<Offset>(begin: const Offset(0, -0.2), end: Offset.zero).animate(animation), child: FadeTransition(opacity: animation, child: child)),
+                  SlideTransition(
+                    position: Tween<Offset>(begin: const Offset(0, -0.2), end: Offset.zero).animate(animation),
+                    child: FadeTransition(opacity: animation, child: child),
+                  ),
               child: _showSearchAndFilter
                   ? Column(
                 key: const ValueKey('search-filter'),
                 children: [
-                  // Search
                   _buildSearchBar(theme, loc),
                   const SizedBox(height: 12),
-
-                  // Filter
-                  if (_selectedStatus != EventStatus.canceled) _buildFilterRow(theme, loc),
+                  _buildFilterRow(theme, loc),
                   const SizedBox(height: 16),
                 ],
               )
@@ -227,7 +248,7 @@ class _MyEventsState extends State<MyEvents> {
           // List events
           Expanded(
             child: eventsToShow.isEmpty
-                ? Center(child: Text("Không có event nào phù hợp với filter hiện tại"))
+                ? Center(child: Text(loc.translate("no_events_found")))
                 : MasonryGridView.count(
               controller: _scrollController,
               crossAxisCount: crossAxisCount,
@@ -235,7 +256,7 @@ class _MyEventsState extends State<MyEvents> {
               crossAxisSpacing: 12,
               padding: const EdgeInsets.only(bottom: 16),
               itemCount: eventsToShow.length,
-              itemBuilder: (context, index) => _buildEventCard(context, eventsToShow[index]),
+              itemBuilder: (context, index) => _buildEventCard(eventsToShow[index]),
             ),
           ),
         ],
@@ -311,7 +332,7 @@ class _MyEventsState extends State<MyEvents> {
                 _filterLanguages = List<Map<String, String>>.from(result['languages'] ?? []);
                 _filterInterests = List<Map<String, String>>.from(result['interests'] ?? []);
               });
-              _loadHostedEvents(lang: _currentLocale?.languageCode);
+              _loadJoinedEvents(lang: _currentLocale?.languageCode);
             }
           },
           icon: const Icon(Icons.filter_alt_outlined),
@@ -352,7 +373,7 @@ class _MyEventsState extends State<MyEvents> {
                             _filterLanguages.removeWhere((f) => f['name'] == tag);
                             _filterInterests.removeWhere((f) => f['name'] == tag);
                           });
-                          _loadHostedEvents(lang: _currentLocale?.languageCode);
+                          _loadJoinedEvents(lang: _currentLocale?.languageCode);
                         },
                         child: const Icon(Icons.close_rounded, size: 16, color: Colors.grey),
                       ),
@@ -367,7 +388,6 @@ class _MyEventsState extends State<MyEvents> {
     );
   }
 
-  // Khi chuyển tab status → reset search/filter hiển thị
   Widget _buildStatusButton(EventStatus status, String label) {
     final theme = Theme.of(context);
     final isSelected = _selectedStatus == status;
@@ -376,8 +396,7 @@ class _MyEventsState extends State<MyEvents> {
       onPressed: () {
         setState(() {
           _selectedStatus = isSelected ? null : status;
-          // Khi đổi tab → show search & filter
-          _showSearchAndFilter = true;
+          _showSearchAndFilter = true; // Khi đổi tab → show search & filter
         });
       },
       style: ElevatedButton.styleFrom(
@@ -391,8 +410,7 @@ class _MyEventsState extends State<MyEvents> {
     );
   }
 
-
-  Widget _buildEventCard(BuildContext context, HostedEventModel event) {
+  Widget _buildEventCard(JoinedEventModel event) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -419,13 +437,15 @@ class _MyEventsState extends State<MyEvents> {
 
         showDialog(
           context: context,
-          barrierDismissible: true,
-          builder: (_) => HostedEventDetails(
+          builder: (context) => JoinedEventDetails(
             event: event,
+            currentUserId: _id,
             eventRepository: _repository,
             token: token,
             parentContext: context,
-            onCancel: () => _loadHostedEvents(lang: _currentLocale?.languageCode),
+            onEventCanceled: () async {
+              await _loadJoinedEvents(lang: _currentLocale?.languageCode);
+            },
           ),
         );
       },
