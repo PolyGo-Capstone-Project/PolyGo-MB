@@ -49,7 +49,7 @@ class TransactionFilter extends StatelessWidget {
             Expanded(
               child: _buildDropdown(
                 context: context,
-                label: "Type",
+                label: loc.translate("type"),
                 value: selectedType,
                 items: _transactionTypes,
                 onChanged: (val) => onFilterChanged(
@@ -65,7 +65,7 @@ class TransactionFilter extends StatelessWidget {
             Expanded(
               child: _buildDropdown(
                 context: context,
-                label: "Method",
+                label: loc.translate("method"),
                 value: selectedMethod,
                 items: _transactionMethods,
                 onChanged: (val) => onFilterChanged(
@@ -85,7 +85,7 @@ class TransactionFilter extends StatelessWidget {
             Expanded(
               child: _buildDropdown(
                 context: context,
-                label: "Status",
+                label: loc.translate("status"),
                 value: selectedStatus,
                 items: _transactionStatuses,
                 onChanged: (val) => onFilterChanged(
@@ -101,7 +101,7 @@ class TransactionFilter extends StatelessWidget {
             Expanded(
               child: _buildDropdown(
                 context: context,
-                label: "Inquiry",
+                label: loc.translate("inquiry"),
                 value: selectedInquiry,
                 items: _inquiryOptions,
                 onChanged: (val) => onFilterChanged(
@@ -127,11 +127,11 @@ class TransactionFilter extends StatelessWidget {
     required Function(String?) onChanged,
     required String allLabel,
   }) {
+    final loc = AppLocalizations.of(context);
     final dropdownItems = [allLabel, ...items];
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
-    // Nền menu dropdown
     final dropdownBackground = isDark ? Colors.grey[800] : Colors.grey[300];
 
     return Column(
@@ -152,7 +152,10 @@ class TransactionFilter extends StatelessWidget {
           items: dropdownItems
               .map((item) => DropdownMenuItem<String>(
             value: item,
-            child: Text(item, overflow: TextOverflow.ellipsis),
+            child: Text(
+              item == allLabel ? item : loc.translate(item.toLowerCase()),
+              overflow: TextOverflow.ellipsis,
+            ),
           ))
               .toList(),
           onChanged: (val) {
@@ -171,8 +174,8 @@ class TransactionFilter extends StatelessWidget {
             maxHeight: 250,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color: dropdownBackground, // đổi màu menu
-              border: Border.all(color: Colors.white), // nếu muốn viền trắng
+              color: dropdownBackground,
+              border: Border.all(color: Colors.white),
             ),
             elevation: 0,
             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -181,5 +184,4 @@ class TransactionFilter extends StatelessWidget {
       ],
     );
   }
-
 }

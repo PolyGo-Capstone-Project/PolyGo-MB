@@ -263,10 +263,10 @@ class _UserInfoState extends State<UserInfo> {
   }
 
   Future<void> _updateAvatar() async {
+    final loc = AppLocalizations.of(context);
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     if (token == null) return;
-    final loc = AppLocalizations.of(context);
 
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -288,7 +288,7 @@ class _UserInfoState extends State<UserInfo> {
       final req = UpdateInfoRequest(
         name: _user?.name ?? '',
         introduction: _user?.introduction ?? '',
-        gender: _user?.gender ?? 'Female',
+        gender: loc.translate(_user?.gender.toLowerCase() ?? 'female'),
         avatarUrl: avatarUrl,
       );
 
@@ -580,6 +580,8 @@ extension MeResponseCopy on MeResponse {
     int? withdrawTimes,
     bool? isNew,
     String? planType,
+    int? numberOfUnreadNotifications,
+    int? numberOfUnreadMessages,
     double? balance,
     int? level,
     int? xpInCurrentLevel,
@@ -599,6 +601,8 @@ extension MeResponseCopy on MeResponse {
       role: role ?? this.role,
       autoRenewSubscription: autoRenewSubscription ?? this.autoRenewSubscription,
       streakDays: streakDays ?? this.streakDays,
+      numberOfUnreadNotifications: numberOfUnreadNotifications ?? this.numberOfUnreadNotifications,
+      numberOfUnreadMessages: numberOfUnreadMessages ?? this.numberOfUnreadMessages,
       longestStreakDays: longestStreakDays ?? this.longestStreakDays,
       withdrawTimes: withdrawTimes ?? this.withdrawTimes,
       isNew: isNew ?? this.isNew,

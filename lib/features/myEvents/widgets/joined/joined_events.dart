@@ -91,9 +91,11 @@ class _JoinedEventsState extends State<JoinedEvents> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final locale = Localizations.localeOf(context);
-    if ((_currentLocale == null || _currentLocale!.languageCode != locale.languageCode) && _id != null) {
+    if (_currentLocale == null || _currentLocale!.languageCode != locale.languageCode) {
       _currentLocale = locale;
-      _loadJoinedEvents(lang: locale.languageCode);
+      if (_id != null) {
+        _loadJoinedEvents(lang: locale.languageCode);
+      }
     }
   }
 
@@ -123,7 +125,7 @@ class _JoinedEventsState extends State<JoinedEvents> {
       if (token.isEmpty) throw Exception("Missing token");
 
       final events = await _repository.getJoinedEvents(
-        lang: lang ?? 'vi',
+        lang: _currentLocale?.languageCode ?? 'vi',
         pageNumber: 1,
         pageSize: 50,
         languageIds: _filterLanguages.map((e) => e['id']!).toList(),
@@ -287,7 +289,7 @@ class _JoinedEventsState extends State<JoinedEvents> {
               focusNode: _searchFocusNode,
               style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.white : Colors.black87),
               decoration: InputDecoration(
-                hintText: loc.translate("search_placeholder"),
+                hintText: loc.translate("search_event_placeholder"),
                 hintStyle: TextStyle(color: theme.brightness == Brightness.dark ? Colors.grey : Colors.grey[600]),
                 border: InputBorder.none,
                 isCollapsed: true,

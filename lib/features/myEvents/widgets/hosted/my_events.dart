@@ -102,7 +102,7 @@ class _MyEventsState extends State<MyEvents> {
       if (token.isEmpty) throw Exception("Missing token");
 
       final events = await _repository.getHostedEvents(
-        lang: lang ?? 'vi',
+        lang: _currentLocale?.languageCode ?? 'vi',
         pageNumber: 1,
         pageSize: 50,
         languageIds: _filterLanguages.map((e) => e['id']!).toList(),
@@ -228,7 +228,7 @@ class _MyEventsState extends State<MyEvents> {
           // List events
           Expanded(
             child: eventsToShow.isEmpty
-                ? Center(child: Text("Không có event nào phù hợp với filter hiện tại"))
+                ? Center(child: Text(loc.translate('no_events_fit_filter')))
                 : MasonryGridView.count(
               controller: _scrollController,
               crossAxisCount: crossAxisCount,
@@ -267,7 +267,7 @@ class _MyEventsState extends State<MyEvents> {
               focusNode: _searchFocusNode,
               style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.white : Colors.black87),
               decoration: InputDecoration(
-                hintText: loc.translate("search_placeholder"),
+                hintText: loc.translate("search_event_placeholder"),
                 hintStyle: TextStyle(color: theme.brightness == Brightness.dark ? Colors.grey : Colors.grey[600]),
                 border: InputBorder.none,
                 isCollapsed: true,

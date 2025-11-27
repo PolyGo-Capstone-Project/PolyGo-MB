@@ -37,6 +37,15 @@ class HostedEventDetails extends StatefulWidget {
 }
 
 class _HostedEventDetailsState extends State<HostedEventDetails> {
+
+  int currentParticipantCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    currentParticipantCount = widget.event.numberOfParticipants;
+  }
+
   @override
   Widget build(BuildContext context) {
     late List<ParticipantModel> participants;
@@ -207,7 +216,7 @@ class _HostedEventDetailsState extends State<HostedEventDetails> {
                             children: [
                               const Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 20),
                               const SizedBox(width: 8),
-                              Text('Cancel', style: const TextStyle(color: Colors.redAccent)),
+                              Text(loc.translate('cancel_event'), style: const TextStyle(color: Colors.redAccent)),
                             ],
                           ),
                         ),
@@ -282,7 +291,7 @@ class _HostedEventDetailsState extends State<HostedEventDetails> {
                 context,
                 Icons.people_alt_outlined,
                 loc.translate('participants'),
-                "${widget.event.numberOfParticipants}/${widget.event.capacity}",
+                "$currentParticipantCount/${widget.event.capacity}",
                 textColor,
                 secondaryText,
                 onTapValue: () async {
@@ -302,12 +311,18 @@ class _HostedEventDetailsState extends State<HostedEventDetails> {
                         hostId: widget.event.host.id,
                         token: widget.token,
                         eventId: widget.event.id,
+                        eventStatus: widget.event.status,
                         eventRepository: widget.eventRepository,
+                        onKick: (kickedUserId) {
+                          setState(() {
+                            currentParticipantCount--;
+                          });
+                        },
                       ),
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(loc.translate('error_occurred'))),
+                      SnackBar(content: Text('Error: $e')),
                     );
                   }
                 },
@@ -351,6 +366,7 @@ class _HostedEventDetailsState extends State<HostedEventDetails> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     // Share button
+                    if (widget.event.isPublic)
                     AppButton(
                       variant: ButtonVariant.outline,
                       size: ButtonSize.md,

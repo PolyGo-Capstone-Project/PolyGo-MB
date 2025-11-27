@@ -159,6 +159,9 @@ class _LoginFormState extends State<LoginForm> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: "user@example.com",
+                  hintStyle: TextStyle(
+                    color: Colors.grey[600],
+                  ),
                   errorText: _emailError,
                   prefixIcon: Icon(Icons.mail_outline, size: sw(context, 20)),
                   border: OutlineInputBorder(
@@ -182,6 +185,9 @@ class _LoginFormState extends State<LoginForm> {
                 obscureText: !_showPassword,
                 decoration: InputDecoration(
                   hintText: "••••••••",
+                  hintStyle: TextStyle(
+                    color: Colors.grey[600],
+                  ),
                   errorText: _passwordError,
                   prefixIcon: Icon(Icons.lock_outline, size: sw(context, 20)),
                   suffixIcon: IconButton(
@@ -198,24 +204,8 @@ class _LoginFormState extends State<LoginForm> {
               SizedBox(height: sh(context, 12)),
 
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Flexible(
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: _rememberMe,
-                          onChanged: (v) => setState(() => _rememberMe = v!),
-                        ),
-                        Flexible(
-                          child: Text(
-                            loc.translate("remember_me"),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   AppButton(
                     text: loc.translate("forgot_password"),
                     variant: ButtonVariant.link,
@@ -266,7 +256,7 @@ class _LoginFormState extends State<LoginForm> {
               SizedBox(height: sh(context, 24)),
               Text.rich(
                 TextSpan(
-                  text: loc.translate("no_account") + ' ',
+                  text: '${loc.translate("no_account")} ',
                   style: t.bodyMedium?.copyWith(
                       color: Colors.grey, fontSize: st(context, 14)),
                   children: [
