@@ -426,14 +426,17 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
                           onLeave: () => setState(() => showLeaveDialog = true),
                           onStartEvent: _handleStartEvent,
                           onEndEvent: () => setState(() => showEndDialog = true),
-                          onTranscribeToggle: () {
+                          onTranscribeToggle: () async {
                             if (_controller.isTranscriptionEnabled) {
-                              _controller.stopTranscription();
+                              // Tắt transcription
+                              await _controller.disableMobileTranscription(); // tắt server STT
                             } else {
-                              _controller.startTranscription();
+                              // Bật transcription
+                              await _controller.enableMobileTranscription(); // bật server STT
                             }
-                            setState(() {}); // Cập nhật UI nút
+                            setState(() {}); // cập nhật UI nút
                           },
+
                           onCaptionsToggle: () {
                             if (_controller.isCaptionsEnabled) {
                               _controller.disableCaptions();

@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:signalr_core/signalr_core.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 import 'dart:async';
 import '../../../core/config/api_constants.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+
 
 class Participant {
   final String id;
@@ -119,6 +120,16 @@ class WebRTCController extends ChangeNotifier {
 
   MeetingSummary? meetingSummary;
   bool isSummaryGenerating = false;
+
+  bool get isMicEnabled =>
+      localStream?.getAudioTracks().isNotEmpty == true &&
+          localStream!.getAudioTracks()[0].enabled;
+
+  final ValueNotifier<bool> isTranscriptionEnabledRef = ValueNotifier(false);
+
+  FlutterSoundRecorder? _recorder;
+  bool _isRecording = false;
+  StreamController<Uint8List>? _audioStreamController;
 
   WebRTCController({
     required this.eventId,
@@ -513,67 +524,95 @@ class WebRTCController extends ChangeNotifier {
     isConnected = true;
   }
 
-  final SpeechToText _speech = SpeechToText();
+  Future<void> enableMobileTranscription() async {
+    try {
+      // Bật transcription trên server
+      await _hub?.invoke("EnableMobileTranscription", args: [eventId, "en-US"]);
 
-  Future<void> startTranscription() async {
-    print("🟢 Starting transcription...");
-    bool available = await _speech.initialize();
-    print("🟢 SpeechToText initialized: $available");
+      // Cập nhật trạng thái local
+      isTranscriptionEnabled = true;
+      isTranscriptionEnabledRef.value = true;
+      notifyListeners();
 
-    if (!available) {
-      print("❌ Microphone not available or permission denied");
-      return;
+      // Bắt đầu gửi audio
+      await startSendingAudio();
+    } catch (e) {
+      print("Failed to enable mobile transcription: $e");
     }
-
-    isTranscriptionEnabled = true;
-    notifyListeners();
-
-    _speech.listen(
-      localeId: "en_US",
-      onResult: (result) async {
-        print("🎤 Speech result received: ${result.recognizedWords} (final=${result.finalResult})");
-
-        if (result.finalResult) {
-          String transcript = result.recognizedWords;
-          print("🟢 Final transcript: $transcript");
-
-          if (_hub == null || !_hub!.state.toString().contains("Connected")) {
-            print("❌ Hub not connected, cannot broadcast transcription");
-            return;
-          }
-
-          try {
-            await _hub?.invoke(
-              "BroadcastTranscription",
-              args: [
-                eventId,
-                myConnectionId,
-                transcript,
-                "en",
-              ],
-            );
-            print("🟢 Broadcasted transcription to hub successfully");
-          } catch (e) {
-            print("❌ Failed to broadcast transcription: $e");
-          }
-        }
-      },
-      onSoundLevelChange: (level) {
-        print("🎚 Sound level: $level");
-      },
-      listenMode: ListenMode.dictation,
-      cancelOnError: true,
-    );
-
-    print("🟢 Listening started...");
   }
 
-  void stopTranscription() {
-    print("🔴 Stopping transcription...");
-    _speech.stop();
-    isTranscriptionEnabled = false;
-    notifyListeners();
-    print("🔴 Transcription stopped");
+  Future<void> disableMobileTranscription() async {
+    try {
+      // Dừng gửi audio trước
+      await stopSendingAudio();
+
+      // Tắt transcription trên server
+      await _hub?.invoke("DisableMobileTranscription", args: []);
+
+      // Cập nhật trạng thái local
+      isTranscriptionEnabled = false;
+      isTranscriptionEnabledRef.value = false;
+      notifyListeners();
+    } catch (e) {
+      print("Failed to disable mobile transcription: $e");
+    }
+  }
+
+  Future<void> startSendingAudio() async {
+    print("🎙️ startSendingAudio called");
+
+    if (_recorder == null) {
+      print("🎙️ Initializing recorder...");
+      _recorder = FlutterSoundRecorder();
+      await _recorder!.openRecorder();
+      print("🎙️ Recorder opened");
+    }
+
+    _audioStreamController = StreamController<Uint8List>();
+
+    // Listen dữ liệu và gửi lên hub
+    _audioStreamController!.stream.listen(
+          (chunk) async {
+        print("🎧 Audio chunk received: ${chunk.lengthInBytes} bytes");
+        await sendAudioChunk(chunk);
+      },
+      onDone: () => print("🎧 Audio stream closed"),
+      onError: (e) => print("❌ Audio stream error: $e"),
+    );
+
+    // Bắt đầu ghi âm PCM 16-bit, dùng StreamSink
+    print("🎙️ Starting recorder...");
+    await _recorder!.startRecorder(
+      toStream: _audioStreamController!.sink,
+      codec: Codec.pcm16,
+      numChannels: 1,
+      sampleRate: 16000,
+    );
+
+    _isRecording = true;
+    print("🎙️ Recorder started");
+  }
+
+  Future<void> stopSendingAudio() async {
+    if (!_isRecording) return;
+
+    print("🎙️ Stopping recorder...");
+    await _recorder?.stopRecorder();
+    await _audioStreamController?.close();
+    _isRecording = false;
+    print("🎙️ Recorder stopped and stream closed");
+  }
+
+  Future<void> sendAudioChunk(Uint8List chunk) async {
+    if (_hub == null) return;
+
+    print("📤 Sending audio chunk: ${chunk.lengthInBytes} bytes");
+    try {
+      await _hub!.invoke("SendAudioChunk", args: [chunk.toList()]);
+      print("✅ Audio chunk sent successfully");
+    } catch (e) {
+      print("❌ Error sending audio chunk: $e");
+    }
   }
 
   void enableCaptions() {
