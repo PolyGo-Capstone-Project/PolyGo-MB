@@ -1,14 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signalr_core/signalr_core.dart';
 import 'dart:async';
-
-import '../../../core/api/api_client.dart';
 import '../../../core/config/api_constants.dart';
-import '../../repositories/auth_repository.dart';
-import '../apis/auth_service.dart';
 
 class Participant {
   final String id;
