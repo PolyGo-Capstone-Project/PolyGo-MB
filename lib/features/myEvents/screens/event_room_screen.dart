@@ -23,6 +23,7 @@ class MeetingRoomScreen extends StatefulWidget {
   final bool initialMicOn;
   final bool initialCameraOn;
   final String hostId;
+  final String sourceLanguage;
 
   const MeetingRoomScreen({
     super.key,
@@ -33,6 +34,7 @@ class MeetingRoomScreen extends StatefulWidget {
     this.initialMicOn = true,
     this.initialCameraOn = true,
     required this.hostId,
+    required this.sourceLanguage,
   });
 
   @override
@@ -58,12 +60,16 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
   bool _chatListenerAdded = false;
   bool isHandRaised = false;
   bool showControls = true;
+
   @override
   void initState() {
     super.initState();
 
     isCameraOn = widget.initialCameraOn;
     isMicOn = widget.initialMicOn;
+
+    final normalizedSourceLang =
+        languageCodeMap[widget.sourceLanguage] ?? widget.sourceLanguage;
 
     if (widget.isHost && widget.eventStatus.toLowerCase() == 'live') {
       hasStartedEvent = true;
@@ -74,6 +80,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
       isHost: widget.isHost,
       localAudioEnabled: widget.initialMicOn,
       localVideoEnabled: widget.initialCameraOn,
+      sourceLanguage: normalizedSourceLang,
       onRoomEnded: () {
         if (!widget.isHost && mounted) {
           final hostName = _controller.hostId != null
@@ -183,11 +190,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
 
       if (!_chatListenerAdded) {
         _controller.addChatListener((msg) {
-          if (mounted) {
-            setState(() {
-              // _chatMessages.add(msg);
-            });
-          }
+          if (mounted) setState(() {});
         });
         _chatListenerAdded = true;
       }
@@ -197,22 +200,25 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
       isCameraOn = _controller.localVideoEnabled;
       _localRenderer.srcObject = _controller.localStream;
 
+      // ---- CHỈ LẤY USER MỘT LẦN ----
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
+
+      String? userId;
       if (token != null && token.isNotEmpty) {
         try {
           final user = await AuthRepository(AuthService(ApiClient())).me(token);
           _controller.userName = user.name;
+          userId = user.id;
         } catch (e) {
           print("Failed to get user info: $e");
         }
       }
 
-      // Sử dụng widget.isHost để quyết định isHost khi joinRoom
-      final isUserHost = widget.isHost;
-
+      // ---- JOIN ROOM ----
       await _controller.joinRoom(
-        isHost: isUserHost,
+        isHost: widget.isHost,
+        userId: userId,
       );
 
       print("Controller hostId: ${_controller.hostId}");
@@ -220,24 +226,13 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
         print("Participant: id=${v.id}, name=${v.name}, role=${v.role}");
       });
 
-      final prefs2 = await SharedPreferences.getInstance();
-      final token2 = prefs2.getString('token');
-      String? userId;
-
-      if (token2 != null && token2.isNotEmpty) {
-        try {
-          final me = await AuthRepository(AuthService(ApiClient())).me(token2);
-          userId = me.id;
-        } catch (e) {
-          //
-        }
-      }
-
+      // ---- CONFIRM ----
       if (userId != null) {
-        final ok = await _controller.joinRoomConfirm(userId);
+        await _controller.joinRoomConfirm(userId);
       }
 
-      if (isUserHost) {
+      // ---- HOST START CALL ----
+      if (widget.isHost) {
         Future.delayed(const Duration(seconds: 1), () async {
           await _controller.startCall();
         });
@@ -248,7 +243,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
         if (mounted) setState(() {});
       });
     } catch (e) {
-      //
+      print("InitMeeting error: $e");
     }
   }
 
@@ -610,3 +605,22 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
     'th': "ไทย",
   };
 }
+
+const Map<String, String> languageCodeMap = {
+  "en": "en-US",
+  "vi": "vi-VN",
+  "ja": "ja-JP",
+  "ko": "ko-KR",
+  "zh": "zh-CN",
+  "fr": "fr-FR",
+  "de": "de-DE",
+  "es": "es-ES",
+  "it": "it-IT",
+  "pt": "pt-BR",
+  "ru": "ru-RU",
+  "th": "th-TH",
+  "id": "id-ID",
+  "ms": "ms-MY",
+  "ar": "ar-SA",
+  "hi": "hi-IN",
+};

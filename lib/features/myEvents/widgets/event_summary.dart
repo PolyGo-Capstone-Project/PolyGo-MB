@@ -254,7 +254,7 @@ class EventSummary extends StatelessWidget {
                                         ),
                                       ),
 
-                                      // Từ vựng + dấu :
+                                      // Từ vựng
                                       Text(
                                         vocab.word,
                                         style: TextStyle(
@@ -265,18 +265,18 @@ class EventSummary extends StatelessWidget {
                                       ),
 
                                       SizedBox(width: sw(context, 12)),
-
-                                      // Nghĩa — căn lề phải
-                                      Expanded(
-                                        child: Align(
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            vocab.meaning,
-                                            textAlign: TextAlign.right,
-                                            style: TextStyle(color: textColor),
-                                          ),
-                                        ),
-                                      ),
+                                      //
+                                      // // Nghĩa —
+                                      // Expanded(
+                                      //   child: Align(
+                                      //     alignment: Alignment.centerRight,
+                                      //     child: Text(
+                                      //       vocab.meaning,
+                                      //       textAlign: TextAlign.right,
+                                      //       style: TextStyle(color: textColor),
+                                      //     ),
+                                      //   ),
+                                      // ),
                                     ],
                                   ),
 

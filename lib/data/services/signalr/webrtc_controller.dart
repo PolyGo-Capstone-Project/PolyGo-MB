@@ -93,6 +93,7 @@ class WebRTCController extends ChangeNotifier {
   final String eventId;
   String userName;
   final bool isHost;
+  final String sourceLanguage;
 
   final VoidCallback? onRoomEnded;
   HubConnection? _hub;
@@ -114,7 +115,7 @@ class WebRTCController extends ChangeNotifier {
   List<TranscriptionMessage> transcriptions = [];
   bool isTranscriptionEnabled = false;
   bool isCaptionsEnabled = false;
-  bool _isTranscriptionToggling = false; // Prevent double toggle
+  bool _isTranscriptionToggling = false; 
 
   String targetLanguage = "en";
 
@@ -138,6 +139,7 @@ class WebRTCController extends ChangeNotifier {
     this.localAudioEnabled = true,
     this.localVideoEnabled = true,
     this.onRoomEnded,
+    required this.sourceLanguage,
   });
 
   Future<void> initLocalMedia() async {
@@ -578,7 +580,7 @@ class WebRTCController extends ChangeNotifier {
       );
 
       // Bật transcription trên server
-      await _hub?.invoke("EnableMobileTranscription", args: [eventId, "en-US"]);
+      await _hub?.invoke("EnableMobileTranscription", args: [eventId, sourceLanguage]);
       print("📞 [FLUTTER] EnableMobileTranscription invoke completed");
 
       // Cập nhật trạng thái local
@@ -754,12 +756,12 @@ class WebRTCController extends ChangeNotifier {
     }
   }
 
-  Future<void> joinRoom({required bool isHost}) async {
+  Future<void> joinRoom({required bool isHost, String? userId}) async {
     if (_hub == null || !isConnected) return;
 
     String actualName = userName;
 
-    await _hub!.invoke("JoinRoom", args: [eventId, actualName, isHost]);
+    await _hub!.invoke("JoinRoom", args: [eventId, actualName, isHost, userId]);
 
     if (localStream != null) {
       localAudioEnabled = localStream!.getAudioTracks().isNotEmpty
