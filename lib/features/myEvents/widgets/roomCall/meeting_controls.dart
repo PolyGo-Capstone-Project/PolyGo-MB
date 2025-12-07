@@ -196,7 +196,7 @@ class MeetingPanel extends StatefulWidget {
   final bool isParticipantsOpen;
 
   const MeetingPanel({
-    Key? key,
+    super.key,
     required this.isHost,
     required this.isCameraOn,
     required this.isMicOn,
@@ -218,7 +218,7 @@ class MeetingPanel extends StatefulWidget {
     this.onEndEvent,
     this.isChatOpen = false,
     this.isParticipantsOpen = false,
-  }) : super(key: key);
+  });
 
   @override
   State<MeetingPanel> createState() => _MeetingPanelState();
@@ -252,10 +252,12 @@ class _MeetingPanelState extends State<MeetingPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
-        height: 180,
+        height: 220,
         width: double.infinity,
         color: Colors.black.withOpacity(0.4),
         padding: const EdgeInsets.all(10),
@@ -349,7 +351,7 @@ class _MeetingPanelState extends State<MeetingPanel> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.black45,
+                    color: isDark ? Colors.grey[900] : Colors.black45,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: ScrollConfiguration(
@@ -363,7 +365,7 @@ class _MeetingPanelState extends State<MeetingPanel> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                             decoration: BoxDecoration(
-                              color: Colors.black54,
+                              color: isDark ? Colors.grey[800] : Colors.black54,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -393,6 +395,8 @@ class _MeetingPanelState extends State<MeetingPanel> {
     required VoidCallback onPressed,
     bool disabled = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Opacity(
       opacity: disabled ? 0.5 : 1.0,
       child: InkWell(
@@ -400,9 +404,9 @@ class _MeetingPanelState extends State<MeetingPanel> {
         borderRadius: BorderRadius.circular(50),
         child: Container(
           padding: const EdgeInsets.all(12),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.black54,
+            color: isDark ? Colors.grey[800] : Colors.black54,
           ),
           child: Icon(icon, color: color, size: 26),
         ),

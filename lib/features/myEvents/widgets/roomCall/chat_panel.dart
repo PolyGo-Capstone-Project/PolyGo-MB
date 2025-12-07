@@ -50,11 +50,11 @@ class _ChatPanelState extends State<ChatPanel> {
     final textColor = theme.textTheme.bodyMedium?.color ?? Colors.black87;
     final secondaryTextColor = theme.textTheme.bodySmall?.color ?? Colors.black45;
     final loc = AppLocalizations.of(context);
-
+    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
-      bottom: 0,
+      bottom: keyboardInset,
       left: 0,
       right: 0,
       height: height,
@@ -139,7 +139,9 @@ class _ChatPanelState extends State<ChatPanel> {
                           child: Text(
                             msg.message,
                             style: TextStyle(
-                              color: isMe ? Colors.white : Colors.black,
+                              color: isMe
+                                  ? Colors.white
+                                  : (isDark ? Colors.black87 : Colors.white70),
                             ),
                           ),
                         ),

@@ -143,7 +143,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
 
     _controller.onKicked = (message) {
       if (!mounted) return;
-
+      final loc = AppLocalizations.of(context);
       showDialog(
         context: context,
         barrierDismissible: true,  // user có thể bấm back
@@ -159,7 +159,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
             return false; // ngăn dialog tự đóng mặc định
           },
           child: AlertDialog(
-            title: const Text("Bạn đã bị mời ra khỏi sự kiện"),
+            title: Text(loc.translate('you_have_been_kicked_from_room')),
             content: Text(message),
             actions: [
               TextButton(
@@ -183,12 +183,12 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
 
   Future<void> _showSubtitleLanguageDialog() async {
     String currentLang = _controller.targetLanguage;
-
+    final loc = AppLocalizations.of(context);
     await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Cài đặt phụ đề"),
+          title: Text(loc.translate('setting_subtitle')),
           content: SizedBox(
             height: 250,
             width: double.maxFinite,
@@ -221,14 +221,14 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
   Future<void> _showTranscriptionDialog() async {
     bool transcriptionEnabled = _controller.isTranscriptionEnabled;
     String currentLang = _controller.sourceLanguage;
-
+    final loc = AppLocalizations.of(context);
     await showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: const Text("Cài đặt chuyển giọng nói"),
+              title: Text(loc.translate('setting_voice_to_text')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -236,7 +236,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Bật Transcription"),
+                      Text(loc.translate('toggle_transcript')),
                       Switch(
                         value: transcriptionEnabled,
                         onChanged: (value) {
@@ -509,6 +509,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
     final loc = AppLocalizations.of(context);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
