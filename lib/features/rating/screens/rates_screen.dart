@@ -6,10 +6,7 @@ import '../widgets/rating.dart';
 class RatesScreen extends StatefulWidget {
   final String eventId;
 
-  const RatesScreen({
-    super.key,
-    required this.eventId,
-  });
+  const RatesScreen({super.key, required this.eventId});
 
   @override
   State<RatesScreen> createState() => _RatesScreenState();
@@ -22,18 +19,15 @@ class _RatesScreenState extends State<RatesScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final loc = AppLocalizations.of(context);
 
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: isDark ? Colors.black : Colors.white,
-        appBar: AppBar(
-          scrolledUnderElevation: 0,
-          surfaceTintColor: Colors.transparent,
-          title: Text(loc.translate('rating_event')),
-          centerTitle: true,
-        ),
-        body: Rates(eventId: widget.eventId),
+    return Scaffold(
+      backgroundColor: isDark ? Colors.black : Colors.white,
+      appBar: AppBar(
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: Text(loc.translate('rating_event')),
+        centerTitle: true,
       ),
+      body: SafeArea(child: Rates(eventId: widget.eventId)),
     );
-
   }
 }

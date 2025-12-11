@@ -18,8 +18,7 @@ class _RatingScreenState extends State<RatingScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final loc = AppLocalizations.of(context);
 
-    return SafeArea(
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: isDark ? Colors.black : Colors.white,
         appBar: AppBar(
           scrolledUnderElevation: 0,
@@ -27,7 +26,8 @@ class _RatingScreenState extends State<RatingScreen> {
           title: Text(loc.translate('rating_event')),
           centerTitle: true,
         ),
-        body: RatingWidget(eventId: widget.eventId),
+        body: SafeArea(
+          child: RatingWidget(eventId: widget.eventId),
       ),
     );
   }

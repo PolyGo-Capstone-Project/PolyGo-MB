@@ -100,7 +100,7 @@ class _EventSummaryState extends State<EventSummary> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   /// ------- WORD -------
-                  Text(
+                  SelectableText(
                     vocab.word,
                     style: const TextStyle(
                       fontSize: 24,
@@ -117,7 +117,7 @@ class _EventSummaryState extends State<EventSummary> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
-                  Text(vocab.context, style: const TextStyle(fontSize: 16)),
+                  SelectableText(vocab.context, style: const TextStyle(fontSize: 16)),
 
                   const SizedBox(height: 20),
 
@@ -133,7 +133,7 @@ class _EventSummaryState extends State<EventSummary> {
                     children: vocab.examples.map((e) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
+                        child: SelectableText(
                           "• $e",
                           style: const TextStyle(fontSize: 16),
                         ),
@@ -248,7 +248,7 @@ class _EventSummaryState extends State<EventSummary> {
                   ],
                 ),
                 SizedBox(height: sh(context, 12)),
-                Text(summary.summary, style: t.bodyMedium),
+                SelectableText(summary.summary, style: t.bodyMedium),
               ],
             ),
           ),
@@ -286,8 +286,8 @@ class _EventSummaryState extends State<EventSummary> {
                 ),
                 SizedBox(height: sh(context, 12)),
                 Column(
-                  children: data!.keyPoints.map((point) {
-                    final index = data!.keyPoints.indexOf(point);
+                  children: summary.keyPoints.map((point) {
+                    final index = summary.keyPoints.indexOf(point);
                     return Padding(
                       padding: EdgeInsets.symmetric(vertical: sh(context, 4)),
                       child: Row(
@@ -299,7 +299,7 @@ class _EventSummaryState extends State<EventSummary> {
                           ),
                           SizedBox(width: sw(context, 8)),
                           Expanded(
-                            child: Text(
+                            child: SelectableText(
                               point,
                               style: t.bodyMedium?.copyWith(color: textColor),
                             ),
@@ -348,9 +348,9 @@ class _EventSummaryState extends State<EventSummary> {
                 SizedBox(
                   height: sh(context, 200),
                   child: ListView.builder(
-                    itemCount: data!.vocabulary.length,
+                    itemCount: summary.vocabulary.length,
                     itemBuilder: (context, index) {
-                      final vocab = data!.vocabulary[index];
+                      final vocab = summary.vocabulary[index];
                       final isDark =
                           Theme.of(context).brightness == Brightness.dark;
 
@@ -387,7 +387,7 @@ class _EventSummaryState extends State<EventSummary> {
                                   color: textColor.withOpacity(0.6),
                                 ),
                               ),
-                              Text(
+                              SelectableText(
                                 vocab.word,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -407,7 +407,7 @@ class _EventSummaryState extends State<EventSummary> {
           ),
 
           /// ---------- ACTION ITEMS ----------
-          if (data!.actionItems.isNotEmpty) ...[
+          if (summary.actionItems.isNotEmpty) ...[
             SizedBox(height: sh(context, 20)),
             Container(
               width: double.infinity,
@@ -439,8 +439,8 @@ class _EventSummaryState extends State<EventSummary> {
                   ),
                   SizedBox(height: sh(context, 12)),
                   Column(
-                    children: data!.actionItems.map((item) {
-                      final index = data!.actionItems.indexOf(item);
+                    children: summary.actionItems.map((item) {
+                      final index = summary.actionItems.indexOf(item);
                       return Padding(
                         padding: EdgeInsets.symmetric(vertical: sh(context, 4)),
                         child: Row(
@@ -458,7 +458,7 @@ class _EventSummaryState extends State<EventSummary> {
                             ),
                             SizedBox(width: sw(context, 8)),
                             Expanded(
-                              child: Text(
+                              child: SelectableText(
                                 item,
                                 style: t.bodyMedium?.copyWith(color: textColor),
                               ),
@@ -479,11 +479,11 @@ class _EventSummaryState extends State<EventSummary> {
           Center(
             child: Text(() {
               try {
-                final createdAtUtc = DateTime.parse(data!.createdAt);
+                final createdAtUtc = DateTime.parse(summary.createdAt);
                 final createdAtLocal = createdAtUtc.toLocal();
                 return DateFormat('dd MMM yyyy, HH:mm').format(createdAtLocal);
               } catch (_) {
-                return data!.createdAt;
+                return summary.createdAt;
               }
             }(), style: t.bodySmall?.copyWith(color: Colors.grey)),
           ),

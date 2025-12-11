@@ -27,8 +27,27 @@ class ActionButtons extends StatelessWidget {
     final eventStatus = event.status.toLowerCase();
     final isHost = currentUserId == event.host.id;
     final loc = AppLocalizations.of(context);
-
+    final userStatus = event.userEvent?.status;
     List<Widget> buttons = [];
+
+    if (userStatus == 2) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          AppButton(
+            variant: ButtonVariant.outline,
+            size: ButtonSize.sm,
+            icon: const Icon(Icons.share_outlined, size: 18),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => ShareEventDialog(targetId: event.id),
+              );
+            },
+          ),
+        ],
+      );
+    }
 
     /// ---------------- Share button ----------------
     final canShare = event.isPublic && eventStatus != 'cancelled';

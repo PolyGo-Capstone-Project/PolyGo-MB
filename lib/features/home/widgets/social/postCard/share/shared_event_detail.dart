@@ -66,7 +66,10 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
 
     try {
       final repo = EventRepository(EventService(ApiClient()));
-      final res = await repo.getEventDetail(token: token, eventId: widget.sharedEventId);
+      final res = await repo.getEventDetail(
+        token: token,
+        eventId: widget.sharedEventId,
+      );
       if (!mounted) return;
       setState(() {
         event = res;
@@ -100,15 +103,15 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
               decoration: BoxDecoration(
                 gradient: isDark
                     ? const LinearGradient(
-                  colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
+                        colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
                     : const LinearGradient(
-                  colors: [Colors.white, Colors.white],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                        colors: [Colors.white, Colors.white],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -191,7 +194,9 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
                           backgroundColor: const Color(0xFF2563EB),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -210,15 +215,18 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
     );
   }
 
-  Future<void> _registerEvent(String password, {bool closeTwoDialogs = false}) async {
+  Future<void> _registerEvent(
+    String password, {
+    bool closeTwoDialogs = false,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
     final loc = AppLocalizations.of(context);
 
     if (token.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.translate("missing_token"))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(loc.translate("missing_token"))));
       return;
     }
 
@@ -239,7 +247,8 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
         SnackBar(content: Text(loc.translate("event_register_success"))),
       );
 
-      if (closeTwoDialogs) Navigator.of(context, rootNavigator: true).pop(); // password dialog
+      if (closeTwoDialogs)
+        Navigator.of(context, rootNavigator: true).pop(); // password dialog
       Navigator.pop(context); // main dialog
     } on InvalidEventPasswordException {
       throw "wrong_password";
@@ -261,6 +270,13 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(loc.translate("insufficient_balance"))),
+      );
+      if (closeTwoDialogs) Navigator.of(context, rootNavigator: true).pop();
+      Navigator.pop(context);
+    } on EventNotOpenForRegistration {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(loc.translate("not_open_registration"))),
       );
       if (closeTwoDialogs) Navigator.of(context, rootNavigator: true).pop();
       Navigator.pop(context);
@@ -306,7 +322,9 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
       buttonText = loc.translate('joined');
     }
 
-    final dateFormatted = DateFormat('dd MMM yyyy, hh:mm a').format(event!.startAt);
+    final dateFormatted = DateFormat(
+      'dd MMM yyyy, hh:mm a',
+    ).format(event!.startAt);
     final durationFormatted =
         "${event!.expectedDurationInMinutes ~/ 60}h ${event!.expectedDurationInMinutes % 60}m";
 
@@ -326,32 +344,29 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
             children: [
               // --- Title + Close ---
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Row(
-                      children: [
-                        if (event!.planType == "Plus") ...[
-                          const SizedBox(width: 6),
-                          const Icon(Icons.star, size: 20, color: Colors.amber),
-                        ],
-                        Flexible(
-                          child: Text(
-                            event!.title,
-                            style: t.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: st(context, 18),
-                              color: textColor,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      event!.title,
+                      style: t.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: st(context, 18),
+                        color: textColor,
+                      ),
+                      maxLines: null,
                     ),
                   ),
+
+                  SizedBox(width: 12),
+
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.close, size: 24, color: secondaryText),
+                    child: Icon(
+                        Icons.close,
+                        size: 24,
+                        color: secondaryText
+                    ),
                   ),
                 ],
               ),
@@ -364,24 +379,30 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
                 aspectRatio: 16 / 9,
                 child: event!.bannerUrl.isNotEmpty
                     ? Image.network(
-                  event!.bannerUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: Icon(Icons.event_note_rounded,
-                          size: 64, color: Colors.white70),
-                    ),
-                  ),
-                )
+                        event!.bannerUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: Icon(
+                              Icons.event_note_rounded,
+                              size: 64,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ),
+                      )
                     : Container(
-                  color: Colors.grey[400],
-                  child: const Center(
-                    child: Icon(Icons.event_note_rounded,
-                        size: 64, color: Colors.white70),
-                  ),
-                ),
+                        color: Colors.grey[400],
+                        child: const Center(
+                          child: Icon(
+                            Icons.event_note_rounded,
+                            size: 64,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ),
               ),
               const SizedBox(height: 16),
 
@@ -392,35 +413,47 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
                   GestureDetector(
                     onTap: _userId != event!.host.id
                         ? () => Navigator.pushNamed(
-                      context,
-                      AppRoutes.userProfile,
-                      arguments: {'id': event!.host.id},
-                    )
+                            context,
+                            AppRoutes.userProfile,
+                            arguments: {'id': event!.host.id},
+                          )
                         : null,
                     child: Row(
                       children: [
                         CircleAvatar(
                           radius: sw(context, 28),
                           backgroundColor: Colors.grey[300],
-                          backgroundImage: (event!.host.avatarUrl ?? '').isNotEmpty
+                          backgroundImage:
+                              (event!.host.avatarUrl ?? '').isNotEmpty
                               ? NetworkImage(event!.host.avatarUrl!)
                               : null,
                           child: (event!.host.avatarUrl ?? '').isEmpty
-                              ? const Icon(Icons.person, size: 36, color: Colors.white70)
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 36,
+                                  color: Colors.white70,
+                                )
                               : null,
                         ),
                         SizedBox(width: sw(context, 12)),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(event!.host.name,
-                                style: t.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: st(context, 15),
-                                    color: textColor)),
-                            Text(loc.translate('host'),
-                                style: t.bodySmall?.copyWith(
-                                    fontSize: st(context, 13), color: secondaryText)),
+                            Text(
+                              event!.host.name,
+                              style: t.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: st(context, 15),
+                                color: textColor,
+                              ),
+                            ),
+                            Text(
+                              loc.translate('host'),
+                              style: t.bodySmall?.copyWith(
+                                fontSize: st(context, 13),
+                                color: secondaryText,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -435,7 +468,11 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
                           onSubmit: () => Navigator.pop(context),
                         ),
                       ),
-                      child: Icon(Icons.flag_outlined, size: 20, color: Colors.grey),
+                      child: Icon(
+                        Icons.flag_outlined,
+                        size: 20,
+                        color: Colors.grey,
+                      ),
                     ),
                 ],
               ),
@@ -448,27 +485,66 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
                 event!.description.isNotEmpty
                     ? event!.description
                     : loc.translate('no_description'),
-                style: TextStyle(fontSize: st(context, 14), height: 1.4, color: textColor),
+                style: TextStyle(
+                  fontSize: st(context, 14),
+                  height: 1.4,
+                  color: textColor,
+                ),
               ),
 
               const SizedBox(height: 16),
 
               // --- Info Rows ---
-              _buildInfoRow(context, Icons.language, loc.translate('language'),
-                  event!.language.name, textColor, secondaryText),
-              _buildInfoRow(context, Icons.category_outlined, loc.translate('categories'),
-                  event!.categories.isNotEmpty
-                      ? event!.categories.map((e) => e.name).join(', ')
-                      : loc.translate('none'),
-                  textColor, secondaryText),
-              _buildInfoRow(context, Icons.people_alt_outlined, loc.translate('participants'),
-                  "${event!.numberOfParticipants}/${event!.capacity}", textColor, secondaryText),
-              _buildInfoRow(context, Icons.access_time, loc.translate('time'), dateFormatted,
-                  textColor, secondaryText),
-              _buildInfoRow(context, Icons.timer_outlined, loc.translate('duration'),
-                  durationFormatted, textColor, secondaryText),
-              _buildInfoRow(context, Icons.monetization_on_outlined, loc.translate('fee'),
-                  event!.fee > 0 ? "${event!.fee}đ" : loc.translate('free'), textColor, secondaryText),
+              _buildInfoRow(
+                context,
+                Icons.language,
+                loc.translate('language'),
+                event!.language.name,
+                textColor,
+                secondaryText,
+              ),
+              _buildInfoRow(
+                context,
+                Icons.category_outlined,
+                loc.translate('categories'),
+                event!.categories.isNotEmpty
+                    ? event!.categories.map((e) => e.name).join(', ')
+                    : loc.translate('none'),
+                textColor,
+                secondaryText,
+              ),
+              _buildInfoRow(
+                context,
+                Icons.people_alt_outlined,
+                loc.translate('participants'),
+                "${event!.numberOfParticipants}/${event!.capacity}",
+                textColor,
+                secondaryText,
+              ),
+              _buildInfoRow(
+                context,
+                Icons.access_time,
+                loc.translate('time'),
+                dateFormatted,
+                textColor,
+                secondaryText,
+              ),
+              _buildInfoRow(
+                context,
+                Icons.timer_outlined,
+                loc.translate('duration'),
+                durationFormatted,
+                textColor,
+                secondaryText,
+              ),
+              _buildInfoRow(
+                context,
+                Icons.monetization_on_outlined,
+                loc.translate('fee'),
+                event!.fee > 0 ? "${event!.fee}đ" : loc.translate('free'),
+                textColor,
+                secondaryText,
+              ),
 
               const SizedBox(height: 16),
               Divider(color: dividerColor, thickness: 1),
@@ -490,161 +566,226 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
                       onPressed: isDisabled
                           ? null
                           : () async {
-                        if (event!.fee > 0) {
-                          final confirmPaid = await _showPaidEventWarning();
-                          if (confirmPaid != true) return;
-                        }
+                              if (event!.fee > 0) {
+                                final confirmPaid =
+                                    await _showPaidEventWarning();
+                                if (confirmPaid != true) return;
+                              }
 
-                        if (event!.isPublic) {
-                          await _registerEvent('');
-                          return;
-                        }
+                              if (event!.isPublic) {
+                                await _registerEvent('');
+                                return;
+                              }
 
-                        final controller = TextEditingController();
-                        await showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) {
-                            String? errorText;
-                            final isDark = Theme.of(context).brightness == Brightness.dark;
-                            final loc = AppLocalizations.of(context);
+                              final controller = TextEditingController();
+                              await showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (context) {
+                                  String? errorText;
+                                  final isDark =
+                                      Theme.of(context).brightness ==
+                                      Brightness.dark;
+                                  final loc = AppLocalizations.of(context);
 
-                            return StatefulBuilder(builder: (context, setState) {
-                              return Dialog(
-                                backgroundColor: Colors.transparent,
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    gradient: isDark
-                                        ? const LinearGradient(
-                                      colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    )
-                                        : const LinearGradient(
-                                      colors: [Colors.white, Colors.white],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.08),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 6),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // ---- TITLE ----
-                                      Center(
-                                        child: Text(
-                                          loc.translate("enter_event_password"),
-                                          textAlign: TextAlign.center,
-                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18,
-                                            color: isDark ? Colors.white : Colors.black87,
-                                          ),
-                                        ),
-                                      ),
-
-                                      const SizedBox(height: 10),
-
-                                      Divider(
-                                        color: isDark ? Colors.grey[700] : Colors.grey[300],
-                                        thickness: 1,
-                                      ),
-
-                                      const SizedBox(height: 12),
-
-                                      // ---- DESCRIPTION ----
-                                      Text(
-                                        loc.translate("private_event_description"),
-                                        style: TextStyle(
-                                          color: isDark ? Colors.grey[300] : Colors.grey[800],
-                                          fontSize: 14,
-                                        ),
-                                      ),
-
-                                      const SizedBox(height: 12),
-
-                                      // ---- PASSWORD FIELD ----
-                                      TextField(
-                                        controller: controller,
-                                        obscureText: true,
-                                        decoration: InputDecoration(
-                                          hintText: loc.translate("password"),
-                                          hintStyle: TextStyle(
-                                            color: isDark ? Colors.grey[500] : Colors.grey[400],
-                                          ),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          errorText: errorText,
-                                          contentPadding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 10),
-                                        ),
-                                      ),
-
-                                      const SizedBox(height: 16),
-
-                                      // ---- BUTTONS ----
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
-                                        children: [
-                                          TextButton(
-                                            onPressed: () => Navigator.of(context).pop(),
-                                            child: Text(loc.translate("cancel")),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(0xFF2563EB),
-                                              foregroundColor: Colors.white,
-                                              padding: const EdgeInsets.symmetric(
-                                                  horizontal: 16, vertical: 10),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
+                                  return StatefulBuilder(
+                                    builder: (context, setState) {
+                                      return Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            gradient: isDark
+                                                ? const LinearGradient(
+                                                    colors: [
+                                                      Color(0xFF1E1E1E),
+                                                      Color(0xFF2C2C2C),
+                                                    ],
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                  )
+                                                : const LinearGradient(
+                                                    colors: [
+                                                      Colors.white,
+                                                      Colors.white,
+                                                    ],
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                  ),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
                                             ),
-                                            onPressed: () async {
-                                              if (controller.text.isEmpty) {
-                                                setState(() {
-                                                  errorText = loc.translate("password_required");
-                                                });
-                                                return;
-                                              }
-
-                                              try {
-                                                await _registerEvent(
-                                                  controller.text,
-                                                  closeTwoDialogs: true,
-                                                );
-                                              } catch (e) {
-                                                if (e == "wrong_password") {
-                                                  setState(() {
-                                                    errorText = loc.translate("wrong_password");
-                                                  });
-                                                }
-                                              }
-                                            },
-                                            child: Text(loc.translate("confirm")),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(
+                                                  0.08,
+                                                ),
+                                                blurRadius: 12,
+                                                offset: const Offset(0, 6),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            });
-                          },
-                        );
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              // ---- TITLE ----
+                                              Center(
+                                                child: Text(
+                                                  loc.translate(
+                                                    "enter_event_password",
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleMedium
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 18,
+                                                        color: isDark
+                                                            ? Colors.white
+                                                            : Colors.black87,
+                                                      ),
+                                                ),
+                                              ),
 
-                      },
+                                              const SizedBox(height: 10),
+
+                                              Divider(
+                                                color: isDark
+                                                    ? Colors.grey[700]
+                                                    : Colors.grey[300],
+                                                thickness: 1,
+                                              ),
+
+                                              const SizedBox(height: 12),
+
+                                              // ---- DESCRIPTION ----
+                                              Text(
+                                                loc.translate(
+                                                  "private_event_description",
+                                                ),
+                                                style: TextStyle(
+                                                  color: isDark
+                                                      ? Colors.grey[300]
+                                                      : Colors.grey[800],
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+
+                                              const SizedBox(height: 12),
+
+                                              // ---- PASSWORD FIELD ----
+                                              TextField(
+                                                controller: controller,
+                                                obscureText: true,
+                                                decoration: InputDecoration(
+                                                  hintText: loc.translate(
+                                                    "password",
+                                                  ),
+                                                  hintStyle: TextStyle(
+                                                    color: isDark
+                                                        ? Colors.grey[500]
+                                                        : Colors.grey[400],
+                                                  ),
+                                                  border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                  ),
+                                                  errorText: errorText,
+                                                  contentPadding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 10,
+                                                      ),
+                                                ),
+                                              ),
+
+                                              const SizedBox(height: 16),
+
+                                              // ---- BUTTONS ----
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop(),
+                                                    child: Text(
+                                                      loc.translate("cancel"),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor:
+                                                          const Color(
+                                                            0xFF2563EB,
+                                                          ),
+                                                      foregroundColor:
+                                                          Colors.white,
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 16,
+                                                            vertical: 10,
+                                                          ),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              12,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    onPressed: () async {
+                                                      if (controller
+                                                          .text
+                                                          .isEmpty) {
+                                                        setState(() {
+                                                          errorText = loc.translate(
+                                                            "password_required",
+                                                          );
+                                                        });
+                                                        return;
+                                                      }
+
+                                                      try {
+                                                        await _registerEvent(
+                                                          controller.text,
+                                                          closeTwoDialogs: true,
+                                                        );
+                                                      } catch (e) {
+                                                        if (e ==
+                                                            "wrong_password") {
+                                                          setState(() {
+                                                            errorText = loc
+                                                                .translate(
+                                                                  "wrong_password",
+                                                                );
+                                                          });
+                                                        }
+                                                      }
+                                                    },
+                                                    child: Text(
+                                                      loc.translate("confirm"),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            },
                     ),
                   ],
                 ],
@@ -656,8 +797,14 @@ class _SharedEventDetailState extends State<SharedEventDetail> {
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value,
-      Color textColor, Color? secondaryText) {
+  Widget _buildInfoRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+    Color textColor,
+    Color? secondaryText,
+  ) {
     final t = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),

@@ -27,6 +27,7 @@ class _RatesState extends State<Rates> {
 
   late final EventRepository _eventRepository;
   List<EventRatingItem> _ratings = [];
+  int selectedFilter = 0;
 
   @override
   void initState() {
@@ -116,9 +117,7 @@ class _RatesState extends State<Rates> {
       if (mounted) {
         final loc = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(loc.translate("update_rating_success")),
-          ),
+          SnackBar(content: Text(loc.translate("update_rating_success"))),
         );
       }
 
@@ -128,25 +127,63 @@ class _RatesState extends State<Rates> {
     } catch (e) {
       if (mounted) {
         final loc = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(loc.translate("error")),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(loc.translate("error"))));
       }
     }
   }
 
-
   Widget _buildStar(int rating, Color colorPrimary) {
     return Row(
       children: List.generate(5, (index) {
+        final bool isFilled = index < rating;
+
         return Icon(
-          index < rating ? Icons.star : Icons.star_border,
-          color: colorPrimary,
+          isFilled ? Icons.star : Icons.star_border,
+          color: isFilled ? Colors.amber : Colors.grey,
           size: sw(context, 20),
         );
       }),
+    );
+  }
+
+  Widget _buildFilterTag({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: sw(context, 14),
+          vertical: sh(context, 6),
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primary.withOpacity(0.2)
+              : (isDark ? Colors.grey[800] : Colors.grey[200]),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : (isDark ? Colors.white : Colors.black87),
+          ),
+        ),
+      ),
     );
   }
 
@@ -160,10 +197,10 @@ class _RatesState extends State<Rates> {
     final textColor = isDark ? Colors.white : Colors.black87;
     final Gradient cardBackground = isDark
         ? const LinearGradient(
-      colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    )
+            colors: [Color(0xFF1E1E1E), Color(0xFF2C2C2C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
         : const LinearGradient(colors: [Colors.white, Colors.white]);
 
     if (_loading) {
@@ -177,237 +214,349 @@ class _RatesState extends State<Rates> {
       return Scaffold(
         backgroundColor: backgroundColor,
         body: Center(
-          child: Text(loc.translate("no_events_found"), style: theme.textTheme.bodyMedium),
+          child: Text(
+            loc.translate("no_events_found"),
+            style: theme.textTheme.bodyMedium,
+          ),
         ),
       );
     }
 
+    final filteredRatings = selectedFilter == 0
+        ? _ratings
+        : _ratings.where((e) => e.rating == selectedFilter).toList();
+
     return Scaffold(
       backgroundColor: backgroundColor,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- Event title ---
-            Padding(
-              padding: EdgeInsets.all(sw(context, 20)),
-              child: Text(
-                _eventDetail!.title,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: st(context, 20),
-                  color: textColor,
-                ),
-              ),
-            ),
-            // Banner
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: sw(context, 20)),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: _eventDetail!.bannerUrl.isNotEmpty
-                    ? Image.network(
-                  _eventDetail!.bannerUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: Colors.grey[400],
-                    child: const Center(
-                      child: Icon(Icons.event_note_rounded, size: 64, color: Colors.white70),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: sw(context, 20)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // --- Event title ---
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: sh(context, 16)),
+                  child: Text(
+                    _eventDetail!.title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: st(context, 20),
+                      color: textColor,
                     ),
                   ),
-                )
-                    : Container(
-                  color: Colors.grey[400],
-                  child: const Center(
-                    child: Icon(Icons.event_note_rounded, size: 64, color: Colors.white70),
-                  ),
                 ),
-              ),
-            ),
-
-
-            SizedBox(height: sh(context, 25)),
-
-            // --- Scrollable content ---
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: sw(context, 20)),
-                children: [
-                  // --- My rating  ---
-                  if (_myRating != null && _myRating!.hasRating) ...[
-                    Text(
-                      loc.translate("your_event_rating"),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    SizedBox(height: sh(context, 8)),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: cardBackground,
-                        borderRadius: BorderRadius.circular(sw(context, 10)),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(sw(context, 12)),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildStar(_myRating!.rating, colorPrimary),
-                            SizedBox(height: sh(context, 8)),
-                            Text(
-                              _myRating!.comment,
-                              style: TextStyle(color: textColor),
-                            ),
-                            ...[
-                            SizedBox(height: sh(context, 4)),
-                            Text(
-                              '${loc.translate('at')} ${DateFormat('dd/MM/yyyy, HH:mm').format(_myRating!.createdAt.toLocal())}',
-                              style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
-                            ),
-                          ],
-                            SizedBox(height: sh(context, 8)),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () {
-                                  final ratingController = TextEditingController(text: _myRating!.comment);
-                                  int tempRating = _myRating!.rating;
-
-                                  final theme = Theme.of(context);
-                                  final colorPrimary = theme.colorScheme.primary;
-                                  final textColor = theme.textTheme.bodyMedium?.color ?? Colors.black87;
-                                  final backgroundColor = theme.colorScheme.surface;
-                                  final isDark = theme.brightness == Brightness.dark;
-
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return Dialog(
-                                        backgroundColor: Colors.transparent,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            gradient: cardBackground,
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          padding: const EdgeInsets.all(16),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                loc.translate("fix_rating"),
-                                                style: theme.textTheme.titleMedium?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: textColor,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 12),
-                                              StatefulBuilder(
-                                                builder: (context, setStateDialog) {
-                                                  return Column(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    children: [
-                                                      // --- Stars picker ---
-                                                      Row(
-                                                        mainAxisAlignment: MainAxisAlignment.center,
-                                                        children: List.generate(5, (index) {
-                                                          return IconButton(
-                                                            icon: Icon(
-                                                              index < tempRating
-                                                                  ? Icons.star
-                                                                  : Icons.star_border,
-                                                              color: colorPrimary,
-                                                            ),
-                                                            onPressed: () {
-                                                              setStateDialog(() {
-                                                                tempRating = index + 1;
-                                                              });
-                                                            },
-                                                          );
-                                                        }),
-                                                      ),
-                                                      const SizedBox(height: 12),
-                                                      // --- Comment field ---
-                                                      TextField(
-                                                        controller: ratingController,
-                                                        maxLines: 3,
-                                                        style: TextStyle(color: textColor),
-                                                        decoration: InputDecoration(
-                                                          labelText: loc.translate("your_event_rating"),
-                                                          labelStyle: TextStyle(
-                                                            color: isDark ? Colors.grey[400] : Colors.grey[700],
-                                                          ),
-                                                          enabledBorder: OutlineInputBorder(
-                                                            borderSide: BorderSide(
-                                                              color: isDark ? Colors.grey[700]! : Colors.grey[400]!,
-                                                            ),
-                                                            borderRadius: BorderRadius.circular(8),
-                                                          ),
-                                                          focusedBorder: OutlineInputBorder(
-                                                            borderSide: BorderSide(
-                                                              color: colorPrimary,
-                                                              width: 2,
-                                                            ),
-                                                            borderRadius: BorderRadius.circular(8),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Align(
-                                                alignment: Alignment.centerRight,
-                                                child: AppButton(
-                                                  text: loc.translate("confirm"),
-                                                  onPressed: () async {
-                                                    Navigator.pop(context);
-                                                    await _updateMyRating(tempRating, ratingController.text);
-                                                  },
-                                                  size: ButtonSize.sm,
-                                                  variant: ButtonVariant.primary,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-
-                                },
-                                child: Text(
-                                  loc.translate("fix_rating"),
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                // Banner
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: sw(context, 0)),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: _eventDetail!.bannerUrl.isNotEmpty
+                        ? Image.network(
+                            _eventDetail!.bannerUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.grey[400],
+                              child: const Center(
+                                child: Icon(
+                                  Icons.event_note_rounded,
+                                  size: 64,
+                                  color: Colors.white70,
                                 ),
                               ),
                             ),
+                          )
+                        : Container(
+                            color: Colors.grey[400],
+                            child: const Center(
+                              child: Icon(
+                                Icons.event_note_rounded,
+                                size: 64,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
 
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: sh(context, 20)),
-                  ],
+                SizedBox(height: sh(context, 25)),
 
-                  // --- Other ratings ---
+                // --- My rating  ---
+                if (_myRating != null && _myRating!.hasRating) ...[
                   Text(
-                    loc.translate("others_rating"),
+                    loc.translate("your_event_rating"),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: textColor,
                     ),
                   ),
                   SizedBox(height: sh(context, 8)),
-                  ..._ratings.map((rate) => Container(
+                  Container(
                     decoration: BoxDecoration(
                       gradient: cardBackground,
                       borderRadius: BorderRadius.circular(sw(context, 10)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(sw(context, 12)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildStar(_myRating!.rating, colorPrimary),
+                          SizedBox(height: sh(context, 8)),
+                          Text(
+                            _myRating!.comment,
+                            style: TextStyle(color: textColor),
+                          ),
+                          ...[
+                            SizedBox(height: sh(context, 4)),
+                            Text(
+                              '${loc.translate('at')} ${DateFormat('dd/MM/yyyy, HH:mm').format(_myRating!.createdAt.toLocal())}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                          SizedBox(height: sh(context, 8)),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                final ratingController = TextEditingController(
+                                  text: _myRating!.comment,
+                                );
+                                int tempRating = _myRating!.rating;
+
+                                final theme = Theme.of(context);
+                                final colorPrimary = theme.colorScheme.primary;
+                                final textColor =
+                                    theme.textTheme.bodyMedium?.color ??
+                                    Colors.black87;
+                                final backgroundColor =
+                                    theme.colorScheme.surface;
+                                final isDark =
+                                    theme.brightness == Brightness.dark;
+
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: cardBackground,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.all(16),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              loc.translate("fix_rating"),
+                                              style: theme.textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: textColor,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            StatefulBuilder(
+                                              builder: (context, setStateDialog) {
+                                                return Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    // --- Stars picker ---
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: List.generate(5, (
+                                                        index,
+                                                      ) {
+                                                        final bool isFilled =
+                                                            index < tempRating;
+                                                        return IconButton(
+                                                          icon: Icon(
+                                                            isFilled
+                                                                ? Icons.star
+                                                                : Icons
+                                                                      .star_border,
+                                                            color: isFilled
+                                                                ? Colors.amber
+                                                                : Colors.grey,
+                                                          ),
+                                                          onPressed: () {
+                                                            setStateDialog(() {
+                                                              tempRating =
+                                                                  index + 1;
+                                                            });
+                                                          },
+                                                        );
+                                                      }),
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    // --- Comment field ---
+                                                    TextField(
+                                                      controller:
+                                                          ratingController,
+                                                      maxLines: 3,
+                                                      style: TextStyle(
+                                                        color: textColor,
+                                                      ),
+                                                      decoration: InputDecoration(
+                                                        labelText: loc.translate(
+                                                          "your_event_rating",
+                                                        ),
+                                                        labelStyle: TextStyle(
+                                                          color: isDark
+                                                              ? Colors.grey[400]
+                                                              : Colors
+                                                                    .grey[700],
+                                                        ),
+                                                        enabledBorder: OutlineInputBorder(
+                                                          borderSide: BorderSide(
+                                                            color: isDark
+                                                                ? Colors
+                                                                      .grey[700]!
+                                                                : Colors
+                                                                      .grey[400]!,
+                                                          ),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                        focusedBorder:
+                                                            OutlineInputBorder(
+                                                              borderSide:
+                                                                  BorderSide(
+                                                                    color:
+                                                                        colorPrimary,
+                                                                    width: 2,
+                                                                  ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    8,
+                                                                  ),
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Align(
+                                              alignment: Alignment.centerRight,
+                                              child: AppButton(
+                                                text: loc.translate("confirm"),
+                                                onPressed: () async {
+                                                  Navigator.pop(context);
+                                                  await _updateMyRating(
+                                                    tempRating,
+                                                    ratingController.text,
+                                                  );
+                                                },
+                                                size: ButtonSize.sm,
+                                                variant: ButtonVariant.primary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: Text(
+                                loc.translate("fix_rating"),
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: sh(context, 20)),
+                ],
+
+                // --- Other ratings ---
+                Text(
+                  loc.translate("others_rating"),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+                SizedBox(height: sh(context, 10)),
+
+                SizedBox(
+                  height: sh(context, 40),
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      Center(
+                        child: _buildFilterTag(
+                          label: "All★ (${_ratings.length})",
+                          isSelected: selectedFilter == 0,
+                          onTap: () => setState(() => selectedFilter = 0),
+                        ),
+                      ),
+
+                      SizedBox(width: 8),
+
+                      ...List.generate(5, (i) {
+                        int star = 5 - i;
+                        int count = _ratings
+                            .where((e) => e.rating == star)
+                            .length;
+
+                        return Row(
+                          children: [
+                            _buildFilterTag(
+                              label: "$star★ ($count)",
+                              isSelected: selectedFilter == star,
+                              onTap: () =>
+                                  setState(() => selectedFilter = star),
+                            ),
+                            SizedBox(width: 8),
+                          ],
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: sh(context, 14)),
+
+                SizedBox(height: sh(context, 8)),
+                ...filteredRatings.map(
+                  (rate) => Container(
+                    decoration: BoxDecoration(
+                      gradient: cardBackground,
+                      borderRadius: BorderRadius.circular(sw(context, 10)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     margin: EdgeInsets.only(bottom: sh(context, 12)),
                     child: Padding(
@@ -422,7 +571,11 @@ class _RatesState extends State<Rates> {
                                 : null,
                             backgroundColor: Colors.grey[800],
                             child: (rate.user.avatarUrl.isEmpty)
-                                ? Icon(Icons.person, size: 24, color: Colors.white70)
+                                ? Icon(
+                                    Icons.person,
+                                    size: 24,
+                                    color: Colors.white70,
+                                  )
                                 : null,
                           ),
                           SizedBox(width: sw(context, 12)),
@@ -447,7 +600,9 @@ class _RatesState extends State<Rates> {
                                   SizedBox(height: sh(context, 4)),
                                   Text(
                                     '${loc.translate("at")}: ${DateFormat('dd/MM/yyyy, HH:mm').format(rate.createdAt.toLocal())}',
-                                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ],
                               ],
@@ -456,11 +611,11 @@ class _RatesState extends State<Rates> {
                         ],
                       ),
                     ),
-                  )),
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

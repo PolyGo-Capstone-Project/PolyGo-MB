@@ -30,10 +30,6 @@ class _RatingWidgetState extends State<RatingWidget> {
 
   final TextEditingController _commentController = TextEditingController();
 
-  String _selectedGift = '';
-  String _selectedGiftName = '';
-  int _giftQuantity = 1;
-
   @override
   void initState() {
     super.initState();
@@ -69,12 +65,11 @@ class _RatingWidgetState extends State<RatingWidget> {
       onPressed: () => setState(() => _rating = index),
       icon: Icon(
         index <= _rating ? Icons.star : Icons.star_border,
-        color: colorPrimary,
+        color: index <= _rating ? Colors.amber : Colors.grey,
         size: sw(context, 32),
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -144,6 +139,13 @@ class _RatingWidgetState extends State<RatingWidget> {
                           colors: [Colors.white, Colors.white],
                         ),
                         borderRadius: BorderRadius.circular(sw(context, 12)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,40 +186,6 @@ class _RatingWidgetState extends State<RatingWidget> {
                                       ),
                                     ),
                                   ],
-                                ),
-                              ),
-                              // Gift button
-                              OutlinedButton(
-                                onPressed: () async {
-                                  final result = await showDialog(
-                                    context: context,
-                                    builder: (context) => const InvenGifts(),
-                                  );
-
-                                  if (result != null && mounted) {
-                                    setState(() {
-                                      _selectedGift = result['giftId'];
-                                      _selectedGiftName = result['giftName'] ?? '';
-                                      _giftQuantity = result['quantity'] ?? 1;
-                                    });
-                                  }
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  side: BorderSide(color: colorPrimary, width: 2),
-                                  foregroundColor: colorPrimary,
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: sh(context, 8),
-                                    horizontal: sw(context, 12),
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(sw(context, 10)),
-                                  ),
-                                ),
-                                child: Text(
-                                  _selectedGift.isEmpty
-                                      ? loc.translate("choose_gift")
-                                      : "$_selectedGiftName x$_giftQuantity",
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
                                 ),
                               ),
                             ],
@@ -281,6 +249,8 @@ class _RatingWidgetState extends State<RatingWidget> {
                                 final prefs = await SharedPreferences.getInstance();
                                 final token = prefs.getString('token') ?? '';
 
+                                if (!mounted) return;
+
                                 if (token.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(content: Text("Bạn chưa đăng nhập")),
@@ -289,8 +259,6 @@ class _RatingWidgetState extends State<RatingWidget> {
                                 }
 
                                 final comment = _commentController.text;
-                                final giftId = _selectedGift.isEmpty ? '' : _selectedGift;
-                                final giftQuantity = _selectedGift.isEmpty ? 0 : _giftQuantity;
 
                                 try {
                                   final res = await _eventRepository.rateEvent(
@@ -298,9 +266,10 @@ class _RatingWidgetState extends State<RatingWidget> {
                                     eventId: widget.eventId,
                                     rating: _rating,
                                     comment: comment,
-                                    giftId: giftId,
-                                    giftQuantity: giftQuantity,
+                                    giftId: '',
+                                    giftQuantity: 0,
                                   );
+                                  if (!mounted) return;
 
                                   final msg = (res.message ?? '').trim().toLowerCase();
 
@@ -308,9 +277,10 @@ class _RatingWidgetState extends State<RatingWidget> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text(loc.translate("rating_success"))),
                                     );
+                                    if (!mounted) return;
                                     Navigator.of(context).pushReplacement(
                                       MaterialPageRoute(
-                                        builder: (_) => const MyEventsScreen(initialTab: 2),
+                                        builder: (_) => const MyEventsScreen(initialTab: 1),
                                       ),
                                     );
                                   } else {
@@ -323,6 +293,7 @@ class _RatingWidgetState extends State<RatingWidget> {
                                     );
                                   }
                                 } catch (e) {
+                                  if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text(loc.translate("error_rating"))),
                                   );
