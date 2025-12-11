@@ -61,6 +61,9 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
   bool isHandRaised = false;
   bool showControls = true;
 
+  int controlPage = 0; // 0 = Controls, 1 = Subtitle
+  final PageController _pageController = PageController();
+
   @override
   void initState() {
     super.initState();
@@ -140,7 +143,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
 
     _controller.onKicked = (message) {
       if (!mounted) return;
-
+      final loc = AppLocalizations.of(context);
       showDialog(
         context: context,
         barrierDismissible: true,  // user có thể bấm back
@@ -156,7 +159,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
             return false; // ngăn dialog tự đóng mặc định
           },
           child: AlertDialog(
-            title: const Text("Bạn đã bị mời ra khỏi sự kiện"),
+            title: Text(loc.translate('you_have_been_kicked_from_room')),
             content: Text(message),
             actions: [
               TextButton(
@@ -179,68 +182,110 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
   }
 
   Future<void> _showSubtitleLanguageDialog() async {
-    bool captionsEnabled = _controller.isCaptionsEnabled;
     String currentLang = _controller.targetLanguage;
+    final loc = AppLocalizations.of(context);
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(loc.translate('setting_subtitle')),
+          content: SizedBox(
+            height: 250,
+            width: double.maxFinite,
+            child: ListView(
+              children: subtitleLanguages.entries.map((entry) {
+                final isCurrent = currentLang == entry.key;
 
+                return ListTile(
+                  title: Text(entry.value),
+                  trailing: isCurrent ? const Icon(Icons.check, color: Colors.green) : null,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _controller.setTargetLanguage(entry.key);
+                    setState(() {}); // Nếu cần cập nhật UI
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+
+    // Luôn bật captions
+    if (!_controller.isCaptionsEnabled) {
+      _controller.enableCaptions();
+    }
+  }
+
+  Future<void> _showTranscriptionDialog() async {
+    bool transcriptionEnabled = _controller.isTranscriptionEnabled;
+    String currentLang = _controller.sourceLanguage;
+    final loc = AppLocalizations.of(context);
     await showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: const Text("Cài đặt phụ đề"),
+              title: Text(loc.translate('setting_voice_to_text')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Toggle Captions
+                  // Toggle transcription
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Bật phụ đề"),
+                      Text(loc.translate('toggle_transcript')),
                       Switch(
-                        value: captionsEnabled,
+                        value: transcriptionEnabled,
                         onChanged: (value) {
                           setStateDialog(() {
-                            captionsEnabled = value;
+                            transcriptionEnabled = value;
                           });
 
                           if (value) {
-                            _controller.enableCaptions();
+                            _controller.enableMobileTranscription(currentLang);
                           } else {
-                            _controller.disableCaptions();
+                            _controller.disableMobileTranscription();
                           }
 
                           setState(() {});
                         },
-                      )
+                      ),
                     ],
                   ),
 
                   const Divider(),
 
-                  // List languages (disabled when captions OFF)
+                  // List languages (disabled when transcription OFF)
                   SizedBox(
                     height: 250,
                     width: double.maxFinite,
                     child: ListView(
-                      children: subtitleLanguages.entries.map((entry) {
-                        final isCurrent = currentLang == entry.key;
+                      children: languageCodeMap.entries.map((entry) {
+                        final code = entry.key;
+                        final locale = entry.value;
+                        final isCurrent = locale == currentLang;
 
                         return ListTile(
-                          enabled: captionsEnabled,
+                          enabled: transcriptionEnabled,
                           title: Text(
-                            entry.value,
+                            "$code (${locale.toUpperCase()})",
                             style: TextStyle(
-                              color: captionsEnabled ? null : Colors.grey,
+                              color: transcriptionEnabled ? null : Colors.grey,
                             ),
                           ),
-                          trailing: isCurrent && captionsEnabled
+                          trailing: isCurrent && transcriptionEnabled
                               ? const Icon(Icons.check, color: Colors.green)
                               : null,
-                          onTap: captionsEnabled
+                          onTap: transcriptionEnabled
                               ? () {
                             Navigator.pop(context);
-                            _controller.setTargetLanguage(entry.key);
+                            _controller.sourceLanguage = locale;
+                            if (transcriptionEnabled) {
+                              _controller.enableMobileTranscription(locale);
+                            }
                             setState(() {});
                           }
                               : null,
@@ -250,97 +295,6 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
                   ),
                 ],
               ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> _showTranscriptionDialog() async {
-    bool tempEnabled = _controller.isTranscriptionEnabled;
-
-    // ⭐ copy language hiện tại
-    String tempSourceLang = _controller.sourceLanguage;
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: const Text("Cài đặt chuyển giọng nói"),
-              content: SizedBox(
-                height: 400,
-                width: double.maxFinite,
-                child: Column(
-                  children: [
-                    // Toggle transcription
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text("Bật Transcription"),
-                        Switch(
-                          value: tempEnabled,
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              tempEnabled = value;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-
-                    const Divider(),
-
-                    // ⭐ Danh sách ngôn ngữ
-                    Expanded(
-                      child: ListView(
-                        children: languageCodeMap.entries.map((entry) {
-                          final code = entry.key;
-                          final locale = entry.value;
-                          final isSelected = locale == tempSourceLang;
-
-                          return ListTile(
-                            title: Text("${code.toUpperCase()}  ($locale)"),
-                            trailing: isSelected
-                                ? const Icon(Icons.check, color: Colors.green)
-                                : null,
-                            onTap: () {
-                              setStateDialog(() {
-                                tempSourceLang = locale;
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Hủy"),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    // Cập nhật source language vào controller
-                    _controller.sourceLanguage = tempSourceLang;
-
-                    if (tempEnabled) {
-                      await _controller.enableMobileTranscription(tempSourceLang);
-                    } else {
-                      await _controller.disableMobileTranscription();
-                    }
-
-                    setState(() {});
-                    Navigator.pop(context);
-                  },
-
-                  child: const Text("OK"),
-                ),
-              ],
             );
           },
         );
@@ -555,6 +509,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
     final loc = AppLocalizations.of(context);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
@@ -579,7 +534,6 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
                 Container(
                   width: double.infinity,
                   color: Colors.black.withOpacity(0.4),
-                  padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
                   child: Align(
                     alignment: Alignment.center,
                     child: IconButton(
@@ -605,7 +559,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
                       child: AnimatedOpacity(
                         duration: const Duration(milliseconds: 200),
                         opacity: (isChatOpen || isParticipantsOpen) ? 0 : 1,
-                        child: MeetingControls(
+                        child: MeetingPanel(
                           isHandRaised: isHandRaised,
                           onToggleHand: _toggleHand,
                           isHost: widget.isHost,
@@ -626,6 +580,9 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
                           onCaptionsToggle: _showSubtitleLanguageDialog,
                           isTranscriptionEnabled: _controller.isTranscriptionEnabled,
                           isCaptionsEnabled: _controller.isCaptionsEnabled,
+                          subtitles: _controller.transcriptions
+                              .map((t) => "${t.senderName}: ${t.translatedText}")
+                              .toList(),
                         )
                       ),
                     ),

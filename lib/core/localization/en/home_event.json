@@ -37,6 +37,7 @@
   "filter": "Filter",
   "interest": "Interest",
   "format": "Type",
-  "apply_filters": "Applt filters"
-
+  "apply_filters": "Apply filters",
+  "not_open_registration": "This event has been cancelled or not available anymore",
+  "event_full_slot": "Event full of slot!"
 }

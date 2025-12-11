@@ -33,7 +33,7 @@ class HeaderSection extends StatelessWidget {
     final secondaryText = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: Text(
@@ -43,12 +43,19 @@ class HeaderSection extends StatelessWidget {
               fontSize: st(context, 18),
               color: textColor,
             ),
-            overflow: TextOverflow.ellipsis,
+            maxLines: null,
           ),
         ),
+
+        SizedBox(width: 12),
+
         GestureDetector(
           onTap: () => Navigator.pop(context),
-          child: Icon(Icons.close, size: 24, color: secondaryText),
+          child: Icon(
+            Icons.close,
+            size: 24,
+            color: secondaryText,
+          ),
         ),
       ],
     );

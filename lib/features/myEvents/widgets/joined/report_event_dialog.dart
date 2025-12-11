@@ -55,7 +55,6 @@ class _ReportEventDialogState extends State<ReportEventDialog> {
     reasons = [
       loc.translate("reason_negative_content"),
       loc.translate("reason_spam_or_ads"),
-      loc.translate("reason_unfair_price"),
       loc.translate("reason_illegal_or_policy_violation"),
       loc.translate("reason_other"),
     ];

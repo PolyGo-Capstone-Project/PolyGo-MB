@@ -44,7 +44,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final screenWidth = MediaQuery.of(context).size.width;
-      if (screenWidth >= 1024) {
+      if (screenWidth >= 800) {
         setState(() {
           _loadPosts = true;
         });

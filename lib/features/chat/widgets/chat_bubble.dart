@@ -169,10 +169,8 @@ class _ChatBubbleState extends State<ChatBubble> {
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.7, // bubble tối đa 70% màn hình
           ),
-          child: Text(
+          child: SelectableText(
             widget.message.content,
-            softWrap: true,
-            overflow: TextOverflow.visible,
             style: TextStyle(
               color: widget.isMine
                   ? Colors.white

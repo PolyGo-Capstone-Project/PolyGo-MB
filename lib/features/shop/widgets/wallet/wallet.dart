@@ -73,7 +73,7 @@ class _WalletState extends State<Wallet> {
     } finally {
       if (!mounted) return;
       setState(() {
-        _loading = false; // tắt spinner loadData
+        _loading = false;
       });
     }
   }
@@ -127,11 +127,11 @@ class _WalletState extends State<Wallet> {
         _hasPreviousPage = response?.hasPreviousPage ?? false;
       });
     } catch (e) {
-      // Nếu muốn có error riêng cho transactions, xử lý ở đây
+      // error riêng cho transactions
     } finally {
       if (!mounted) return;
       setState(() {
-        _loadingTransactions = false; // tắt loading history
+        _loadingTransactions = false;
       });
     }
   }
@@ -194,10 +194,11 @@ class _WalletState extends State<Wallet> {
         _loadTransactions();
       },
 
-      loading: _loadingTransactions, // thêm dòng này
+      loading: _loadingTransactions,
     );
 
     if (isTablet) {
+      final screenHeight = MediaQuery.of(context).size.height;
       return Padding(
         padding: EdgeInsets.all(sw(context, 16)),
         child: Row(
@@ -205,7 +206,15 @@ class _WalletState extends State<Wallet> {
           children: [
             Expanded(flex: 2, child: walletWidget),
             SizedBox(width: sw(context, 16)),
-            Expanded(flex: 3, child: transactionWidget),
+            Expanded(
+              flex: 3,
+              child: SizedBox(
+                height: screenHeight,
+                child: SingleChildScrollView(
+                  child: transactionWidget,
+                ),
+              ),
+            ),
           ],
         ),
       );

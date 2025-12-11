@@ -119,9 +119,14 @@ class EventService {
           throw KickedFromEventException();
         } else if (message == 'Error.InsufficientBalance') {
           throw InsufficientBalanceException();
+        } else if (message == 'Error.EventNotOpenForRegistration') {
+          throw EventNotOpenForRegistration();
+        } else if (message == 'Error.EventFull') {
+          throw EventFull();
         }
+
       }
-      rethrow; // các lỗi khác vẫn throw ra ngoài
+      rethrow;
     }
   }
 
@@ -501,3 +506,5 @@ class InvalidEventPasswordException implements Exception {}
 class KickedFromEventException implements Exception {}
 class InsufficientBalanceException implements Exception {}
 class EventsOverlappingException implements Exception {}
+class EventNotOpenForRegistration implements Exception {}
+class EventFull implements Exception {}

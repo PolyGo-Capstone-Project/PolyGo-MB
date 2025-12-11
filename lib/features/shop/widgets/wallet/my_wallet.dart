@@ -119,7 +119,7 @@ class _MyWalletState extends State<MyWallet> {
                                     style: t.headlineSmall?.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: st(context, 24),
+                                      fontSize: st(context, 20),
                                     ),
                                   ),
                                   TextSpan(

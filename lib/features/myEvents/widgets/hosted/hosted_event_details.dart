@@ -86,7 +86,7 @@ class _HostedEventDetailsState extends State<HostedEventDetails> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
@@ -96,9 +96,10 @@ class _HostedEventDetailsState extends State<HostedEventDetails> {
                             fontSize: st(context, 18),
                             color: textColor,
                           ),
-                          overflow: TextOverflow.ellipsis,
+                          maxLines: null,
                         ),
                       ),
+                      SizedBox(width: 12),
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: Icon(

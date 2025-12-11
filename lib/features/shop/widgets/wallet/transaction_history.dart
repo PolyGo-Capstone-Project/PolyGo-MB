@@ -264,7 +264,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
                                 Text(
                                     "${loc.translate("remaining_balance")}: ${widget.balanceHidden ? "****" : formatCurrency(tx.remainingBalance)} đ",
                                     style: t.bodySmall?.copyWith(
-                                    fontSize: st(context, 12),
+                                    fontSize: st(context, 10),
                                     color: isDark ? Colors.grey[400] : Colors.grey[600],
                                   ),
                                 ),

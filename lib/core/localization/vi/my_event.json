@@ -95,6 +95,11 @@
 
   "search_hosted_placeholder": "Tìm sự kiện đã tạo...",
   "search_joined_placeholder": "Tìm sự kiện đã tham gia...",
-  "cancel_event": "Hủy"
+  "cancel_event": "Hủy",
+
+  "setting_voice_to_text": "Cài đặt giọng nói",
+  "toggle_transcript": "Thu âm thanh",
+  "setting_subtitle": "Cài đặt phụ đề",
+  "you_have_been_kicked_from_room": "Bạn đã bị mời ra khỏi phòng!"
 
 }
