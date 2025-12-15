@@ -162,13 +162,19 @@ class AuthService {
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-    serverClientId: '368271231724-fmnffol42ki90lroodm6q7slm3nts3h0.apps.googleusercontent.com',
+    serverClientId: ApiConstants.androidId,
   );
 
   Future<String?> getGoogleIdToken() async {
     try {
       debugPrint('🟡 Google signIn start');
 
+      // XÓA SESSION GOOGLE CŨ
+      await _googleSignIn.signOut();
+
+      // await _googleSignIn.disconnect();
+
+      // BẮT ĐẦU SIGN IN
       final googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
@@ -190,5 +196,15 @@ class AuthService {
       rethrow;
     }
   }
+
+  Future<void> googleSignOut() async {
+    try {
+      await _googleSignIn.signOut();
+      debugPrint('🟢 Google signOut success');
+    } catch (e) {
+      debugPrint('❌ Google signOut error: $e');
+    }
+  }
+
 
 }
