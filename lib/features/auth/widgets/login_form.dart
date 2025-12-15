@@ -115,6 +115,7 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> _loginWithGoogle() async {
     setState(() => _isLoading = true);
+    final loc = AppLocalizations.of(context);
 
     try {
       final repo = AuthRepository(AuthService(ApiClient()));
@@ -153,7 +154,7 @@ class _LoginFormState extends State<LoginForm> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
+          content: Text(loc.translate('login_google_failed')),
         ),
       );
     } finally {
