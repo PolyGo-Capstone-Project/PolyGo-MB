@@ -94,6 +94,7 @@ flutter:
   assets:
     - lib/core/localization/en/
     - lib/core/localization/vi/
+    - lib/core/localization/ja/
     - assets/
     - assets/omedetou.mp3
     - assets/correct.mp3

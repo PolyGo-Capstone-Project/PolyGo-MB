@@ -28,17 +28,32 @@ class Participant {
   });
 }
 
+// class ChatMessage {
+//   final String sender;
+//   final String message;
+//   final DateTime timestamp;
+//
+//   ChatMessage({
+//     required this.sender,
+//     required this.message,
+//     DateTime? timestamp,
+//   }) : timestamp = timestamp ?? DateTime.now();
+// }
+
 class ChatMessage {
+  final String id;
   final String sender;
   final String message;
   final DateTime timestamp;
 
   ChatMessage({
+    required this.id,
     required this.sender,
     required this.message,
-    DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
+    required this.timestamp,
+  });
 }
+
 
 class TranscriptionMessage {
   final String id;
@@ -383,14 +398,51 @@ class WebRTCController extends ChangeNotifier {
       notifyListeners();
     });
 
+    // _hub!.on('ReceiveChatMessage', (args) {
+    //   final sender = args?[1] ?? "Unknown";
+    //   final message = args?[2] ?? "";
+    //   final chatMessage = ChatMessage(sender: sender, message: message);
+    //   chatMessages.add(chatMessage);
+    //   for (var listener in _chatListeners) {
+    //     listener(chatMessage);
+    //   }
+    //   notifyListeners();
+    // });
+
     _hub!.on('ReceiveChatMessage', (args) {
-      final sender = args?[0] ?? "Unknown";
-      final message = args?[1] ?? "";
-      final chatMessage = ChatMessage(sender: sender, message: message);
-      chatMessages.add(chatMessage);
-      for (var listener in _chatListeners) {
-        listener(chatMessage);
+      if (args == null || args.length < 4) {
+        debugPrint("⚠️ [CHAT] Invalid args: $args");
+        return;
       }
+
+      final id = args[0]?.toString() ?? '';
+      final senderName = args[1]?.toString() ?? "Unknown";
+      final message = args[2]?.toString() ?? "";
+
+      final rawTime = args[3];
+      final timestamp = rawTime is DateTime
+          ? rawTime
+          : DateTime.tryParse(rawTime.toString()) ?? DateTime.now();
+
+      // 🔒 chống duplicate
+      final exists = chatMessages.any((m) => m.id == id);
+      if (exists) {
+        debugPrint("🔁 [CHAT] Duplicate ignored: $id");
+        return;
+      }
+
+      final chatMessage = ChatMessage(
+        id: id,
+        sender: senderName,
+        message: message,
+        timestamp: timestamp,
+      );
+
+      debugPrint(
+        "📥 [CHAT] Receive | id=$id | sender=$senderName | message=$message",
+      );
+
+      chatMessages.add(chatMessage);
       notifyListeners();
     });
 
@@ -1037,24 +1089,57 @@ class WebRTCController extends ChangeNotifier {
     }
   }
 
+  // Future<void> sendChatMessage(String message) async {
+  //   if (!isChatEnabled) {
+  //     print("⛔ Chat disabled — cannot send");
+  //     return;
+  //   }
+  //
+  //   if (_hub == null || !isConnected || eventId.isEmpty) return;
+  //
+  //   final chatMessage = ChatMessage(sender: userName, message: message);
+  //
+  //   try {
+  //     await _hub!.invoke("SendChatMessage", args: [eventId, userName, message]);
+  //   } catch (e) {}
+  //
+  //   for (var listener in _chatListeners) {
+  //     listener(chatMessage);
+  //   }
+  //   notifyListeners();
+  // }
+
   Future<void> sendChatMessage(String message) async {
     if (!isChatEnabled) {
-      print("⛔ Chat disabled — cannot send");
+      debugPrint("⛔ [CHAT] Disabled — cannot send message");
       return;
     }
 
-    if (_hub == null || !isConnected || eventId.isEmpty) return;
+    if (_hub == null || !isConnected || eventId.isEmpty) {
+      debugPrint(
+        "⛔ [CHAT] Invalid state | hub: $_hub | connected: $isConnected | eventId: $eventId",
+      );
+      return;
+    }
 
-    final chatMessage = ChatMessage(sender: userName, message: message);
+    final content = message.trim();
+    if (content.isEmpty) return;
+
+    debugPrint(
+      "📤 [CHAT] Sending | user=$userName | eventId=$eventId | content=$content",
+    );
 
     try {
-      await _hub!.invoke("SendChatMessage", args: [eventId, userName, message]);
-    } catch (e) {}
+      await _hub!.invoke(
+        "SendChatMessage",
+        args: [eventId, userName, content],
+      );
 
-    for (var listener in _chatListeners) {
-      listener(chatMessage);
+      debugPrint("✅ [CHAT] Invoke SendChatMessage success");
+    } catch (e, stack) {
+      debugPrint("❌ [CHAT] Invoke SendChatMessage failed: $e");
+      debugPrint(stack.toString());
     }
-    notifyListeners();
   }
 
   void addChatListener(ValueChanged<ChatMessage> listener) {
@@ -1111,6 +1196,67 @@ class WebRTCController extends ChangeNotifier {
     notifyListeners();
     onAllCamsOff?.call();
   }
+
+  Future<void> loadChatHistory() async {
+    if (_hub == null || !isConnected || eventId.isEmpty) {
+      debugPrint("⛔ [CHAT] Cannot load history – invalid state");
+      return;
+    }
+
+    debugPrint("📜 [CHAT] Loading chat history for eventId=$eventId");
+
+    try {
+      final result = await _hub!.invoke(
+        "GetChatHistory",
+        args: [eventId],
+      );
+
+      if (result is! List) {
+        debugPrint("⚠️ [CHAT] History result is not a list");
+        return;
+      }
+
+      final List<ChatMessage> history = [];
+
+      for (final item in result) {
+        final map = Map<String, dynamic>.from(item);
+
+        final id = map['id']?.toString();
+        if (id == null) continue;
+
+        // 🔒 tránh duplicate nếu history load lại
+        if (chatMessages.any((m) => m.id == id)) continue;
+
+        final rawTime = map['timestamp'];
+        final timestamp = rawTime is DateTime
+            ? rawTime
+            : DateTime.tryParse(rawTime.toString()) ?? DateTime.now();
+
+        history.add(
+          ChatMessage(
+            id: id,
+            sender: map['senderName'] ?? "Unknown",
+            message: map['message'] ?? "",
+            timestamp: timestamp,
+          ),
+        );
+      }
+
+      // sort theo thời gian (cũ → mới)
+      history.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+      chatMessages
+        ..clear()
+        ..addAll(history);
+
+      debugPrint("✅ [CHAT] Loaded ${history.length} messages");
+      notifyListeners();
+    } catch (e, stack) {
+      debugPrint("❌ [CHAT] Load history failed: $e");
+      debugPrint(stack.toString());
+    }
+  }
+
 }
 
 String _preferH264(String sdp) {

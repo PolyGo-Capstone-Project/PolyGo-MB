@@ -354,6 +354,9 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
         userId: userId,
       );
 
+      // ---- LOAD CHAT HISTORY ----
+      await _controller.loadChatHistory();
+
       print("Controller hostId: ${_controller.hostId}");
       _controller.participants.forEach((k, v) {
         print("Participant: id=${v.id}, name=${v.name}, role=${v.role}");
