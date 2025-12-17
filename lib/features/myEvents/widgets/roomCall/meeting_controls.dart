@@ -272,6 +272,13 @@ class _MeetingPanelState extends State<MeetingPanel> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const SizedBox(height: 10),
+                    _buildButton(
+                      icon: Icons.description,
+                      color: Colors.white,
+                      onPressed: (){},
+                    ),
+                    const SizedBox(height: 10),
                     _buildButton(
                       icon: widget.isMicOn ? Icons.mic : Icons.mic_off,
                       color: widget.isMicOn ? Colors.white : Colors.redAccent,

@@ -113,7 +113,7 @@ class _MyAppState extends State<MyApp> {
       initialRoute: initialRoute,
       onGenerateRoute: AppRoutes.generateRoute,
       locale: _locale,
-      supportedLocales: const [Locale('en'), Locale('vi')],
+      supportedLocales: const [Locale('en'), Locale('vi'), Locale('ja')],
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
