@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/api/api_client.dart';
 import 'core/localization/app_localizations.dart';
@@ -18,8 +19,10 @@ import 'routes/app_routes.dart';
 final GlobalKey<NavigatorState> globalNavigatorKey =
     GlobalKey<NavigatorState>();
 
-void main() {
-  runApp(DevicePreview(enabled: true, builder: (context) => const MyApp()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+  runApp(DevicePreview(enabled: false, builder: (context) => const MyApp()));
 }
 
 class MyApp extends StatefulWidget {
