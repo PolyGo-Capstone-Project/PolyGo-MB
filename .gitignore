@@ -30,7 +30,6 @@ android/app/build/
 *.jks
 *.keystore
 *.env
-lib/core/config/*.dart
 
 # Generated plugin registrant files
 generated_plugin_registrant.dart
