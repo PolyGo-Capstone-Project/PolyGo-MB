@@ -361,7 +361,11 @@ class _PlayCardWidgetState extends State<PlayCardWidget> {
                   color: colorPrimary,
                   borderRadius: BorderRadius.circular(sw(context, 8)),
                 ),
-                child: Text(c, style: const TextStyle(color: Colors.white)),
+                // child: Text(c, style: const TextStyle(color: Colors.white)),
+                child: SelectableText(
+                  c,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ))
                   .toList(),
             ),
